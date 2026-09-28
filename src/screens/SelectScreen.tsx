@@ -5,10 +5,12 @@ import { categoryPath, childCategories, NO_CATEGORY } from '../catalog';
 import { catKey, descendantIds, visibleKeys } from '../listView';
 import { CHAINS, CHAIN_IDS, MODES, type Category, type ChainId, type ListItem, type Mode, type Product } from '../types';
 import { Empty, Header, Stepper, Tile } from '../ui/components';
-import { confirmDialog, promptDialog } from '../ui/dialog';
+import { promptDialog } from '../ui/dialog';
+import { haptic, withUndo } from '../ui/toast';
 import { BulkAddSheet, CategorySheet, ProductSheet } from '../ui/catalogSheets';
 import VoiceAdd from '../ui/VoiceAdd';
 import { fmtMoney, listTotals } from '../money';
+import { categoryEmoji } from '../catColors';
 
 interface Ctx {
   chainId: ChainId;
@@ -188,10 +190,7 @@ export default function SelectScreen({ chainId, mode }: { chainId: ChainId; mode
             <div className="center pad">
               <button
                 className="btn ghost small"
-                onClick={async () => {
-                  if (await confirmDialog({ title: 'ניקוי הרשימה', message: 'כל הסימונים יבוטלו.', confirmText: 'ניקוי', danger: true }))
-                    clearList(chainId, mode);
-                }}
+                onClick={() => withUndo('הרשימה נוקתה', () => clearList(chainId, mode))}
               >
                 ניקוי כל הסימונים
               </button>
@@ -240,7 +239,10 @@ function CategoryNode({ ctx, cat, depth }: { ctx: Ctx; cat: Category; depth: num
       <div className="cat-card-head">
         <button className="cat-card-main" onClick={() => ctx.toggleOpen(cat.id)}>
           <span className="chev">{isOpen ? '▾' : '◂'}</span>
-          <span className="cat-card-name">{cat.name}</span>
+          <span className="cat-card-name">
+            {depth === 0 && <span className="cat-emoji">{categoryEmoji(cat.name)}</span>}
+            {cat.name}
+          </span>
           <span className="muted small">{pickedInside > 0 ? `${pickedInside} נבחרו` : `${total} מוצרים`}</span>
         </button>
         {inList && (
@@ -278,7 +280,11 @@ function PickRow({ ctx, product, showPath }: { ctx: Ctx; product: Product; showP
   const { chainId, mode, items, editMode } = ctx;
   const it = items[product.id];
   const { toggleSelect, setQty } = useApp.getState();
-  const onClick = () => (editMode ? ctx.onEditProduct(product) : toggleSelect(chainId, mode, product.id));
+  const onClick = () => {
+    if (editMode) return ctx.onEditProduct(product);
+    haptic();
+    toggleSelect(chainId, mode, product.id);
+  };
   return (
     <div
       role="button"
@@ -291,7 +297,11 @@ function PickRow({ ctx, product, showPath }: { ctx: Ctx; product: Product; showP
       <span className="pick-name">
         {product.name}
         {showPath && <span className="pick-path">{categoryPath(ctx.categories, product.categoryId)}</span>}
-        {product.price !== undefined && <span className="pick-path">{fmtMoney(product.price)}</span>}
+        {(product.note || product.price !== undefined) && (
+          <span className="pick-path">
+            {[product.note && `📝 ${product.note}`, product.price !== undefined && fmtMoney(product.price)].filter(Boolean).join(' · ')}
+          </span>
+        )}
       </span>
       {editMode ? (
         <span className="chev">✎</span>

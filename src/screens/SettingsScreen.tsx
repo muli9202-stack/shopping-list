@@ -120,6 +120,7 @@ export default function SettingsScreen() {
         )}
       </section>
 
+      <DisplayCard />
       <SyncCard />
       <ReminderCard />
       <BudgetCard />
@@ -244,6 +245,47 @@ function BudgetCard() {
             />
           </label>
         ))}
+      </div>
+    </section>
+  );
+}
+
+function DisplayCard() {
+  const theme = useApp((s) => s.settings.theme ?? 'auto');
+  const textSize = useApp((s) => s.settings.textSize ?? 'normal');
+  const set = useApp.getState().updateSettings;
+  return (
+    <section className="card">
+      <h2>🎨 תצוגה</h2>
+      <div className="form">
+        <span className="muted small">ערכת צבעים</span>
+        <div className="segmented">
+          {(
+            [
+              ['auto', 'אוטומטי'],
+              ['light', '☀️ בהיר'],
+              ['dark', '🌙 כהה'],
+            ] as const
+          ).map(([v, label]) => (
+            <button key={v} className={theme === v ? 'active' : ''} onClick={() => set({ theme: v })}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <span className="muted small">גודל טקסט</span>
+        <div className="segmented">
+          {(
+            [
+              ['normal', 'רגיל'],
+              ['large', 'גדול'],
+              ['xlarge', 'גדול מאוד'],
+            ] as const
+          ).map(([v, label]) => (
+            <button key={v} className={textSize === v ? 'active' : ''} onClick={() => set({ textSize: v })}>
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -35,6 +35,8 @@ export interface Product {
   barcode?: string;
   /** How many to keep at home (home inventory). */
   target?: number;
+  /** Free-text reminder, e.g. "only the Tnuva one". */
+  note?: string;
 }
 
 export type ItemStatus = 'pending' | 'bought' | 'missing';
@@ -106,6 +108,10 @@ export interface Settings {
   autoExcel: boolean;
   reminder?: Reminder;
   sync?: SyncSettings;
+  theme?: 'auto' | 'light' | 'dark';
+  textSize?: 'normal' | 'large' | 'xlarge';
+  hideBought?: boolean;
+  seenWelcome?: boolean;
 }
 
 export interface Reminder {

@@ -3,6 +3,7 @@ import { HashRouter, Navigate, Route, Routes, useParams } from 'react-router-dom
 import { useApp } from './store';
 import { isChainId, isMode, type ChainId, type Mode } from './types';
 import { DialogHost } from './ui/dialog';
+import { ToastHost } from './ui/toast';
 import { startAutoBackup } from './autoBackup';
 import HomeScreen from './screens/HomeScreen';
 import ChainScreen from './screens/ChainScreen';
@@ -46,6 +47,17 @@ function BranchRoute({ chainId }: { chainId: ChainId }) {
 
 export default function App() {
   const hydrated = useHydrated();
+  const theme = useApp((s) => s.settings.theme ?? 'auto');
+  const textSize = useApp((s) => s.settings.textSize ?? 'normal');
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'auto') root.removeAttribute('data-theme');
+    else root.setAttribute('data-theme', theme);
+    root.setAttribute('data-text', textSize);
+    // Keep the browser chrome in step with the theme.
+    const dark = theme === 'dark' || (theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0f1419' : '#0f766e');
+  }, [theme, textSize]);
   useEffect(() => {
     if (!hydrated) return;
     startAutoBackup();
@@ -73,6 +85,7 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <DialogHost />
+      <ToastHost />
     </HashRouter>
   );
 }

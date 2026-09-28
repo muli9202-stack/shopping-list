@@ -62,7 +62,7 @@ interface Actions {
   moveCategory: (id: string, dir: -1 | 1) => void;
 
   addProducts: (chainId: ChainId, names: string[], categoryId: string | null) => void;
-  updateProduct: (id: string, patch: Partial<Pick<Product, 'name' | 'categoryId' | 'price' | 'barcode' | 'target'>>) => void;
+  updateProduct: (id: string, patch: Partial<Pick<Product, 'name' | 'categoryId' | 'price' | 'barcode' | 'target' | 'note'>>) => void;
   deleteProduct: (id: string) => void;
   moveProduct: (id: string, dir: -1 | 1) => void;
 

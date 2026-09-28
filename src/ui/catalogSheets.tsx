@@ -3,6 +3,7 @@ import { useApp } from '../store';
 import { buildSections, categoryPath } from '../catalog';
 import type { Category, ChainId, Product } from '../types';
 import { Sheet, confirmDialog, promptDialog } from './dialog';
+import { withUndo } from './toast';
 
 // Bottom sheets for editing the catalog (categories and products) in place.
 
@@ -62,7 +63,7 @@ export function CategorySheet({
               confirmText: 'מחיקה',
               danger: true,
             });
-            if (ok) deleteCategory(category.id);
+            if (ok) withUndo(`הקטגוריה "${category.name}" נמחקה`, () => deleteCategory(category.id));
           })}
         >
           🗑️ מחיקת קטגוריה
@@ -79,6 +80,7 @@ export function ProductSheet({ product, categories, onClose }: { product: Produc
   const [price, setPrice] = useState(product.price?.toString() ?? '');
   const [target, setTarget] = useState(product.target?.toString() ?? '');
   const [barcode, setBarcode] = useState(product.barcode ?? '');
+  const [note, setNote] = useState(product.note ?? '');
   const num = (v: string) => {
     const n = parseFloat(v.replace(',', '.'));
     return Number.isFinite(n) && n > 0 ? n : undefined;
@@ -96,6 +98,7 @@ export function ProductSheet({ product, categories, onClose }: { product: Produc
             price: num(price),
             target: num(target) && Math.round(num(target)!),
             barcode: barcode.trim() || undefined,
+            note: note.trim() || undefined,
           });
           onClose();
         }}
@@ -103,6 +106,10 @@ export function ProductSheet({ product, categories, onClose }: { product: Produc
         <label>
           שם המוצר
           <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
+        </label>
+        <label>
+          הערה (לא חובה)
+          <input className="input" placeholder='לדוגמה: רק של תנובה, בלי לקטוז' value={note} onChange={(e) => setNote(e.target.value)} />
         </label>
         <label>
           קטגוריה
@@ -138,12 +145,9 @@ export function ProductSheet({ product, categories, onClose }: { product: Produc
         <button
           type="button"
           className="btn danger block"
-          onClick={async () => {
-            const ok = await confirmDialog({ title: `מחיקת "${product.name}"`, message: 'המוצר יוסר מהמאגר ומהרשימות הפעילות.', confirmText: 'מחיקה', danger: true });
-            if (ok) {
-              deleteProduct(product.id);
-              onClose();
-            }
+          onClick={() => {
+            withUndo(`"${product.name}" נמחק`, () => deleteProduct(product.id));
+            onClose();
           }}
         >
           מחיקת מוצר

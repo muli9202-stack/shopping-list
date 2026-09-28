@@ -9,6 +9,9 @@ import { CHAINS, CHAIN_IDS, MODES, type ChainId, type ListItem, type Mode, type 
 import { Empty, Header } from '../ui/components';
 import { promptDialog, Sheet } from '../ui/dialog';
 import { useWakeLock } from '../ui/useWakeLock';
+import { categoryEmoji } from '../catColors';
+import { shareList } from '../share';
+import { haptic, withUndo } from '../ui/toast';
 
 const Scanner = lazy(() => import('../ui/Scanner'));
 
@@ -47,6 +50,7 @@ export default function ShopScreen({ chainId, mode }: { chainId: ChainId; mode: 
     if (b) useApp.getState().setListBranch(chainId, mode, b);
   }, [params, chainId, mode]);
   const [query, setQuery] = useState('');
+  const hideBought = useApp((s) => !!s.settings.hideBought);
   const [scanning, setScanning] = useState(false);
   const [scanMsg, setScanMsg] = useState('');
   const [unknownCode, setUnknownCode] = useState<string | null>(null);
@@ -65,11 +69,11 @@ export default function ShopScreen({ chainId, mode }: { chainId: ChainId; mode: 
           const rows: { key: string; name: string; note?: string; product?: Product }[] = [];
           if (sec.category && visible.has(catKey(sec.category.id)))
             rows.push({ key: catKey(sec.category.id), name: sec.category.name, note: 'כל הקטגוריה' });
-          for (const p of sec.products) rows.push({ key: p.id, name: p.name, product: p });
-          return { sec, rows: q ? rows.filter((r) => r.name.includes(q)) : rows };
+          for (const p of sec.products) rows.push({ key: p.id, name: p.name, note: p.note && `📝 ${p.note}`, product: p });
+          return { sec, rows: rows.filter((r) => (!q || r.name.includes(q)) && !(hideBought && items[r.key]?.status === 'bought')) };
         })
         .filter((x) => x.rows.length),
-    [categories, products, chainId, visible, q],
+    [categories, products, chainId, visible, q, hideBought, items],
   );
   const all = visibleList.map((k) => items[k]);
   const bought = all.filter((i) => i.status === 'bought').length;
@@ -80,7 +84,6 @@ export default function ShopScreen({ chainId, mode }: { chainId: ChainId; mode: 
   const route = useMemo(
     () => (sort === 'route' && branch?.map ? planRoute(branch.map, visibleList, products, categories) : null),
     // Plan over the whole list so the order stays put while items get ticked.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [sort, branch?.map, visibleList.join('|'), products, categories],
   );
   const rowFor = (k: string) => {
@@ -89,7 +92,7 @@ export default function ShopScreen({ chainId, mode }: { chainId: ChainId; mode: 
       return { key: k, name: c?.name ?? '', note: 'כל הקטגוריה' as string | undefined, product: undefined as Product | undefined };
     }
     const p = products.find((x) => x.id === k);
-    return { key: k, name: p?.name ?? '', note: undefined as string | undefined, product: p };
+    return { key: k, name: p?.name ?? '', note: (p?.note ? `📝 ${p.note}` : undefined) as string | undefined, product: p };
   };
   const compare = useMemo(() => compareWithChain(visibleList, items, products, otherChain), [visibleList, items, products, otherChain]);
 
@@ -125,9 +128,14 @@ export default function ShopScreen({ chainId, mode }: { chainId: ChainId; mode: 
         back={`/c/${chainId}/${mode}`}
         actions={
           all.length > 0 && (
-            <button className="icon-btn" onClick={() => (setScanMsg(''), setScanning(true))} aria-label="סריקת ברקוד">
-              📷
-            </button>
+            <>
+              <button className="icon-btn" onClick={() => shareList(chainId, mode)} aria-label="שליחת הרשימה">
+                📤
+              </button>
+              <button className="icon-btn" onClick={() => (setScanMsg(''), setScanning(true))} aria-label="סריקת ברקוד">
+                📷
+              </button>
+            </>
           )
         }
       />
@@ -180,6 +188,13 @@ export default function ShopScreen({ chainId, mode }: { chainId: ChainId; mode: 
 
           <div className="search-row">
             <input className="input search" type="search" placeholder="🔍 חיפוש ברשימה" value={query} onChange={(e) => setQuery(e.target.value)} />
+            <button
+              className={`chip ${hideBought ? 'active' : ''}`}
+              onClick={() => useApp.getState().updateSettings({ hideBought: !hideBought })}
+              title="הסתרת מה שכבר נקנה"
+            >
+              {hideBought ? `👁 הצג הכול (${bought})` : 'הסתר שנקנו'}
+            </button>
           </div>
 
           {sort === 'route' && branch?.map && route ? (
@@ -187,6 +202,7 @@ export default function ShopScreen({ chainId, mode }: { chainId: ChainId; mode: 
               route={route}
               rowFor={rowFor}
               query={q}
+              hideBought={hideBought}
               items={items}
               onToggle={(k) => toggleStatus(chainId, mode, k, 'bought')}
               onMissing={(k) => toggleStatus(chainId, mode, k, 'missing')}
@@ -205,7 +221,9 @@ export default function ShopScreen({ chainId, mode }: { chainId: ChainId; mode: 
               {sections.length === 0 && <p className="muted center pad">לא נמצאו מוצרים ברשימה</p>}
               {sections.map(({ sec, rows }) => (
                 <section key={sec.category?.id ?? 'none'} className="shop-section">
-                  <div className="shop-section-title">{sec.path}</div>
+                  <div className="shop-section-title">
+                    {categoryEmoji(sec.path)} {sec.path}
+                  </div>
                   {rows.map((r) => (
                     <ShopRow
                       key={r.key}
@@ -259,6 +277,17 @@ export default function ShopScreen({ chainId, mode }: { chainId: ChainId; mode: 
 
 function MoneyBox({ totals, budget, onEditBudget }: { totals: ReturnType<typeof listTotals>; budget?: number; onEditBudget: () => void }) {
   const over = budget !== undefined && totals.planned > budget;
+  if (!totals.planned && budget === undefined)
+    return (
+      <div className="money-box">
+        <div className="money-row">
+          <span className="muted small">💲 הוספת מחירים למוצרים (ב-✎ עריכה) תראה כמה הקנייה תעלה</span>
+          <button className="link-btn" onClick={onEditBudget}>
+            + תקציב
+          </button>
+        </div>
+      </div>
+    );
   return (
     <div className="money-box">
       <div className="money-row">
@@ -351,7 +380,7 @@ function FinishSheet({
         className="form"
         onSubmit={(e) => {
           e.preventDefault();
-          useApp.getState().finishList(chainId, mode, parseFloat(paid.replace(',', '.')) || undefined);
+          withUndo('הקנייה נשמרה בהיסטוריה', () => useApp.getState().finishList(chainId, mode, parseFloat(paid.replace(',', '.')) || undefined));
           navigate(`/c/${chainId}`);
         }}
       >
@@ -392,7 +421,13 @@ export function ShopRow({
 }) {
   return (
     <div className={`shop-row status-${item.status} ${highlight ? 'highlight' : ''}`}>
-      <button className="shop-main" onClick={onToggle}>
+      <button
+        className="shop-main"
+        onClick={() => {
+          haptic(item.status === 'bought' ? 8 : 20);
+          onToggle();
+        }}
+      >
         <span className="shop-check">{item.status === 'bought' ? '✓' : ''}</span>
         <span className="shop-name">
           {name}
@@ -441,6 +476,7 @@ function RouteList({
   route,
   rowFor,
   query,
+  hideBought,
   items,
   onToggle,
   onMissing,
@@ -449,6 +485,7 @@ function RouteList({
   route: Route;
   rowFor: (k: string) => { key: string; name: string; note?: string; product?: Product };
   query: string;
+  hideBought: boolean;
   items: Record<string, ListItem>;
   onToggle: (k: string) => void;
   onMissing: (k: string) => void;
@@ -456,7 +493,7 @@ function RouteList({
 }) {
   let heading: number | null = null;
   const nextIdx = route.stops.findIndex((s) => s.keys.some((k) => items[k]?.status === 'pending'));
-  const match = (k: string) => !query || rowFor(k).name.includes(query);
+  const match = (k: string) => (!query || rowFor(k).name.includes(query)) && !(hideBought && items[k]?.status === 'bought');
   return (
     <>
       <div className="route-summary">

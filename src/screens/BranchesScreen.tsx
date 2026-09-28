@@ -3,6 +3,7 @@ import { useApp } from '../store';
 import { CHAINS, type ChainId } from '../types';
 import { Empty, Header } from '../ui/components';
 import { confirmDialog, promptDialog } from '../ui/dialog';
+import { withUndo } from '../ui/toast';
 
 export default function BranchesScreen({ chainId }: { chainId: ChainId }) {
   const allBranches = useApp((s) => s.branches);
@@ -87,8 +88,8 @@ export default function BranchesScreen({ chainId }: { chainId: ChainId }) {
                     )}
                     <button
                       className="btn small ghost danger-text"
-                      onClick={async () => {
-                        if (await confirmDialog({ title: `מחיקת "${b.name}"`, message: 'הסניף והמפה שלו יימחקו.', confirmText: 'מחיקה', danger: true })) deleteBranch(b.id);
+                      onClick={() => {
+                        withUndo(`הסניף "${b.name}" נמחק`, () => deleteBranch(b.id));
                       }}
                     >
                       מחיקה

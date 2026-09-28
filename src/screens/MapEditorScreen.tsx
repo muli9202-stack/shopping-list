@@ -7,6 +7,7 @@ import { sampleMap } from '../route';
 import { CHAINS, MODES, MODE_IDS, type Branch, type CellKind, type ChainId, type MapCell, type StoreMap } from '../types';
 import { Empty, Header } from '../ui/components';
 import { confirmDialog, Sheet } from '../ui/dialog';
+import { withUndo } from '../ui/toast';
 
 type Tool = CellKind | 'assign';
 
@@ -166,7 +167,8 @@ export default function MapEditorScreen({ chainId, branchId }: { chainId: ChainI
             <button
               className="btn ghost danger-text small"
               onClick={async () => {
-                if (await confirmDialog({ title: 'איפוס המפה', message: 'כל הציור והשיבוצים יימחקו.', confirmText: 'איפוס', danger: true })) updateBranch(branchId, { map: undefined });
+                if (await confirmDialog({ title: 'איפוס המפה', message: 'כל הציור והשיבוצים יימחקו.', confirmText: 'איפוס', danger: true }))
+                  withUndo('המפה אופסה', () => updateBranch(branchId, { map: undefined }));
               }}
             >
               איפוס המפה

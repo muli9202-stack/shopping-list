@@ -5,6 +5,7 @@ import { formatDate } from '../stats';
 import { CHAINS, MODES, MODE_IDS, listKey, type ChainId, type HistoryEntry, type Mode } from '../types';
 import { Empty, Header } from '../ui/components';
 import { confirmDialog } from '../ui/dialog';
+import { withUndo } from '../ui/toast';
 
 /** "the week of 27.9–3.10" (Sunday to Saturday) or "September 2026". */
 function periodLabel(entry: HistoryEntry): string {
@@ -122,7 +123,7 @@ function HistoryCard({ entry, branchName, open, onToggle }: { entry: HistoryEntr
             <button
               className="btn ghost small danger-text"
               onClick={async () => {
-                if (await confirmDialog({ title: 'מחיקת הרשימה מההיסטוריה', confirmText: 'מחיקה', danger: true })) deleteHistory(entry.id);
+                withUndo('הקנייה נמחקה מההיסטוריה', () => deleteHistory(entry.id));
               }}
             >
               מחיקה מההיסטוריה

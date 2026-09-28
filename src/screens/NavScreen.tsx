@@ -8,6 +8,7 @@ import { describeLeg, finalHeading, planRoute, type Instruction, type Pt } from 
 import { CHAINS, MODES, type ChainId, type Mode } from '../types';
 import { Empty, Header } from '../ui/components';
 import { useWakeLock } from '../ui/useWakeLock';
+import { haptic } from '../ui/toast';
 import type { CameraMode, ShelfLabel, Store3D } from '../nav/Store3D';
 
 const ARROW: Record<Instruction['icon'], string> = { straight: '⬆', left: '⬅', right: '➡', back: '⤵', here: '📍' };
@@ -30,13 +31,12 @@ export default function NavScreen({ chainId, mode }: { chainId: ChainId; mode: M
   // Plan once over the full list so stop numbers stay stable while shopping.
   const route = useMemo(
     () => (branch?.map ? planRoute(branch.map, keys, products, categories) : null),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [branch?.map, keys.join('|')],
   );
   const pending = (k: string) => items[k]?.status === 'pending';
   const current = route ? route.stops.findIndex((s) => s.keys.some(pending)) : -1;
   const stopIndex = current === -1 ? (route?.stops.length ?? 0) : current;
-  const doneStops = useMemo(() => new Set(route?.stops.map((s, i) => (s.keys.some(pending) ? -1 : i)).filter((i) => i >= 0)), [route, items]); // eslint-disable-line react-hooks/exhaustive-deps
+  const doneStops = useMemo(() => new Set(route?.stops.map((s, i) => (s.keys.some(pending) ? -1 : i)).filter((i) => i >= 0)), [route, items]);
 
   const labels = useMemo<ShelfLabel[]>(() => {
     if (!branch?.map) return [];
@@ -72,7 +72,7 @@ export default function NavScreen({ chainId, mode }: { chainId: ChainId; mode: M
       viewRef.current?.dispose();
       viewRef.current = null;
     };
-  }, [route, branch?.map, labels]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [route, branch?.map, labels]);
 
   useEffect(() => {
     viewRef.current?.setProgress(stopIndex, doneStops);
@@ -96,7 +96,7 @@ export default function NavScreen({ chainId, mode }: { chainId: ChainId; mode: M
     u.lang = 'he-IL';
     speechSynthesis.cancel();
     speechSynthesis.speak(u);
-  }, [voice, current]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [voice, current]);
 
   const back = `/c/${chainId}/${mode}/shop`;
   if (!branch?.map || !route) {
@@ -180,7 +180,7 @@ export default function NavScreen({ chainId, mode }: { chainId: ChainId; mode: M
                 <button className="btn nav-missing" onClick={() => toggleStatus(chainId, mode, k, 'missing')}>
                   {items[k]?.status === 'missing' ? 'לא היה ✕' : 'לא היה'}
                 </button>
-                <button className="btn primary nav-check" onClick={() => toggleStatus(chainId, mode, k, 'bought')} aria-label="נקנה">
+                <button className="btn primary nav-check" onClick={() => (haptic(25), toggleStatus(chainId, mode, k, 'bought'))} aria-label="נקנה">
                   {items[k]?.status === 'bought' ? '✓ נקנה' : '✓'}
                 </button>
               </div>
