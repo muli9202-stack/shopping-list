@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { exportData, useApp } from '../store';
-import type { AppData } from '../types';
+import { AI_MODELS, type AppData } from '../types';
 import { Header } from '../ui/components';
 import { confirmDialog } from '../ui/dialog';
 
@@ -89,6 +89,19 @@ export default function SettingsScreen() {
             </button>
           </div>
         </label>
+        <label className="form">
+          מודל
+          <select className="input" value={settings.model} onChange={(e) => updateSettings({ model: e.target.value })}>
+            {AI_MODELS.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <p className="muted small">
+          מפתח אפשר ליצור ב-<a className="link" href="https://platform.claude.com/settings/keys" target="_blank" rel="noreferrer">platform.claude.com</a>. כל ניתוח עולה בדרך כלל כמה סנטים.
+        </p>
       </section>
 
       <section className="card">

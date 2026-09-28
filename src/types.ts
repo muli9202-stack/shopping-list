@@ -1,3 +1,5 @@
+import type { AiInsight } from './ai';
+
 export type ChainId = 'neto' | 'yesh';
 export type Mode = 'weekly' | 'monthly';
 
@@ -80,9 +82,16 @@ export interface AppData {
   history: HistoryEntry[];
   branches: Branch[];
   settings: Settings;
+  /** Last AI analysis per list key (chain:mode). */
+  aiInsights: Record<string, AiInsight>;
 }
 
 export const listKey = (chainId: ChainId, mode: Mode) => `${chainId}:${mode}`;
 
 export const isChainId = (v: string | undefined): v is ChainId => v === 'neto' || v === 'yesh';
 export const isMode = (v: string | undefined): v is Mode => v === 'weekly' || v === 'monthly';
+
+export const AI_MODELS = [
+  { id: 'claude-opus-5', label: 'Claude Opus 5 (מומלץ)' },
+  { id: 'claude-sonnet-5', label: 'Claude Sonnet 5 (זול יותר)' },
+];

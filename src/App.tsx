@@ -9,6 +9,8 @@ import CatalogScreen from './screens/CatalogScreen';
 import SelectScreen from './screens/SelectScreen';
 import ShopScreen from './screens/ShopScreen';
 import SettingsScreen from './screens/SettingsScreen';
+import AverageScreen from './screens/AverageScreen';
+import HistoryScreen from './screens/HistoryScreen';
 
 function useHydrated() {
   const [done, setDone] = useState(useApp.persist.hasHydrated());
@@ -42,6 +44,8 @@ export default function App() {
         <Route path="/c/:chain/catalog" element={<WithChain render={(c) => <CatalogScreen chainId={c} />} />} />
         <Route path="/c/:chain/:mode" element={<WithMode render={(c, m) => <SelectScreen chainId={c} mode={m} />} />} />
         <Route path="/c/:chain/:mode/shop" element={<WithMode render={(c, m) => <ShopScreen chainId={c} mode={m} />} />} />
+        <Route path="/c/:chain/:mode/average" element={<WithMode render={(c, m) => <AverageScreen chainId={c} mode={m} />} />} />
+        <Route path="/c/:chain/:mode/history" element={<WithMode render={(c, m) => <HistoryScreen chainId={c} mode={m} />} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <DialogHost />

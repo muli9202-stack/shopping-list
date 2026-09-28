@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom';
 import { useApp, useList } from '../store';
 import { buildSections } from '../catalog';
 import { CHAINS, CHAIN_IDS, MODES, type ChainId, type Mode } from '../types';
-import { Empty, Header, Stepper } from '../ui/components';
+import { Empty, Header, Stepper, Tile } from '../ui/components';
 import { confirmDialog } from '../ui/dialog';
 
 export default function SelectScreen({ chainId, mode }: { chainId: ChainId; mode: Mode }) {
   const categories = useApp((s) => s.categories);
   const products = useApp((s) => s.products);
   const list = useList(chainId, mode);
+  const historyCount = useApp((s) => s.history.filter((h) => h.chainId === chainId && h.mode === mode).length);
   const { toggleSelect, setQty, clearList, loadSampleCatalog, copyCatalog } = useApp.getState();
   const [query, setQuery] = useState('');
   const [onlySelected, setOnlySelected] = useState(false);
@@ -33,11 +34,33 @@ export default function SelectScreen({ chainId, mode }: { chainId: ChainId; mode
         subtitle={`${CHAINS[chainId].name} · סמן את מה שצריך ${period}`}
         back={`/c/${chainId}`}
         actions={
-          <Link to={`/c/${chainId}/catalog`} className="icon-btn" aria-label="עריכת המאגר">
-            ✎
-          </Link>
+          <>
+            <Link to={`/c/${chainId}/${mode}/history`} className="icon-btn" aria-label="היסטוריה">
+              📜
+            </Link>
+            <Link to={`/c/${chainId}/catalog`} className="icon-btn" aria-label="עריכת המאגר">
+              ✎
+            </Link>
+          </>
         }
       />
+
+      <div className="tiles quick-tiles">
+        <Tile
+          to={`/c/${chainId}/${mode}/shop`}
+          className="tile-small tile-accent"
+          icon="🛒"
+          title={`כניסה לרשימת הקניות שיצרת ${period}`}
+          subtitle={selectedCount ? `${selectedCount} מוצרים` : 'עדיין לא נבחרו מוצרים'}
+        />
+        <Tile
+          to={`/c/${chainId}/${mode}/average`}
+          className="tile-small tile-accent"
+          icon="📊"
+          title="כניסה לקנייה הממוצעת שלי"
+          subtitle={historyCount ? `מבוסס על ${historyCount} רשימות` : 'עדיין אין היסטוריה'}
+        />
+      </div>
 
       {!hasCatalog ? (
         <Empty icon="🧺" title="אין עדיין מוצרים במאגר">

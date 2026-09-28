@@ -793,3 +793,167 @@ textarea.input {
     opacity: 0;
   }
 }
+
+/* ---------- stage 2: history & average ---------- */
+.small {
+  font-size: 0.82rem;
+}
+.link {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.error-msg {
+  color: var(--danger);
+  font-weight: 500;
+}
+.quick-tiles {
+  margin-bottom: 14px;
+}
+.quick-tiles .tile-title {
+  font-size: 0.98rem;
+}
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 20px 4px 8px;
+}
+.section-head .section-title {
+  margin: 0;
+}
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 6px;
+  background: var(--surface);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.stat strong {
+  font-size: 1.4rem;
+  color: var(--accent);
+}
+.stat span {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.ai-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 2px solid var(--accent-soft);
+}
+.ai-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.ai-result p {
+  margin: 0 0 8px;
+}
+.ai-result h3 {
+  font-size: 0.95rem;
+  margin: 14px 0 6px;
+  color: var(--accent);
+}
+.basket {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+}
+.basket li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 2px;
+  border-bottom: 1px solid var(--border);
+}
+.basket li.gone {
+  opacity: 0.5;
+}
+.bullets {
+  margin: 0;
+  padding-inline-start: 20px;
+}
+.bullets li {
+  margin-bottom: 4px;
+}
+.stat-item {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.stat-item-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.stat-name {
+  font-weight: 500;
+}
+.freq-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+.freq-bar > div {
+  height: 100%;
+  background: var(--accent);
+}
+.history-card {
+  padding: 0;
+  overflow: hidden;
+}
+.history-card > .row {
+  padding: 0 16px 14px;
+}
+.history-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  background: none;
+  text-align: start;
+  cursor: pointer;
+}
+.history-items {
+  list-style: none;
+  margin: 0;
+  padding: 0 16px 10px;
+}
+.history-items li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+}
+.h-icon {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: var(--border);
+}
+.h-bought .h-icon {
+  background: var(--ok);
+  color: #fff;
+}
+.h-missing .h-icon {
+  background: var(--warn);
+  color: #fff;
+}

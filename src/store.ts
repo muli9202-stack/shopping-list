@@ -15,6 +15,7 @@ import {
 } from './types';
 import { SAMPLE_CATALOG } from './sampleCatalog';
 import { categoryPath } from './catalog';
+import type { AiInsight } from './ai';
 
 export const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
@@ -31,7 +32,8 @@ export const emptyData = (): AppData => ({
   lists: {},
   history: [],
   branches: [],
-  settings: { apiKey: '', model: 'claude-sonnet-5' },
+  settings: { apiKey: '', model: 'claude-opus-5' },
+  aiInsights: {},
 });
 
 const emptyList = (): ActiveList => ({ items: {}, branchId: null, startedAt: Date.now() });
@@ -69,6 +71,9 @@ interface Actions {
   clearList: (chainId: ChainId, mode: Mode) => void;
   finishList: (chainId: ChainId, mode: Mode) => void;
   deleteHistory: (id: string) => void;
+  /** Adds products to the active list, keeping items already there. */
+  mergeIntoList: (chainId: ChainId, mode: Mode, items: { productId: string; qty: number }[]) => void;
+  setAiInsight: (chainId: ChainId, mode: Mode, insight: AiInsight) => void;
 
   updateSettings: (patch: Partial<Settings>) => void;
   importData: (data: AppData) => void;
@@ -252,15 +257,35 @@ export const useApp = create<Store>()(
           }));
         },
         deleteHistory: (id) => set((s) => ({ history: s.history.filter((h) => h.id !== id) })),
+        mergeIntoList: (chainId, mode, items) => {
+          const known = new Set(get().products.map((p) => p.id));
+          updateList(chainId, mode, (l) => {
+            for (const { productId, qty } of items) {
+              if (known.has(productId) && !l.items[productId]) l.items[productId] = { qty: Math.max(1, Math.round(qty)), status: 'pending' };
+            }
+            return l;
+          });
+        },
+        setAiInsight: (chainId, mode, insight) =>
+          set((s) => ({ aiInsights: { ...s.aiInsights, [listKey(chainId, mode)]: insight } })),
 
         updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
-        importData: (data) => set({ ...emptyData(), ...data, settings: { ...emptyData().settings, ...data.settings } }),
+        importData: (data) => set({ ...emptyData(), ...data, aiInsights: data.aiInsights ?? {}, settings: { ...emptyData().settings, ...data.settings } }),
         resetAll: () => set(emptyData()),
       };
     },
     {
       name: 'shopping-list-data',
-      version: 1,
+      version: 2,
+      migrate: (persisted, version) => {
+        const data = persisted as AppData;
+        if (version < 2) {
+          data.aiInsights = {};
+          // v1 stored a default model the user never picked; move it to the current default.
+          if (data.settings?.model === 'claude-sonnet-5') data.settings.model = 'claude-opus-5';
+        }
+        return data as Store;
+      },
       storage: createJSONStorage(() => idbStorage),
       partialize: (s): AppData => ({
         version: 1,
@@ -270,6 +295,7 @@ export const useApp = create<Store>()(
         history: s.history,
         branches: s.branches,
         settings: s.settings,
+        aiInsights: s.aiInsights,
       }),
     },
   ),
@@ -285,6 +311,7 @@ export function exportData(): AppData {
     history: s.history,
     branches: s.branches,
     settings: { ...s.settings, apiKey: '' },
+    aiInsights: s.aiInsights,
   };
 }
 
