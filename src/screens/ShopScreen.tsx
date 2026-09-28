@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp, useList } from '../store';
 import { buildSections } from '../catalog';
-import { CHAINS, MODES, type ChainId, type ListItem, type Mode, type Product } from '../types';
+import { catKey, visibleKeys } from '../listView';
+import { CHAINS, MODES, type ChainId, type ListItem, type Mode } from '../types';
 import { Empty, Header } from '../ui/components';
 import { confirmDialog } from '../ui/dialog';
 
@@ -16,12 +17,26 @@ export default function ShopScreen({ chainId, mode }: { chainId: ChainId; mode: 
   const navigate = useNavigate();
   const [sort, setSort] = useState<SortMode>('category');
 
+  const [query, setQuery] = useState('');
+
   const items = list?.items ?? {};
+  const visible = useMemo(() => new Set(visibleKeys(items, categories, products)), [items, categories, products]);
+  const q = query.trim();
+  // Each section: an optional whole-category row ("something from dairy") plus the chosen products.
   const sections = useMemo(
-    () => buildSections(categories, products, chainId, (p) => !!items[p.id]).filter((s) => s.products.length),
-    [categories, products, chainId, items],
+    () =>
+      buildSections(categories, products, chainId, (p) => visible.has(p.id), true)
+        .map((sec) => {
+          const rows: { key: string; name: string; note?: string }[] = [];
+          if (sec.category && visible.has(catKey(sec.category.id)))
+            rows.push({ key: catKey(sec.category.id), name: sec.category.name, note: 'כל הקטגוריה' });
+          for (const p of sec.products) rows.push({ key: p.id, name: p.name });
+          return { sec, rows: q ? rows.filter((r) => r.name.includes(q)) : rows };
+        })
+        .filter((x) => x.rows.length),
+    [categories, products, chainId, visible, q],
   );
-  const all = Object.values(items);
+  const all = [...visible].map((k) => items[k]);
   const bought = all.filter((i) => i.status === 'bought').length;
   const missing = all.filter((i) => i.status === 'missing').length;
   const period = MODES[mode].period;
@@ -80,16 +95,22 @@ export default function ShopScreen({ chainId, mode }: { chainId: ChainId; mode: 
             </div>
           )}
 
-          {sections.map((sec) => (
+          <div className="search-row">
+            <input className="input search" type="search" placeholder="🔍 חיפוש ברשימה" value={query} onChange={(e) => setQuery(e.target.value)} />
+          </div>
+
+          {sections.length === 0 && <p className="muted center pad">לא נמצאו מוצרים ברשימה</p>}
+          {sections.map(({ sec, rows }) => (
             <section key={sec.category?.id ?? 'none'} className="shop-section">
               <div className="shop-section-title">{sec.path}</div>
-              {sec.products.map((p) => (
+              {rows.map((r) => (
                 <ShopRow
-                  key={p.id}
-                  product={p}
-                  item={items[p.id]}
-                  onToggle={() => toggleStatus(chainId, mode, p.id, 'bought')}
-                  onMissing={() => toggleStatus(chainId, mode, p.id, 'missing')}
+                  key={r.key}
+                  name={r.name}
+                  note={r.note}
+                  item={items[r.key]}
+                  onToggle={() => toggleStatus(chainId, mode, r.key, 'bought')}
+                  onMissing={() => toggleStatus(chainId, mode, r.key, 'missing')}
                 />
               ))}
             </section>
@@ -109,13 +130,15 @@ export default function ShopScreen({ chainId, mode }: { chainId: ChainId; mode: 
 }
 
 export function ShopRow({
-  product,
+  name,
+  note,
   item,
   onToggle,
   onMissing,
   highlight,
 }: {
-  product: Product;
+  name: string;
+  note?: string;
   item: ListItem;
   onToggle: () => void;
   onMissing: () => void;
@@ -125,7 +148,10 @@ export function ShopRow({
     <div className={`shop-row status-${item.status} ${highlight ? 'highlight' : ''}`}>
       <button className="shop-main" onClick={onToggle}>
         <span className="shop-check">{item.status === 'bought' ? '✓' : ''}</span>
-        <span className="shop-name">{product.name}</span>
+        <span className="shop-name">
+          {name}
+          {note && <span className="pick-path">{note}</span>}
+        </span>
         {item.qty > 1 && (
           <span className="shop-qty" dir="ltr">
             ×{item.qty}

@@ -39,6 +39,7 @@ export function computeAverage(entries: HistoryEntry[]): AverageSummary | null {
 
   for (const e of sorted) {
     for (const it of e.items) {
+      if (it.productId.startsWith('cat:')) continue;
       const s = map.get(it.productId) ?? {
         productId: it.productId,
         name: it.name,

@@ -16,6 +16,7 @@ import {
 import { SAMPLE_CATALOG } from './sampleCatalog';
 import { categoryPath } from './catalog';
 import type { AiInsight } from './ai';
+import { catIdOf, catKey, isCatKey, visibleKeys } from './listView';
 
 export const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
@@ -32,7 +33,7 @@ export const emptyData = (): AppData => ({
   lists: {},
   history: [],
   branches: [],
-  settings: { apiKey: '', model: 'claude-opus-5' },
+  settings: { apiKey: '', model: 'claude-opus-5', autoExcel: false },
   aiInsights: {},
 });
 
@@ -73,6 +74,10 @@ interface Actions {
   deleteHistory: (id: string) => void;
   /** Adds products to the active list, keeping items already there. */
   mergeIntoList: (chainId: ChainId, mode: Mode, items: { productId: string; qty: number }[]) => void;
+  /** Replaces the active list with the given items (used to repeat a past list). */
+  replaceList: (chainId: ChainId, mode: Mode, items: { productId: string; qty: number }[]) => void;
+  /** Adds a product or `cat:` key to the list if it isn't there yet. */
+  addToList: (chainId: ChainId, mode: Mode, key: string) => void;
   setAiInsight: (chainId: ChainId, mode: Mode, insight: AiInsight) => void;
 
   updateSettings: (patch: Partial<Settings>) => void;
@@ -120,7 +125,14 @@ export const useApp = create<Store>()(
                 }
               }
             }
+            const lists: Record<string, ActiveList> = {};
+            for (const [k, l] of Object.entries(s.lists)) {
+              const items = { ...l.items };
+              for (const id of doomed) delete items[catKey(id)];
+              lists[k] = { ...l, items };
+            }
             return {
+              lists,
               categories: s.categories.filter((c) => !doomed.has(c.id)),
               products: s.products.map((p) => (p.categoryId && doomed.has(p.categoryId) ? { ...p, categoryId: null } : p)),
             };
@@ -245,10 +257,15 @@ export const useApp = create<Store>()(
             mode,
             date: Date.now(),
             branchId: list.branchId,
-            items: Object.entries(list.items).flatMap(([productId, it]) => {
-              const p = byId.get(productId);
-              if (!p) return [];
-              return [{ productId, name: p.name, categoryPath: categoryPath(s.categories, p.categoryId), qty: it.qty, status: it.status }];
+            items: visibleKeys(list.items, s.categories, s.products).flatMap((key) => {
+              const it = list.items[key];
+              if (isCatKey(key)) {
+                const cat = s.categories.find((c) => c.id === catIdOf(key));
+                if (!cat) return [];
+                return [{ productId: key, name: cat.name, categoryPath: categoryPath(s.categories, cat.id), qty: it.qty, status: it.status }];
+              }
+              const p = byId.get(key)!;
+              return [{ productId: key, name: p.name, categoryPath: categoryPath(s.categories, p.categoryId), qty: it.qty, status: it.status }];
             }),
           };
           set((st) => ({
@@ -258,7 +275,7 @@ export const useApp = create<Store>()(
         },
         deleteHistory: (id) => set((s) => ({ history: s.history.filter((h) => h.id !== id) })),
         mergeIntoList: (chainId, mode, items) => {
-          const known = new Set(get().products.map((p) => p.id));
+          const known = new Set([...get().products.map((p) => p.id), ...get().categories.map((c) => catKey(c.id))]);
           updateList(chainId, mode, (l) => {
             for (const { productId, qty } of items) {
               if (known.has(productId) && !l.items[productId]) l.items[productId] = { qty: Math.max(1, Math.round(qty)), status: 'pending' };
@@ -266,6 +283,15 @@ export const useApp = create<Store>()(
             return l;
           });
         },
+        replaceList: (chainId, mode, items) => {
+          updateList(chainId, mode, (l) => ({ ...emptyList(), branchId: l.branchId }));
+          get().mergeIntoList(chainId, mode, items);
+        },
+        addToList: (chainId, mode, key) =>
+          updateList(chainId, mode, (l) => {
+            if (!l.items[key]) l.items[key] = { qty: 1, status: 'pending' };
+            return l;
+          }),
         setAiInsight: (chainId, mode, insight) =>
           set((s) => ({ aiInsights: { ...s.aiInsights, [listKey(chainId, mode)]: insight } })),
 

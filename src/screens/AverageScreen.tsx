@@ -77,7 +77,7 @@ export default function AverageScreen({ chainId, mode }: { chainId: ChainId; mod
         subtitle={`${CHAINS[chainId].name} · ${MODES[mode].name}`}
         back={back}
         actions={
-          <Link to={`/c/${chainId}/${mode}/history`} className="icon-btn" aria-label="היסטוריה">
+          <Link to={`/c/${chainId}/history`} className="icon-btn" aria-label="היסטוריה">
             📜
           </Link>
         }

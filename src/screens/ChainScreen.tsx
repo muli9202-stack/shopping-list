@@ -1,10 +1,13 @@
 import { useApp } from '../store';
 import { CHAINS, MODES, MODE_IDS, listKey, type ChainId } from '../types';
 import { Header, Tile } from '../ui/components';
+import { visibleKeys } from '../listView';
 
 export default function ChainScreen({ chainId }: { chainId: ChainId }) {
   const lists = useApp((s) => s.lists);
-  const productCount = useApp((s) => s.products.filter((p) => p.chainId === chainId).length);
+  const categories = useApp((s) => s.categories);
+  const products = useApp((s) => s.products);
+  const historyCount = useApp((s) => s.history.filter((h) => h.chainId === chainId).length);
   const chain = CHAINS[chainId];
 
   return (
@@ -12,7 +15,7 @@ export default function ChainScreen({ chainId }: { chainId: ChainId }) {
       <Header title={chain.name} subtitle="בחר סוג קנייה" back="/" />
       <div className="tiles tiles-big">
         {MODE_IDS.map((mode) => {
-          const n = Object.keys(lists[listKey(chainId, mode)]?.items ?? {}).length;
+          const n = visibleKeys(lists[listKey(chainId, mode)]?.items ?? {}, categories, products).length;
           return (
             <Tile
               key={mode}
@@ -20,14 +23,17 @@ export default function ChainScreen({ chainId }: { chainId: ChainId }) {
               className="tile-mode"
               icon={MODES[mode].emoji}
               title={MODES[mode].name}
-              subtitle={n ? `${n} מוצרים ברשימה של ${MODES[mode].period}` : 'אין רשימה פעילה'}
+              subtitle={n ? `${n} פריטים ברשימה של ${MODES[mode].period}` : 'אין רשימה פעילה'}
             />
           );
         })}
-      </div>
-      <h2 className="section-title">ניהול</h2>
-      <div className="tiles">
-        <Tile to={`/c/${chainId}/catalog`} className="tile-small" icon="📋" title="מאגר המוצרים" subtitle={`${productCount} מוצרים`} />
+        <Tile
+          to={`/c/${chainId}/history`}
+          className="tile-history"
+          icon="📜"
+          title="היסטוריה"
+          subtitle={historyCount ? `${historyCount} קניות שמורות` : 'עדיין אין קניות שמורות'}
+        />
       </div>
     </div>
   );

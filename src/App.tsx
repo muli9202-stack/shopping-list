@@ -3,9 +3,9 @@ import { HashRouter, Navigate, Route, Routes, useParams } from 'react-router-dom
 import { useApp } from './store';
 import { isChainId, isMode, type ChainId, type Mode } from './types';
 import { DialogHost } from './ui/dialog';
+import { startAutoBackup } from './autoBackup';
 import HomeScreen from './screens/HomeScreen';
 import ChainScreen from './screens/ChainScreen';
-import CatalogScreen from './screens/CatalogScreen';
 import SelectScreen from './screens/SelectScreen';
 import ShopScreen from './screens/ShopScreen';
 import SettingsScreen from './screens/SettingsScreen';
@@ -34,6 +34,9 @@ function WithMode({ render }: { render: (chainId: ChainId, mode: Mode) => ReactE
 
 export default function App() {
   const hydrated = useHydrated();
+  useEffect(() => {
+    if (hydrated) startAutoBackup();
+  }, [hydrated]);
   if (!hydrated) return <div className="splash">טוען…</div>;
   return (
     <HashRouter>
@@ -41,11 +44,10 @@ export default function App() {
         <Route path="/" element={<HomeScreen />} />
         <Route path="/settings" element={<SettingsScreen />} />
         <Route path="/c/:chain" element={<WithChain render={(c) => <ChainScreen chainId={c} />} />} />
-        <Route path="/c/:chain/catalog" element={<WithChain render={(c) => <CatalogScreen chainId={c} />} />} />
+        <Route path="/c/:chain/history" element={<WithChain render={(c) => <HistoryScreen chainId={c} />} />} />
         <Route path="/c/:chain/:mode" element={<WithMode render={(c, m) => <SelectScreen chainId={c} mode={m} />} />} />
         <Route path="/c/:chain/:mode/shop" element={<WithMode render={(c, m) => <ShopScreen chainId={c} mode={m} />} />} />
         <Route path="/c/:chain/:mode/average" element={<WithMode render={(c, m) => <AverageScreen chainId={c} mode={m} />} />} />
-        <Route path="/c/:chain/:mode/history" element={<WithMode render={(c, m) => <HistoryScreen chainId={c} mode={m} />} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <DialogHost />

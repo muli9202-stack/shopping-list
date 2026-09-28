@@ -52,7 +52,7 @@ export async function analyzeHistory(opts: {
     .map(
       (e, i) =>
         `רשימה ${i + 1} (${formatDate(e.date)}):\n` +
-        e.items.map((it) => `- ${it.name} [${it.productId}] ×${it.qty} ${it.status}`).join('\n'),
+        e.items.filter((it) => !it.productId.startsWith('cat:')).map((it) => `- ${it.name} [${it.productId}] ×${it.qty} ${it.status}`).join('\n'),
     )
     .join('\n\n');
   const catalogText = products

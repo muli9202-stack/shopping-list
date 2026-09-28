@@ -72,6 +72,8 @@ export interface Branch {
 export interface Settings {
   apiKey: string;
   model: string;
+  /** Download an Excel backup every hour while the app is open. */
+  autoExcel: boolean;
 }
 
 export interface AppData {

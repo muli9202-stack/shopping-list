@@ -1,8 +1,13 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { exportData, useApp } from '../store';
 import { AI_MODELS, type AppData } from '../types';
 import { Header } from '../ui/components';
 import { confirmDialog } from '../ui/dialog';
+import { downloadExcel, xlsxToData } from '../excel';
+import { listSnapshots, type Snapshot } from '../autoBackup';
+
+const fmt = (ts: number) =>
+  new Date(ts).toLocaleString('he-IL', { weekday: 'short', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 export default function SettingsScreen() {
   const settings = useApp((s) => s.settings);
@@ -11,30 +16,31 @@ export default function SettingsScreen() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState('');
   const [showKey, setShowKey] = useState(false);
+  const [snaps, setSnaps] = useState<Snapshot[]>([]);
 
-  const doExport = () => {
-    const blob = new Blob([JSON.stringify(exportData(), null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `shopping-list-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    setMsg('קובץ הגיבוי נשמר');
+  useEffect(() => {
+    listSnapshots().then(setSnaps);
+  }, []);
+
+  const restore = async (data: AppData, source: string) => {
+    if (data?.version !== 1 || !Array.isArray(data.products) || !Array.isArray(data.categories)) throw new Error('bad');
+    const ok = await confirmDialog({
+      title: 'שחזור מגיבוי',
+      message: `${source}: ${data.products.length} מוצרים ו-${data.history?.length ?? 0} קניות בהיסטוריה. כל הנתונים הנוכחיים יוחלפו.`,
+      confirmText: 'שחזור',
+      danger: true,
+    });
+    if (!ok) return;
+    importData({ ...data, settings: { ...settings, ...data.settings, apiKey: settings.apiKey || data.settings?.apiKey || '' } });
+    setMsg('הנתונים שוחזרו בהצלחה');
   };
 
   const doImport = async (file: File) => {
     try {
-      const data = JSON.parse(await file.text()) as AppData;
-      if (data.version !== 1 || !Array.isArray(data.products) || !Array.isArray(data.categories)) throw new Error('bad');
-      const ok = await confirmDialog({
-        title: 'שחזור מגיבוי',
-        message: `הקובץ מכיל ${data.products.length} מוצרים ו-${data.history?.length ?? 0} רשימות בהיסטוריה. כל הנתונים הנוכחיים יוחלפו.`,
-        confirmText: 'שחזור',
-        danger: true,
-      });
-      if (!ok) return;
-      importData({ ...data, settings: { ...data.settings, apiKey: settings.apiKey || data.settings?.apiKey || '' } });
-      setMsg('הנתונים שוחזרו בהצלחה');
+      const data = file.name.toLowerCase().endsWith('.json')
+        ? (JSON.parse(await file.text()) as AppData)
+        : xlsxToData(new Uint8Array(await file.arrayBuffer()));
+      await restore(data, 'הקובץ מכיל');
     } catch {
       setMsg('הקובץ אינו קובץ גיבוי תקין');
     }
@@ -45,21 +51,27 @@ export default function SettingsScreen() {
       <Header title="הגדרות" back="/" />
 
       <section className="card">
-        <h2>גיבוי ושחזור</h2>
+        <h2>גיבוי לאקסל</h2>
         <p className="muted">
-          כל הנתונים נשמרים במכשיר ({counts.p} מוצרים, {counts.h} רשימות בהיסטוריה). מומלץ לשמור גיבוי מדי פעם.
+          כל הנתונים נשמרים במכשיר ({counts.p} מוצרים, {counts.h} קניות בהיסטוריה). קובץ האקסל כולל את הרשימות, ההיסטוריה ורשימת המוצרים, ואפשר גם לשחזר ממנו.
         </p>
         <div className="stack">
-          <button className="btn primary" onClick={doExport}>
-            ⬇️ ייצוא גיבוי (JSON)
+          <button
+            className="btn primary"
+            onClick={() => {
+              downloadExcel(exportData());
+              setMsg('קובץ האקסל נשמר בהורדות');
+            }}
+          >
+            ⬇️ ייצוא לאקסל עכשיו
           </button>
           <button className="btn" onClick={() => fileRef.current?.click()}>
-            ⬆️ ייבוא מגיבוי
+            ⬆️ שחזור מקובץ גיבוי
           </button>
           <input
             ref={fileRef}
             type="file"
-            accept="application/json,.json"
+            accept=".xlsx,.json,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             hidden
             onChange={(e) => {
               const f = e.target.files?.[0];
@@ -68,7 +80,41 @@ export default function SettingsScreen() {
             }}
           />
         </div>
+        <label className="switch-row">
+          <input type="checkbox" checked={!!settings.autoExcel} onChange={(e) => updateSettings({ autoExcel: e.target.checked })} />
+          <span>
+            <strong>הורדת קובץ אקסל אוטומטית כל שעה</strong>
+            <span className="muted small"> כל עוד האפליקציה פתוחה. הדפדפן לא מאפשר לשמור קבצים כשהיא סגורה.</span>
+          </span>
+        </label>
         {msg && <p className="ok-msg">{msg}</p>}
+      </section>
+
+      <section className="card">
+        <h2>גיבויים אוטומטיים במכשיר</h2>
+        <p className="muted small">כל שעה (כשיש שינוי) נשמר עותק במכשיר. נשמרים 24 העותקים האחרונים.</p>
+        {snaps.length === 0 ? (
+          <p className="muted">עדיין אין גיבויים אוטומטיים.</p>
+        ) : (
+          <ul className="snap-list">
+            {snaps.map((sn) => (
+              <li key={sn.date}>
+                <span>
+                  {fmt(sn.date)}
+                  <span className="muted small"> · {sn.data.products.length} מוצרים</span>
+                </span>
+                <span className="row">
+                  <button className="btn small" onClick={() => downloadExcel(sn.data, new Date(sn.date))}>
+                    אקסל
+                  </button>
+                  <button className="btn small ghost" onClick={() => restore(sn.data, 'הגיבוי מכיל').catch(() => setMsg('הגיבוי פגום'))}>
+                    שחזור
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="card">
