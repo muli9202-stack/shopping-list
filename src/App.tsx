@@ -15,6 +15,8 @@ import InventoryScreen from './screens/InventoryScreen';
 import SpendingScreen from './screens/SpendingScreen';
 import CompareScreen from './screens/CompareScreen';
 import JoinScreen from './screens/JoinScreen';
+import BranchesScreen from './screens/BranchesScreen';
+import MapEditorScreen from './screens/MapEditorScreen';
 
 function useHydrated() {
   const [done, setDone] = useState(useApp.persist.hasHydrated());
@@ -36,6 +38,11 @@ function WithMode({ render }: { render: (chainId: ChainId, mode: Mode) => ReactE
   return isChainId(chain) && isMode(mode) ? render(chain, mode) : <Navigate to="/" replace />;
 }
 
+function BranchRoute({ chainId }: { chainId: ChainId }) {
+  const { branchId = '' } = useParams();
+  return <MapEditorScreen chainId={chainId} branchId={branchId} />;
+}
+
 export default function App() {
   const hydrated = useHydrated();
   useEffect(() => {
@@ -55,6 +62,8 @@ export default function App() {
         <Route path="/spending" element={<SpendingScreen />} />
         <Route path="/compare" element={<CompareScreen />} />
         <Route path="/c/:chain/inventory" element={<WithChain render={(c) => <InventoryScreen chainId={c} />} />} />
+        <Route path="/c/:chain/branches" element={<WithChain render={(c) => <BranchesScreen chainId={c} />} />} />
+        <Route path="/c/:chain/branches/:branchId" element={<WithChain render={(c) => <BranchRoute chainId={c} />} />} />
         <Route path="/c/:chain/history" element={<WithChain render={(c) => <HistoryScreen chainId={c} />} />} />
         <Route path="/c/:chain/:mode" element={<WithMode render={(c, m) => <SelectScreen chainId={c} mode={m} />} />} />
         <Route path="/c/:chain/:mode/shop" element={<WithMode render={(c, m) => <ShopScreen chainId={c} mode={m} />} />} />

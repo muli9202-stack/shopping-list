@@ -12,6 +12,7 @@ export default function ChainScreen({ chainId }: { chainId: ChainId }) {
   const trackedProducts = products.filter((p) => p.chainId === chainId && p.target);
   const tracked = trackedProducts.length;
   const short = trackedProducts.filter((p) => (stock[p.id] ?? 0) < p.target!).length;
+  const branchCount = useApp((s) => s.branches.filter((b) => b.chainId === chainId).length);
   const chain = CHAINS[chainId];
 
   return (
@@ -31,6 +32,13 @@ export default function ChainScreen({ chainId }: { chainId: ChainId }) {
             />
           );
         })}
+        <Tile
+          to={`/c/${chainId}/branches`}
+          className="tile-history"
+          icon="🗺️"
+          title="סניפים ומפות"
+          subtitle={branchCount ? `${branchCount} סניפים` : 'להוספת סניף ומפה לסידור לפי מסלול'}
+        />
         <Tile
           to={`/c/${chainId}/inventory`}
           className="tile-history"

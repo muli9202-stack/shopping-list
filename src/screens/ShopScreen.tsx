@@ -1,8 +1,9 @@
-import { lazy, Suspense, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useApp, useList } from '../store';
 import { buildSections } from '../catalog';
-import { catKey, visibleKeys } from '../listView';
+import { catIdOf, catKey, isCatKey, visibleKeys } from '../listView';
+import { describeLeg, finalHeading, planRoute, type Route } from '../route';
 import { compareWithChain, fmtMoney, listTotals } from '../money';
 import { CHAINS, CHAIN_IDS, MODES, type ChainId, type ListItem, type Mode, type Product } from '../types';
 import { Empty, Header } from '../ui/components';
@@ -13,13 +14,38 @@ const Scanner = lazy(() => import('../ui/Scanner'));
 
 type SortMode = 'category' | 'route';
 
+const readSort = (): SortMode | null => {
+  try {
+    return localStorage.getItem('shop-sort') as SortMode | null;
+  } catch {
+    return null;
+  }
+};
+
+/** One cell ≈ 1.2 m of floor. */
+const METERS_PER_CELL = 1.2;
+
 export default function ShopScreen({ chainId, mode }: { chainId: ChainId; mode: Mode }) {
   const categories = useApp((s) => s.categories);
   const products = useApp((s) => s.products);
   const budget = useApp((s) => s.budgets[mode]);
   const list = useList(chainId, mode);
   const { toggleStatus, setBudget } = useApp.getState();
-  const [sort, setSort] = useState<SortMode>('category');
+  const branch = useApp((s) => s.branches.find((b) => b.id === list?.branchId));
+  const [params] = useSearchParams();
+  const [sort, setSortState] = useState<SortMode>(() => (params.get('branch') || readSort() === 'route' ? 'route' : 'category'));
+  const setSort = (m: SortMode) => {
+    setSortState(m);
+    try {
+      localStorage.setItem('shop-sort', m);
+    } catch {
+      /* storage unavailable */
+    }
+  };
+  useEffect(() => {
+    const b = params.get('branch');
+    if (b) useApp.getState().setListBranch(chainId, mode, b);
+  }, [params, chainId, mode]);
   const [query, setQuery] = useState('');
   const [scanning, setScanning] = useState(false);
   const [scanMsg, setScanMsg] = useState('');
@@ -51,6 +77,20 @@ export default function ShopScreen({ chainId, mode }: { chainId: ChainId; mode: 
   const period = MODES[mode].period;
   const totals = useMemo(() => listTotals(visibleList, items, products), [visibleList, items, products]);
   const otherChain = CHAIN_IDS.find((c) => c !== chainId)!;
+  const route = useMemo(
+    () => (sort === 'route' && branch?.map ? planRoute(branch.map, visibleList, products, categories) : null),
+    // Plan over the whole list so the order stays put while items get ticked.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sort, branch?.map, visibleList.join('|'), products, categories],
+  );
+  const rowFor = (k: string) => {
+    if (isCatKey(k)) {
+      const c = categories.find((x) => x.id === catIdOf(k));
+      return { key: k, name: c?.name ?? '', note: 'כל הקטגוריה' as string | undefined, product: undefined as Product | undefined };
+    }
+    const p = products.find((x) => x.id === k);
+    return { key: k, name: p?.name ?? '', note: undefined as string | undefined, product: p };
+  };
   const compare = useMemo(() => compareWithChain(visibleList, items, products, otherChain), [visibleList, items, products, otherChain]);
 
   const onScan = (code: string) => {
@@ -136,33 +176,51 @@ export default function ShopScreen({ chainId, mode }: { chainId: ChainId; mode: 
             </button>
           </div>
 
-          {sort === 'route' && (
-            <div className="notice">
-              הסידור לפי מסלול יעבוד אחרי שתגדיר סניף ומפת חנות (שלב 3). בינתיים הרשימה מוצגת לפי קטגוריות.
-            </div>
-          )}
+          <BranchPicker chainId={chainId} mode={mode} branchId={list?.branchId ?? null} />
 
           <div className="search-row">
             <input className="input search" type="search" placeholder="🔍 חיפוש ברשימה" value={query} onChange={(e) => setQuery(e.target.value)} />
           </div>
 
-          {sections.length === 0 && <p className="muted center pad">לא נמצאו מוצרים ברשימה</p>}
-          {sections.map(({ sec, rows }) => (
-            <section key={sec.category?.id ?? 'none'} className="shop-section">
-              <div className="shop-section-title">{sec.path}</div>
-              {rows.map((r) => (
-                <ShopRow
-                  key={r.key}
-                  name={r.name}
-                  note={r.note}
-                  price={r.product?.price}
-                  item={items[r.key]}
-                  onToggle={() => toggleStatus(chainId, mode, r.key, 'bought')}
-                  onMissing={() => toggleStatus(chainId, mode, r.key, 'missing')}
-                />
+          {sort === 'route' && branch?.map && route ? (
+            <RouteList
+              route={route}
+              rowFor={rowFor}
+              query={q}
+              items={items}
+              onToggle={(k) => toggleStatus(chainId, mode, k, 'bought')}
+              onMissing={(k) => toggleStatus(chainId, mode, k, 'missing')}
+              navTo={`/c/${chainId}/${mode}/nav`}
+            />
+          ) : (
+            <>
+              {sort === 'route' && (
+                <div className="notice">
+                  {!branch
+                    ? 'כדי לסדר לפי מסלול, בחר למעלה באיזה סניף אתה נמצא.'
+                    : 'לסניף הזה עדיין אין מפה. '}
+                  {branch && !branch.map && <Link className="link" to={`/c/${chainId}/branches/${branch.id}`}>ליצירת מפה</Link>}
+                </div>
+              )}
+              {sections.length === 0 && <p className="muted center pad">לא נמצאו מוצרים ברשימה</p>}
+              {sections.map(({ sec, rows }) => (
+                <section key={sec.category?.id ?? 'none'} className="shop-section">
+                  <div className="shop-section-title">{sec.path}</div>
+                  {rows.map((r) => (
+                    <ShopRow
+                      key={r.key}
+                      name={r.name}
+                      note={r.note}
+                      price={r.product?.price}
+                      item={items[r.key]}
+                      onToggle={() => toggleStatus(chainId, mode, r.key, 'bought')}
+                      onMissing={() => toggleStatus(chainId, mode, r.key, 'missing')}
+                    />
+                  ))}
+                </section>
               ))}
-            </section>
-          ))}
+            </>
+          )}
         </>
       )}
 
@@ -351,5 +409,96 @@ export function ShopRow({
         {item.status === 'missing' ? 'לא היה במלאי ✕' : 'לא היה במלאי'}
       </button>
     </div>
+  );
+}
+
+function BranchPicker({ chainId, mode, branchId }: { chainId: ChainId; mode: Mode; branchId: string | null }) {
+  const branches = useApp((s) => s.branches);
+  const mine = branches.filter((b) => b.chainId === chainId);
+  if (!mine.length)
+    return (
+      <div className="branch-picker muted small">
+        🏬 אין עדיין סניפים. <Link className="link" to={`/c/${chainId}/branches`}>הוספת סניף ומפה</Link>
+      </div>
+    );
+  return (
+    <label className="branch-picker">
+      <span>🏬 אני בסניף</span>
+      <select className="input" value={branchId ?? ''} onChange={(e) => useApp.getState().setListBranch(chainId, mode, e.target.value || null)}>
+        <option value="">בחר סניף…</option>
+        {mine.map((b) => (
+          <option key={b.id} value={b.id}>
+            {b.name}
+            {b.map ? '' : ' (בלי מפה)'}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function RouteList({
+  route,
+  rowFor,
+  query,
+  items,
+  onToggle,
+  onMissing,
+  navTo,
+}: {
+  route: Route;
+  rowFor: (k: string) => { key: string; name: string; note?: string; product?: Product };
+  query: string;
+  items: Record<string, ListItem>;
+  onToggle: (k: string) => void;
+  onMissing: (k: string) => void;
+  navTo: string;
+}) {
+  let heading: number | null = null;
+  const nextIdx = route.stops.findIndex((s) => s.keys.some((k) => items[k]?.status === 'pending'));
+  const match = (k: string) => !query || rowFor(k).name.includes(query);
+  return (
+    <>
+      <div className="route-summary">
+        <span>
+          🧭 {route.stops.length} עצירות · כ-{Math.round(route.length * METERS_PER_CELL)} מ׳ הליכה
+        </span>
+        <Link className="btn primary small" to={navTo}>
+          ניווט תלת־ממדי
+        </Link>
+      </div>
+      <ol className="route-list">
+        {route.stops.map((stop, i) => {
+          const steps = describeLeg(stop.leg, stop.shelf, heading);
+          heading = finalHeading(stop.leg);
+          const keys = stop.keys.filter(match);
+          if (!keys.length) return null;
+          const done = stop.keys.every((k) => items[k]?.status !== 'pending');
+          return (
+            <li key={i} className={`route-stop ${done ? 'done' : ''} ${i === nextIdx ? 'next' : ''}`}>
+              <div className="stop-head">
+                <span className="stop-num">{i + 1}</span>
+                <span className="stop-dir">{steps.map((s) => s.text).join(' · ')}</span>
+              </div>
+              {keys.map((k) => {
+                const r = rowFor(k);
+                return (
+                  <ShopRow key={k} name={r.name} note={r.note} price={r.product?.price} item={items[k]} onToggle={() => onToggle(k)} onMissing={() => onMissing(k)} />
+                );
+              })}
+            </li>
+          );
+        })}
+      </ol>
+      {route.unplaced.filter(match).length > 0 && (
+        <section className="shop-section">
+          <div className="shop-section-title">לא מופיע במפה של הסניף</div>
+          {route.unplaced.filter(match).map((k) => {
+            const r = rowFor(k);
+            return <ShopRow key={k} name={r.name} note={r.note} price={r.product?.price} item={items[k]} onToggle={() => onToggle(k)} onMissing={() => onMissing(k)} />;
+          })}
+        </section>
+      )}
+    </>
   );
 }

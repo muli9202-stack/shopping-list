@@ -3,6 +3,7 @@ import { persist, createJSONStorage, type StateStorage } from 'zustand/middlewar
 import { get as idbGet, set as idbSet, del as idbDel } from 'idb-keyval';
 import {
   type ActiveList,
+  type Branch,
   type AppData,
   type Category,
   type ChainId,
@@ -74,6 +75,9 @@ interface Actions {
   /** Sets an item's status, adding it to the list first if needed. */
   setStatus: (chainId: ChainId, mode: Mode, key: string, status: ItemStatus) => void;
   setListBranch: (chainId: ChainId, mode: Mode, branchId: string | null) => void;
+  addBranch: (chainId: ChainId, name: string, address?: string) => string;
+  updateBranch: (id: string, patch: Partial<Omit<Branch, 'id' | 'chainId'>>) => void;
+  deleteBranch: (id: string) => void;
   clearList: (chainId: ChainId, mode: Mode) => void;
   /**
    * Saves the list to history and starts a new one. Items that were out of
@@ -266,6 +270,17 @@ export const useApp = create<Store>()(
             return l;
           }),
         setListBranch: (chainId, mode, branchId) => updateList(chainId, mode, (l) => ({ ...l, branchId })),
+        addBranch: (chainId, name, address = '') => {
+          const id = uid();
+          set((s) => ({ branches: [...s.branches, { id, chainId, name, address }] }));
+          return id;
+        },
+        updateBranch: (id, patch) => set((s) => ({ branches: s.branches.map((b) => (b.id === id ? { ...b, ...patch } : b)) })),
+        deleteBranch: (id) =>
+          set((s) => ({
+            branches: s.branches.filter((b) => b.id !== id),
+            lists: Object.fromEntries(Object.entries(s.lists).map(([k, l]) => [k, l.branchId === id ? { ...l, branchId: null } : l])),
+          })),
         clearList: (chainId, mode) => updateList(chainId, mode, () => emptyList()),
         finishList: (chainId, mode, paid) => {
           const s = get();

@@ -72,11 +72,31 @@ export interface HistoryEntry {
   paid?: number;
 }
 
+export type CellKind = 'floor' | 'shelf' | 'entrance' | 'checkout' | 'wall';
+
+export interface MapCell {
+  kind: CellKind;
+  /** Categories stocked on this shelf (subcategories included). */
+  catIds?: string[];
+  /** Specific products placed here; they override their category's place. */
+  productIds?: string[];
+  /** Optional short label, e.g. an aisle number. */
+  label?: string;
+}
+
+export interface StoreMap {
+  rows: number;
+  cols: number;
+  /** Keyed "row,col"; missing cells are walkable floor. */
+  cells: Record<string, MapCell>;
+}
+
 export interface Branch {
   id: string;
   chainId: ChainId;
   name: string;
   address: string;
+  map?: StoreMap;
 }
 
 export interface Settings {
