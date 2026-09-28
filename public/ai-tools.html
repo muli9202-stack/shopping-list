@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>הכלים שלי</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&family=Rubik:wght@500;700;800&display=swap">
+<style>
+/* Layout: one launcher board — header with search + add, then a wrapping grid of equal tiles. */
+:root {
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --ink: #16202b;
+  --muted: #5b6875;
+  --line: #d7dde3;
+  --accent: #0f766e;
+  --accent-ink: #ffffff;
+  --danger: #b42318;
+  --shadow: 0 1px 2px rgba(22,32,43,.06), 0 6px 18px rgba(22,32,43,.07);
+  --font-display: "Rubik", "Heebo", system-ui, sans-serif;
+  --font-body: "Heebo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --radius: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f151b; --surface: #18212a; --ink: #e6ecf1; --muted: #93a1ae; --line: #2a3642;
+    --accent: #2dd4bf; --accent-ink: #062521; --danger: #f97066;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f151b; --surface: #18212a; --ink: #e6ecf1; --muted: #93a1ae; --line: #2a3642;
+  --accent: #2dd4bf; --accent-ink: #062521; --danger: #f97066;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+}
+.wrap { max-width: 1120px; margin: 0 auto; padding: 24px 16px 48px; }
+header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin-bottom: 20px; }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: 1.9rem; margin: 0; text-wrap: balance; }
+.count { color: var(--muted); font-size: .9rem; }
+.tools { display: flex; gap: 10px; flex-wrap: wrap; margin-inline-start: auto; }
+input[type="search"], .field input, .field textarea {
+  font: inherit; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; min-width: 0;
+}
+input[type="search"] { width: 220px; max-width: 100%; }
+button { font: inherit; cursor: pointer; }
+.btn {
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  border-radius: 10px; padding: 9px 16px; font-weight: 500;
+}
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+.btn.danger { color: var(--danger); }
+:is(button, a, input, textarea):focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+.tile { position: relative; }
+.tile a {
+  display: flex; flex-direction: column; gap: 10px; height: 100%;
+  padding: 16px 16px 18px; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow); color: inherit; text-decoration: none;
+  transition: transform .15s ease, border-color .15s ease;
+}
+.tile a:hover { transform: translateY(-2px); border-color: var(--accent); }
+.mono {
+  width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; color: #fff;
+  background: hsl(var(--h) 55% 42%);
+}
+.name { font-family: var(--font-display); font-weight: 700; font-size: 1.12rem; direction: ltr; text-align: right; overflow-wrap: anywhere; }
+.desc { color: var(--muted); font-size: .92rem; overflow-wrap: anywhere; }
+.host { margin-top: auto; font-size: .78rem; color: var(--muted); direction: ltr; text-align: right; opacity: .8; overflow-wrap: anywhere; }
+.edit {
+  position: absolute; top: 12px; left: 12px; width: 34px; height: 34px; border-radius: 9px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+  display: grid; place-items: center;
+}
+.edit:hover { color: var(--accent); border-color: var(--accent); }
+.empty { color: var(--muted); padding: 32px 0; text-align: center; }
+
+dialog {
+  border: none; border-radius: 16px; padding: 0; width: min(440px, calc(100vw - 32px));
+  background: var(--surface); color: var(--ink); box-shadow: 0 20px 60px rgba(0,0,0,.35);
+}
+dialog::backdrop { background: rgba(10,16,22,.5); }
+form.sheet { display: flex; flex-direction: column; gap: 14px; padding: 22px; }
+form.sheet h2 { font-family: var(--font-display); margin: 0; font-size: 1.3rem; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-weight: 500; font-size: .9rem; }
+.field input[dir="ltr"] { text-align: left; }
+.field textarea { resize: vertical; min-height: 64px; }
+.err { color: var(--danger); font-size: .88rem; min-height: 1.2em; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.actions .spacer { flex: 1; }
+.confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--danger); font-size: .9rem; }
+.toast {
+  position: fixed; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 10px; font-weight: 500;
+}
+@media (max-width: 520px) {
+  h1 { font-size: 1.5rem; }
+  .tools { width: 100%; margin-inline-start: 0; }
+  input[type="search"] { flex: 1; width: auto; }
+  .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tile a { padding: 12px; }
+  .host { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .tile a { transition: none; } .tile a:hover { transform: none; } }
+</style>
+
+<div class="wrap" dir="rtl" lang="he">
+  <header>
+    <div>
+      <h1>הכלים שלי</h1>
+      <div class="count" id="count"></div>
+    </div>
+    <div class="tools">
+      <input type="search" id="q" placeholder="חיפוש כלי…" aria-label="חיפוש כלי">
+      <button class="btn primary" id="addBtn" type="button">+ הוספת אפליקציה</button>
+    </div>
+  </header>
+  <main class="grid" id="grid"></main>
+  <p class="empty" id="empty" hidden>לא נמצאו כלים</p>
+</div>
+
+<dialog id="dlg" dir="rtl" lang="he">
+  <form class="sheet" id="form" novalidate>
+    <h2 id="dlgTitle">הוספת אפליקציה</h2>
+    <div class="field">
+      <label for="fUrl">קישור</label>
+      <input id="fUrl" dir="ltr" type="url" inputmode="url" placeholder="https://example.com" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="fName">שם האפליקציה (באנגלית)</label>
+      <input id="fName" dir="ltr" type="text" placeholder="My App" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="fDesc">מה היא עושה</label>
+      <textarea id="fDesc" placeholder="תיאור קצר"></textarea>
+    </div>
+    <div class="err" id="err" role="alert"></div>
+    <div class="confirm" id="confirmRow" hidden>
+      <span>למחוק את האפליקציה?</span>
+      <button class="btn danger" type="button" id="yesDel">כן, למחוק</button>
+      <button class="btn" type="button" id="noDel">ביטול</button>
+    </div>
+    <div class="actions">
+      <button class="btn primary" type="submit" id="saveBtn">שמירה</button>
+      <button class="btn" type="button" id="cancelBtn">ביטול</button>
+      <span class="spacer"></span>
+      <button class="btn danger" type="button" id="delBtn">מחיקה</button>
+    </div>
+  </form>
+</dialog>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function () {
+  const KEY = 'ai-tools-v1';
+  const DEFAULTS = [
+    ['Claude', "צ'אט AI של Anthropic", 'https://claude.ai'],
+    ['Gemini', "צ'אט AI של גוגל", 'https://gemini.google.com'],
+    ['ChatGPT', "צ'אט AI של OpenAI", 'https://chatgpt.com'],
+    ['Claude Code', 'עוזר תכנות', 'https://code.claude.com/docs/en/setup'],
+    ['Google AI Studio', 'סטודיו AI ובונה אפליקציות של גוגל', 'https://aistudio.google.com/apps'],
+    ['MongoDB Atlas', 'מסד נתונים בענן', 'https://www.mongodb.com/atlas'],
+    ['Stitch', 'מעצב מסכים של גוגל', 'https://stitch.withgoogle.com'],
+    ['Pomelli', 'יוצר פרסומות של גוגל', 'https://labs.google.com/pomelli'],
+    ['Opal', 'בונה כלי AI בלי קוד', 'https://opal.withgoogle.com'],
+    ['NotebookLM', 'עוזר מחקר, למידה ופודקאסטים', 'https://notebooklm.google.com'],
+    ['Mixboard', 'לוח השראה ועיצוב', 'https://labs.google.com/mixboard'],
+    ['Learn Your Way', 'לימוד מותאם אישית', 'https://learnyourway.withgoogle.com'],
+    ['neaPay', 'מחולל מספרי כרטיס לבדיקות', 'https://neapay.com/online-tools/credit-card-number-generator-validator.html'],
+    ['Captions', 'אווטאר וכתוביות לסרטונים', 'https://www.captions.ai'],
+    ['FacePoke', 'מזיז הבעות פנים בתמונה', 'https://huggingface.co/spaces/jbilcke-hf/FacePoke'],
+    ['Cartwheel', 'אנימציות תלת־ממד מטקסט', 'https://getcartwheel.com'],
+    ['2Wai', "צ'אט עם אווטארים של אנשים", 'https://2wai.ai'],
+    ['Cluely', 'עוזר AI נסתר לשיחות', 'https://cluely.com'],
+    ['Google Vids', 'יוצר סרטונים של גוגל', 'https://vids.google.com'],
+    ['Cadabra', 'יוצר סרטים בעברית', 'https://www.livinginmovie.com'],
+    ['Lovable', 'בונה אתרים ואפליקציות מטקסט', 'https://lovable.dev'],
+    ['Illusion Diffusion', 'תמונות אשליה אופטית', 'https://huggingface.co/spaces/AP123/IllusionDiffusion'],
+    ['Codex', 'עוזר תכנות של OpenAI', 'https://chatgpt.com/codex'],
+    ['Perplexity', 'מנוע חיפוש חכם', 'https://www.perplexity.ai'],
+    ['Grok', "צ'אט AI של xAI", 'https://grok.com'],
+    ['ElevenLabs', 'מחולל קולות וקריינות', 'https://elevenlabs.io'],
+  ].map(([name, desc, url], i) => ({ id: 'd' + i, name, desc, url }));
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) { const v = JSON.parse(raw); if (Array.isArray(v)) return v; }
+    } catch (e) {}
+    return DEFAULTS.map(t => ({ ...t }));
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(apps)); } catch (e) {} }
+
+  let apps = load();
+  let editingId = null;
+  const $ = id => document.getElementById(id);
+  const grid = $('grid'), dlg = $('dlg'), form = $('form');
+
+  function hue(s) { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) % 360; return h; }
+  function host(u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return u; } }
+  function initials(n) {
+    const w = n.trim().split(/\s+/).filter(Boolean);
+    return ((w[0] || '?')[0] + (w[1] ? w[1][0] : '')).toUpperCase();
+  }
+  function normUrl(u) {
+    u = u.trim();
+    if (!u) return '';
+    if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+    try { const x = new URL(u); return x.hostname.includes('.') ? x.href : ''; } catch (e) { return ''; }
+  }
+
+  function render() {
+    const q = $('q').value.trim().toLowerCase();
+    const list = apps.filter(a => !q || (a.name + ' ' + a.desc + ' ' + a.url).toLowerCase().includes(q));
+    grid.replaceChildren(...list.map(a => {
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      const link = document.createElement('a');
+      link.href = a.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+      const mono = document.createElement('div');
+      mono.className = 'mono'; mono.style.setProperty('--h', hue(a.name)); mono.textContent = initials(a.name);
+      mono.setAttribute('aria-hidden', 'true');
+      const name = document.createElement('div'); name.className = 'name'; name.textContent = a.name;
+      const desc = document.createElement('div'); desc.className = 'desc'; desc.textContent = a.desc;
+      const h = document.createElement('div'); h.className = 'host'; h.textContent = host(a.url);
+      link.append(mono, name, desc, h);
+      const edit = document.createElement('button');
+      edit.type = 'button'; edit.className = 'edit'; edit.title = 'עריכה';
+      edit.setAttribute('aria-label', 'עריכת ' + a.name);
+      edit.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+      edit.addEventListener('click', () => openDialog(a.id));
+      tile.append(link, edit);
+      return tile;
+    }));
+    $('empty').hidden = list.length > 0;
+    $('count').textContent = apps.length + ' כלים · לחיצה על ריבוע פותחת את האפליקציה';
+  }
+
+  function openDialog(id) {
+    editingId = id;
+    const a = apps.find(x => x.id === id);
+    $('dlgTitle').textContent = a ? 'עריכת אפליקציה' : 'הוספת אפליקציה';
+    $('fUrl').value = a ? a.url : '';
+    $('fName').value = a ? a.name : '';
+    $('fDesc').value = a ? a.desc : '';
+    $('err').textContent = '';
+    $('delBtn').hidden = !a;
+    $('confirmRow').hidden = true;
+    dlg.showModal();
+    (a ? $('fName') : $('fUrl')).focus();
+  }
+
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; }, 2200);
+  }
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const url = normUrl($('fUrl').value);
+    const name = $('fName').value.trim();
+    const desc = $('fDesc').value.trim();
+    if (!url) { $('err').textContent = 'צריך להכניס קישור תקין, למשל https://example.com'; $('fUrl').focus(); return; }
+    if (!name) { $('err').textContent = 'צריך להכניס שם לאפליקציה'; $('fName').focus(); return; }
+    const a = apps.find(x => x.id === editingId);
+    if (a) { Object.assign(a, { url, name, desc }); toast('השינויים נשמרו'); }
+    else { apps.push({ id: 'u' + Date.now(), url, name, desc }); toast('האפליקציה נוספה'); }
+    save(); render(); dlg.close();
+  });
+  $('cancelBtn').addEventListener('click', () => dlg.close());
+  $('delBtn').addEventListener('click', () => { $('confirmRow').hidden = false; });
+  $('noDel').addEventListener('click', () => { $('confirmRow').hidden = true; });
+  $('yesDel').addEventListener('click', () => {
+    apps = apps.filter(x => x.id !== editingId);
+    save(); render(); dlg.close(); toast('האפליקציה נמחקה');
+  });
+  $('addBtn').addEventListener('click', () => openDialog(null));
+  $('q').addEventListener('input', render);
+  render();
+})();
+</script>
+</body>
+</html>
