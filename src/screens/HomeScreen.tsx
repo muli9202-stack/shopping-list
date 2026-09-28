@@ -3,11 +3,14 @@ import { useApp } from '../store';
 import { dueToday } from '../reminder';
 import { CHAINS, CHAIN_IDS, MODES } from '../types';
 import { Tile } from '../ui/components';
+import { useSyncStatus } from '../syncStatus';
 
 export default function HomeScreen() {
   const products = useApp((s) => s.products);
   const reminder = useApp((s) => s.settings.reminder);
   const due = dueToday(reminder);
+  const syncOn = useApp((s) => !!s.settings.sync?.enabled);
+  const status = useSyncStatus((s) => s.status);
   return (
     <div className="page">
       <header className="home-head">
@@ -15,9 +18,16 @@ export default function HomeScreen() {
           <h1>רשימת הקניות שלי</h1>
           <p className="muted">באיזו רשת קונים היום?</p>
         </div>
-        <Link to="/settings" className="icon-btn" aria-label="הגדרות">
-          ⚙️
-        </Link>
+        <div className="row">
+          {syncOn && (
+            <Link to="/settings" className={`sync-dot s-${status}`} title="רשימה משותפת">
+              {status === 'online' ? '☁️✓' : status === 'error' ? '☁️⚠' : '☁️…'}
+            </Link>
+          )}
+          <Link to="/settings" className="icon-btn" aria-label="הגדרות">
+            ⚙️
+          </Link>
+        </div>
       </header>
       {due && <div className="reminder-banner">🔔 היום יום {MODES[due].name}: הגיע הזמן להכין רשימה</div>}
       <div className="tiles tiles-big">

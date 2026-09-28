@@ -17,3 +17,21 @@ npm run build    # בנייה לתיקיית dist
 
 כל הנתונים נשמרים במכשיר (IndexedDB). כל שעה נשמר גיבוי אוטומטי במכשיר, ובמסך ההגדרות אפשר לייצא לאקסל
 (כולל הורדה אוטומטית כל שעה כשהאפליקציה פתוחה) ולשחזר מקובץ האקסל.
+
+## רשימה משותפת (Firebase)
+
+הסנכרון בין טלפונים עובד מול פרויקט Firebase של המשתמש. ההוראות להגדרה מופיעות במסך ההגדרות.
+כללי האבטחה של Firestore (מוצגים גם באפליקציה) מתירים גישה רק למי שמחזיק בקוד המשפחתי:
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /families/{code}/{col}/{docId} {
+      allow read, write: if code.size() >= 20;
+    }
+  }
+}
+```
+
+בדיקה מקומית מול האמולטור: `http://localhost:4173/?firestoreEmulator=127.0.0.1:8085`.

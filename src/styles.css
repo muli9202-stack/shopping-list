@@ -1405,3 +1405,37 @@ textarea.input {
   border-top: 1px solid var(--border);
   margin-top: 10px;
 }
+.guide {
+  padding-inline-start: 20px;
+  margin: 10px 0;
+  font-size: 0.9rem;
+}
+.guide li {
+  margin-bottom: 10px;
+}
+.rules {
+  direction: ltr;
+  text-align: left;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 0.72rem;
+  overflow-x: auto;
+  margin: 6px 0;
+}
+.sync-status {
+  font-weight: 700;
+}
+.s-online {
+  color: var(--ok);
+}
+.s-error {
+  color: var(--danger);
+}
+.sync-dot {
+  font-size: 0.9rem;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}

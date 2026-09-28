@@ -7,6 +7,7 @@ import { downloadExcel, xlsxToData } from '../excel';
 import { listSnapshots, type Snapshot } from '../autoBackup';
 import { defaultReminder, downloadIcs, googleCalendarUrl, WEEKDAYS } from '../reminder';
 import { MODES, MODE_IDS, type Mode, type Reminder } from '../types';
+import SyncCard from '../ui/SyncCard';
 
 const fmt = (ts: number) =>
   new Date(ts).toLocaleString('he-IL', { weekday: 'short', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -119,6 +120,7 @@ export default function SettingsScreen() {
         )}
       </section>
 
+      <SyncCard />
       <ReminderCard />
       <BudgetCard />
 

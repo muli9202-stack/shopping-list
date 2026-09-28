@@ -14,6 +14,7 @@ import HistoryScreen from './screens/HistoryScreen';
 import InventoryScreen from './screens/InventoryScreen';
 import SpendingScreen from './screens/SpendingScreen';
 import CompareScreen from './screens/CompareScreen';
+import JoinScreen from './screens/JoinScreen';
 
 function useHydrated() {
   const [done, setDone] = useState(useApp.persist.hasHydrated());
@@ -38,7 +39,10 @@ function WithMode({ render }: { render: (chainId: ChainId, mode: Mode) => ReactE
 export default function App() {
   const hydrated = useHydrated();
   useEffect(() => {
-    if (hydrated) startAutoBackup();
+    if (!hydrated) return;
+    startAutoBackup();
+    const sync = useApp.getState().settings.sync;
+    if (sync?.enabled) import('./sync').then((m) => m.startSync(sync.firebaseConfig, sync.familyCode, 'resume')).catch(() => {});
   }, [hydrated]);
   if (!hydrated) return <div className="splash">טוען…</div>;
   return (
@@ -47,6 +51,7 @@ export default function App() {
         <Route path="/" element={<HomeScreen />} />
         <Route path="/settings" element={<SettingsScreen />} />
         <Route path="/c/:chain" element={<WithChain render={(c) => <ChainScreen chainId={c} />} />} />
+        <Route path="/join/:payload" element={<JoinScreen />} />
         <Route path="/spending" element={<SpendingScreen />} />
         <Route path="/compare" element={<CompareScreen />} />
         <Route path="/c/:chain/inventory" element={<WithChain render={(c) => <InventoryScreen chainId={c} />} />} />
