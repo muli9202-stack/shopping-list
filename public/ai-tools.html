@@ -9,16 +9,22 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&family=Rubik:wght@500;700;800&display=swap">
 <style>
-/* Layout: one launcher board — header with search + add, then a wrapping grid of equal tiles. */
+/* Layout: launcher board — header, filter chips, recent strip, then a wrapping grid of equal tiles. */
 :root {
   --bg: #eef1f4;
   --surface: #ffffff;
+  --soft: #f4f6f8;
   --ink: #16202b;
   --muted: #5b6875;
   --line: #d7dde3;
   --accent: #0f766e;
   --accent-ink: #ffffff;
+  --accent-soft: #d9f0ed;
+  --star: #d99100;
   --danger: #b42318;
+  --free: #1d7a3e; --free-bg: #dff3e5;
+  --mixed: #7a5a00; --mixed-bg: #fbf0cc;
+  --paid: #9b2c2c; --paid-bg: #fbe3e3;
   --shadow: 0 1px 2px rgba(22,32,43,.06), 0 6px 18px rgba(22,32,43,.07);
   --font-display: "Rubik", "Heebo", system-ui, sans-serif;
   --font-body: "Heebo", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -26,29 +32,33 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f151b; --surface: #18212a; --ink: #e6ecf1; --muted: #93a1ae; --line: #2a3642;
-    --accent: #2dd4bf; --accent-ink: #062521; --danger: #f97066;
+    --bg: #0f151b; --surface: #18212a; --soft: #1f2a35; --ink: #e6ecf1; --muted: #93a1ae; --line: #2a3642;
+    --accent: #2dd4bf; --accent-ink: #062521; --accent-soft: #123a37; --star: #fbbf24; --danger: #f97066;
+    --free: #86efac; --free-bg: #173524; --mixed: #fcd34d; --mixed-bg: #3a2f10; --paid: #fca5a5; --paid-bg: #3d1a1a;
     --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0f151b; --surface: #18212a; --ink: #e6ecf1; --muted: #93a1ae; --line: #2a3642;
-  --accent: #2dd4bf; --accent-ink: #062521; --danger: #f97066;
+  --bg: #0f151b; --surface: #18212a; --soft: #1f2a35; --ink: #e6ecf1; --muted: #93a1ae; --line: #2a3642;
+  --accent: #2dd4bf; --accent-ink: #062521; --accent-soft: #123a37; --star: #fbbf24; --danger: #f97066;
+  --free: #86efac; --free-bg: #173524; --mixed: #fcd34d; --mixed-bg: #3a2f10; --paid: #fca5a5; --paid-bg: #3d1a1a;
   --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
   font-family: var(--font-body); font-size: 15px; line-height: 1.5;
 }
 .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 16px 48px; }
-header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin-bottom: 20px; }
+header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin-bottom: 16px; }
 h1 { font-family: var(--font-display); font-weight: 800; font-size: 1.9rem; margin: 0; text-wrap: balance; }
+h2.sec { font-family: var(--font-display); font-size: .95rem; font-weight: 700; margin: 0 0 8px; color: var(--muted); }
 .count { color: var(--muted); font-size: .9rem; }
 .tools { display: flex; gap: 10px; flex-wrap: wrap; margin-inline-start: auto; }
-input[type="search"], .field input, .field textarea {
+input[type="search"], .field input, .field textarea, .field select {
   font: inherit; color: var(--ink); background: var(--surface);
   border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; min-width: 0;
 }
@@ -59,65 +69,124 @@ button { font: inherit; cursor: pointer; }
   border-radius: 10px; padding: 9px 16px; font-weight: 500;
 }
 .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+.btn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); font-weight: 700; }
 .btn.danger { color: var(--danger); }
-:is(button, a, input, textarea):focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+:is(button, a, input, textarea, select):focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; scrollbar-width: thin; }
+.chip {
+  flex: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  border-radius: 999px; padding: 6px 14px; font-size: .9rem; font-weight: 500; white-space: nowrap;
+}
+.chip .n { color: var(--muted); font-variant-numeric: tabular-nums; margin-inline-start: 4px; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip[aria-pressed="true"] .n { color: inherit; opacity: .7; }
+
+.recent { margin-bottom: 20px; }
+.recent-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.recent-row a {
+  flex: none; display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  color: inherit; text-decoration: none; font-weight: 500; font-size: .92rem;
+}
+.recent-row a:hover { border-color: var(--accent); }
+.recent-row .mono { width: 30px; height: 30px; border-radius: 8px; font-size: .85rem; }
+
+.sortbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; background: var(--accent-soft);
+  border: 1px solid var(--accent); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; font-weight: 500; }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
 .tile { position: relative; }
 .tile a {
-  display: flex; flex-direction: column; gap: 10px; height: 100%;
-  padding: 16px 16px 18px; background: var(--surface); border: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 8px; height: 100%;
+  padding: 16px 16px 14px; background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--radius); box-shadow: var(--shadow); color: inherit; text-decoration: none;
   transition: transform .15s ease, border-color .15s ease;
 }
 .tile a:hover { transform: translateY(-2px); border-color: var(--accent); }
+.tile.fav a { border-color: color-mix(in srgb, var(--star) 55%, var(--line)); }
+.sorting .tile a { cursor: grab; touch-action: none; user-select: none; border-style: dashed; }
+.sorting .tile a:hover { transform: none; }
+.tile.dragging { opacity: .45; }
+.tile.dragging a { border-color: var(--accent); }
 .mono {
-  width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center;
+  width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; flex: none;
   font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; color: #fff;
   background: hsl(var(--h) 55% 42%);
 }
+.mono.emoji { font-size: 1.5rem; }
 .name { font-family: var(--font-display); font-weight: 700; font-size: 1.12rem; direction: ltr; text-align: right; overflow-wrap: anywhere; }
 .desc { color: var(--muted); font-size: .92rem; overflow-wrap: anywhere; }
-.host { margin-top: auto; font-size: .78rem; color: var(--muted); direction: ltr; text-align: right; opacity: .8; overflow-wrap: anywhere; }
-.edit {
-  position: absolute; top: 12px; left: 12px; width: 34px; height: 34px; border-radius: 9px;
-  border: 1px solid var(--line); background: var(--surface); color: var(--muted);
-  display: grid; place-items: center;
+.note {
+  font-size: .85rem; background: var(--soft); border-radius: 8px; padding: 6px 9px;
+  border-inline-start: 3px solid var(--star); overflow-wrap: anywhere; white-space: pre-wrap;
 }
-.edit:hover { color: var(--accent); border-color: var(--accent); }
+.meta { margin-top: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-top: 4px; }
+.tag { font-size: .75rem; font-weight: 700; border-radius: 6px; padding: 2px 8px; white-space: nowrap; }
+.tag.cat { background: var(--soft); color: var(--muted); }
+.tag.free { background: var(--free-bg); color: var(--free); }
+.tag.freemium { background: var(--mixed-bg); color: var(--mixed); }
+.tag.paid { background: var(--paid-bg); color: var(--paid); }
+.opens { font-size: .75rem; color: var(--muted); margin-inline-start: auto; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tbtns { position: absolute; top: 12px; left: 12px; display: flex; gap: 6px; }
+.tbtns button {
+  width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--muted); display: grid; place-items: center; padding: 0;
+}
+.tbtns button:hover { color: var(--accent); border-color: var(--accent); }
+.tbtns .star[aria-pressed="true"] { color: var(--star); border-color: var(--star); }
+.sorting .tbtns { display: none; }
 .empty { color: var(--muted); padding: 32px 0; text-align: center; }
 
 dialog {
-  border: none; border-radius: 16px; padding: 0; width: min(440px, calc(100vw - 32px));
+  border: none; border-radius: 16px; padding: 0; width: min(480px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px); overflow: auto;
   background: var(--surface); color: var(--ink); box-shadow: 0 20px 60px rgba(0,0,0,.35);
 }
 dialog::backdrop { background: rgba(10,16,22,.5); }
 form.sheet { display: flex; flex-direction: column; gap: 14px; padding: 22px; }
 form.sheet h2 { font-family: var(--font-display); margin: 0; font-size: 1.3rem; }
-.field { display: flex; flex-direction: column; gap: 5px; }
-.field label { font-weight: 500; font-size: .9rem; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.field > label, .field > .lbl { font-weight: 500; font-size: .9rem; }
 .field input[dir="ltr"] { text-align: left; }
-.field textarea { resize: vertical; min-height: 64px; }
+.field textarea { resize: vertical; min-height: 56px; }
+.swatches, .emojis { display: flex; flex-wrap: wrap; gap: 6px; }
+.sw {
+  width: 30px; height: 30px; border-radius: 8px; border: 2px solid transparent; padding: 0;
+  background: hsl(var(--h) 55% 42%);
+}
+.sw.auto { background: var(--soft); color: var(--muted); font-size: .7rem; font-weight: 700; border-color: var(--line); width: auto; padding: 0 8px; }
+.sw[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 2px var(--surface) inset; }
+.em { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); font-size: 1.1rem; padding: 0; }
+.em[aria-pressed="true"] { border: 2px solid var(--accent); background: var(--accent-soft); }
+.emrow { display: flex; gap: 8px; align-items: center; }
+.emrow input { width: 80px; text-align: center; font-size: 1.1rem; }
+.preview { display: flex; align-items: center; gap: 10px; }
 .err { color: var(--danger); font-size: .88rem; min-height: 1.2em; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .actions .spacer { flex: 1; }
 .confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--danger); font-size: .9rem; }
 .toast {
   position: fixed; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
-  background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 10px; font-weight: 500;
+  background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 10px; font-weight: 500; z-index: 5;
 }
 @media (max-width: 520px) {
   h1 { font-size: 1.5rem; }
   .tools { width: 100%; margin-inline-start: 0; }
-  input[type="search"] { flex: 1; width: auto; }
+  input[type="search"] { flex: 1 1 100%; width: auto; }
+  .tools .btn { flex: 1; }
   .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
   .tile a { padding: 12px; }
-  .host { display: none; }
+  .mono { width: 40px; height: 40px; }
+  .tbtns { top: 8px; left: 8px; gap: 4px; }
+  .tbtns button { width: 30px; height: 30px; }
+  .row2 { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { .tile a { transition: none; } .tile a:hover { transform: none; } }
 </style>
 
-<div class="wrap" dir="rtl" lang="he">
+<div class="wrap" id="wrap" dir="rtl" lang="he">
   <header>
     <div>
       <h1>הכלים שלי</h1>
@@ -125,16 +194,26 @@ form.sheet h2 { font-family: var(--font-display); margin: 0; font-size: 1.3rem; 
     </div>
     <div class="tools">
       <input type="search" id="q" placeholder="חיפוש כלי…" aria-label="חיפוש כלי">
+      <button class="btn" id="sortBtn" type="button">↕ סידור</button>
       <button class="btn primary" id="addBtn" type="button">+ הוספת אפליקציה</button>
     </div>
   </header>
+  <nav class="chips" id="chips" aria-label="סינון לפי קטגוריה"></nav>
+  <section class="recent" id="recent" hidden>
+    <h2 class="sec">בשימוש לאחרונה</h2>
+    <div class="recent-row" id="recentRow"></div>
+  </section>
+  <div class="sortbar" id="sortbar" hidden>
+    <span>גרור ריבועים כדי לסדר אותם. המועדפים תמיד נשארים למעלה.</span>
+    <button class="btn primary" id="sortDone" type="button">סיום</button>
+  </div>
   <main class="grid" id="grid"></main>
   <p class="empty" id="empty" hidden>לא נמצאו כלים</p>
 </div>
 
 <dialog id="dlg" dir="rtl" lang="he">
   <form class="sheet" id="form" novalidate>
-    <h2 id="dlgTitle">הוספת אפליקציה</h2>
+    <div class="preview"><div class="mono" id="pv" aria-hidden="true"></div><h2 id="dlgTitle">הוספת אפליקציה</h2></div>
     <div class="field">
       <label for="fUrl">קישור</label>
       <input id="fUrl" dir="ltr" type="url" inputmode="url" placeholder="https://example.com" autocomplete="off">
@@ -146,6 +225,37 @@ form.sheet h2 { font-family: var(--font-display); margin: 0; font-size: 1.3rem; 
     <div class="field">
       <label for="fDesc">מה היא עושה</label>
       <textarea id="fDesc" placeholder="תיאור קצר"></textarea>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label for="fCat">קטגוריה</label>
+        <select id="fCat"></select>
+      </div>
+      <div class="field">
+        <label for="fPrice">מחיר</label>
+        <select id="fPrice">
+          <option value="">לא צוין</option>
+          <option value="free">חינם</option>
+          <option value="freemium">חינם + בתשלום</option>
+          <option value="paid">בתשלום</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <span class="lbl" id="colLbl">צבע</span>
+      <div class="swatches" id="swatches" role="group" aria-labelledby="colLbl"></div>
+    </div>
+    <div class="field">
+      <label for="fEmoji">אייקון (אימוג'י)</label>
+      <div class="emrow">
+        <input id="fEmoji" type="text" placeholder="—" autocomplete="off">
+        <span class="count">או בחר:</span>
+      </div>
+      <div class="emojis" id="emojis"></div>
+    </div>
+    <div class="field">
+      <label for="fNote">הערה אישית</label>
+      <textarea id="fNote" placeholder="למשל: יש לי מנוי עד מרץ"></textarea>
     </div>
     <div class="err" id="err" role="alert"></div>
     <div class="confirm" id="confirmRow" hidden>
@@ -165,100 +275,270 @@ form.sheet h2 { font-family: var(--font-display); margin: 0; font-size: 1.3rem; 
 
 <script>
 (function () {
-  const KEY = 'ai-tools-v1';
+  const KEY = 'ai-tools-v2', OLD_KEY = 'ai-tools-v1';
+  const CATS = { chat: "צ'אט", code: 'תכנות', video: 'וידאו', design: 'עיצוב ותמונות', voice: 'קול', research: 'מחקר ולמידה', other: 'אחר' };
+  const PRICES = { free: 'חינם', freemium: 'חינם + בתשלום', paid: 'בתשלום' };
+  const HUES = [0, 25, 45, 140, 170, 200, 220, 260, 290, 330];
+  const EMOJIS = ['🤖','💬','🧠','💻','🎬','🎨','🎙️','🔍','📚','✨','🚀','⚡','🖼️','📝','🎵','🧪'];
   const DEFAULTS = [
-    ['Claude', "צ'אט AI של Anthropic", 'https://claude.ai'],
-    ['Gemini', "צ'אט AI של גוגל", 'https://gemini.google.com'],
-    ['ChatGPT', "צ'אט AI של OpenAI", 'https://chatgpt.com'],
-    ['Claude Code', 'עוזר תכנות', 'https://code.claude.com/docs/en/setup'],
-    ['Google AI Studio', 'סטודיו AI ובונה אפליקציות של גוגל', 'https://aistudio.google.com/apps'],
-    ['MongoDB Atlas', 'מסד נתונים בענן', 'https://www.mongodb.com/atlas'],
-    ['Stitch', 'מעצב מסכים של גוגל', 'https://stitch.withgoogle.com'],
-    ['Pomelli', 'יוצר פרסומות של גוגל', 'https://labs.google.com/pomelli'],
-    ['Opal', 'בונה כלי AI בלי קוד', 'https://opal.withgoogle.com'],
-    ['NotebookLM', 'עוזר מחקר, למידה ופודקאסטים', 'https://notebooklm.google.com'],
-    ['Mixboard', 'לוח השראה ועיצוב', 'https://labs.google.com/mixboard'],
-    ['Learn Your Way', 'לימוד מותאם אישית', 'https://learnyourway.withgoogle.com'],
-    ['neaPay', 'מחולל מספרי כרטיס לבדיקות', 'https://neapay.com/online-tools/credit-card-number-generator-validator.html'],
-    ['Captions', 'אווטאר וכתוביות לסרטונים', 'https://www.captions.ai'],
-    ['FacePoke', 'מזיז הבעות פנים בתמונה', 'https://huggingface.co/spaces/jbilcke-hf/FacePoke'],
-    ['Cartwheel', 'אנימציות תלת־ממד מטקסט', 'https://getcartwheel.com'],
-    ['2Wai', "צ'אט עם אווטארים של אנשים", 'https://2wai.ai'],
-    ['Cluely', 'עוזר AI נסתר לשיחות', 'https://cluely.com'],
-    ['Google Vids', 'יוצר סרטונים של גוגל', 'https://vids.google.com'],
-    ['Cadabra', 'יוצר סרטים בעברית', 'https://www.livinginmovie.com'],
-    ['Lovable', 'בונה אתרים ואפליקציות מטקסט', 'https://lovable.dev'],
-    ['Illusion Diffusion', 'תמונות אשליה אופטית', 'https://huggingface.co/spaces/AP123/IllusionDiffusion'],
-    ['Codex', 'עוזר תכנות של OpenAI', 'https://chatgpt.com/codex'],
-    ['Perplexity', 'מנוע חיפוש חכם', 'https://www.perplexity.ai'],
-    ['Grok', "צ'אט AI של xAI", 'https://grok.com'],
-    ['ElevenLabs', 'מחולל קולות וקריינות', 'https://elevenlabs.io'],
-  ].map(([name, desc, url], i) => ({ id: 'd' + i, name, desc, url }));
+    ['Claude', "צ'אט AI של Anthropic", 'https://claude.ai', 'chat', 'freemium'],
+    ['Gemini', "צ'אט AI של גוגל", 'https://gemini.google.com', 'chat', 'freemium'],
+    ['ChatGPT', "צ'אט AI של OpenAI", 'https://chatgpt.com', 'chat', 'freemium'],
+    ['Claude Code', 'עוזר תכנות', 'https://code.claude.com/docs/en/setup', 'code', 'paid'],
+    ['Google AI Studio', 'סטודיו AI ובונה אפליקציות של גוגל', 'https://aistudio.google.com/apps', 'code', 'free'],
+    ['MongoDB Atlas', 'מסד נתונים בענן', 'https://www.mongodb.com/atlas', 'code', 'freemium'],
+    ['Stitch', 'מעצב מסכים של גוגל', 'https://stitch.withgoogle.com', 'design', 'free'],
+    ['Pomelli', 'יוצר פרסומות של גוגל', 'https://labs.google.com/pomelli', 'design', 'free'],
+    ['Opal', 'בונה כלי AI בלי קוד', 'https://opal.withgoogle.com', 'code', 'free'],
+    ['NotebookLM', 'עוזר מחקר, למידה ופודקאסטים', 'https://notebooklm.google.com', 'research', 'freemium'],
+    ['Mixboard', 'לוח השראה ועיצוב', 'https://labs.google.com/mixboard', 'design', 'free'],
+    ['Learn Your Way', 'לימוד מותאם אישית', 'https://learnyourway.withgoogle.com', 'research', 'free'],
+    ['neaPay', 'מחולל מספרי כרטיס לבדיקות', 'https://neapay.com/online-tools/credit-card-number-generator-validator.html', 'code', 'free'],
+    ['Captions', 'אווטאר וכתוביות לסרטונים', 'https://www.captions.ai', 'video', 'freemium'],
+    ['FacePoke', 'מזיז הבעות פנים בתמונה', 'https://huggingface.co/spaces/jbilcke-hf/FacePoke', 'design', 'free'],
+    ['Cartwheel', 'אנימציות תלת־ממד מטקסט', 'https://getcartwheel.com', 'video', ''],
+    ['2Wai', "צ'אט עם אווטארים של אנשים", 'https://2wai.ai', 'chat', ''],
+    ['Cluely', 'עוזר AI נסתר לשיחות', 'https://cluely.com', 'chat', ''],
+    ['Google Vids', 'יוצר סרטונים של גוגל', 'https://vids.google.com', 'video', ''],
+    ['Cadabra', 'יוצר סרטים בעברית', 'https://www.livinginmovie.com', 'video', ''],
+    ['Lovable', 'בונה אתרים ואפליקציות מטקסט', 'https://lovable.dev', 'code', 'freemium'],
+    ['Illusion Diffusion', 'תמונות אשליה אופטית', 'https://huggingface.co/spaces/AP123/IllusionDiffusion', 'design', 'free'],
+    ['Codex', 'עוזר תכנות של OpenAI', 'https://chatgpt.com/codex', 'code', ''],
+    ['Perplexity', 'מנוע חיפוש חכם', 'https://www.perplexity.ai', 'research', 'freemium'],
+    ['Grok', "צ'אט AI של xAI", 'https://grok.com', 'chat', 'freemium'],
+    ['ElevenLabs', 'מחולל קולות וקריינות', 'https://elevenlabs.io', 'voice', 'freemium'],
+  ].map(([name, desc, url, cat, price], i) => ({ id: 'd' + i, name, desc, url, cat, price }));
+  const DEF_BY_ID = Object.fromEntries(DEFAULTS.map(d => [d.id, d]));
 
+  function blank(a) {
+    const d = DEF_BY_ID[a.id] || {};
+    return {
+      id: a.id, name: a.name || '', desc: a.desc || '', url: a.url || '',
+      cat: a.cat || d.cat || 'other', price: a.price !== undefined ? a.price : (d.price || ''),
+      fav: !!a.fav, hue: typeof a.hue === 'number' ? a.hue : null, emoji: a.emoji || '', note: a.note || '',
+    };
+  }
   function load() {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) { const v = JSON.parse(raw); if (Array.isArray(v)) return v; }
+      if (raw) {
+        const v = JSON.parse(raw);
+        if (v && Array.isArray(v.apps)) return { apps: v.apps.map(blank), opens: v.opens || {}, recent: v.recent || [], filter: v.filter || 'all' };
+      }
+      const old = localStorage.getItem(OLD_KEY);
+      if (old) { const v = JSON.parse(old); if (Array.isArray(v)) return { apps: v.map(blank), opens: {}, recent: [], filter: 'all' }; }
     } catch (e) {}
-    return DEFAULTS.map(t => ({ ...t }));
+    return { apps: DEFAULTS.map(blank), opens: {}, recent: [], filter: 'all' };
   }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(apps)); } catch (e) {} }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
 
-  let apps = load();
-  let editingId = null;
+  const state = load();
+  let editingId = null, sorting = false;
+  const draft = { hue: null, emoji: '' };
   const $ = id => document.getElementById(id);
   const grid = $('grid'), dlg = $('dlg'), form = $('form');
 
-  function hue(s) { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) % 360; return h; }
-  function host(u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return u; } }
+  function autoHue(s) { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) % 360; return h; }
   function initials(n) {
     const w = n.trim().split(/\s+/).filter(Boolean);
     return ((w[0] || '?')[0] + (w[1] ? w[1][0] : '')).toUpperCase();
   }
+  function paintMono(el, a) {
+    el.className = 'mono' + (a.emoji ? ' emoji' : '');
+    el.style.setProperty('--h', a.hue !== null ? a.hue : autoHue(a.name || '?'));
+    el.textContent = a.emoji || initials(a.name || '?');
+  }
+  function makeMono(a) { const m = document.createElement('div'); m.setAttribute('aria-hidden', 'true'); paintMono(m, a); return m; }
   function normUrl(u) {
     u = u.trim();
     if (!u) return '';
     if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
     try { const x = new URL(u); return x.hostname.includes('.') ? x.href : ''; } catch (e) { return ''; }
   }
+  function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
+  const ICON_STAR = '<svg width="16" height="16" viewBox="0 0 24 24" fill="FILL" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9Z"/></svg>';
+  const ICON_EDIT = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
 
-  function render() {
+  function recordOpen(id) {
+    state.opens[id] = (state.opens[id] || 0) + 1;
+    state.recent = [id, ...state.recent.filter(x => x !== id)].slice(0, 8);
+    save();
+    setTimeout(render, 0);
+  }
+  function wireOpen(link, id) {
+    link.addEventListener('click', e => { if (sorting) { e.preventDefault(); return; } recordOpen(id); });
+    link.addEventListener('auxclick', e => { if (e.button === 1 && !sorting) recordOpen(id); });
+  }
+
+  function visible() {
     const q = $('q').value.trim().toLowerCase();
-    const list = apps.filter(a => !q || (a.name + ' ' + a.desc + ' ' + a.url).toLowerCase().includes(q));
+    const f = sorting ? 'all' : state.filter;
+    const list = state.apps.filter(a =>
+      (f === 'all' || (f === 'fav' ? a.fav : a.cat === f)) &&
+      (!q || [a.name, a.desc, a.url, a.note, CATS[a.cat]].join(' ').toLowerCase().includes(q)));
+    return [...list.filter(a => a.fav), ...list.filter(a => !a.fav)];
+  }
+
+  function renderChips() {
+    const counts = {};
+    state.apps.forEach(a => { counts[a.cat] = (counts[a.cat] || 0) + 1; });
+    const favs = state.apps.filter(a => a.fav).length;
+    const items = [['all', 'הכול', state.apps.length], ['fav', '★ מועדפים', favs],
+      ...Object.keys(CATS).filter(k => counts[k]).map(k => [k, CATS[k], counts[k]])];
+    if (!items.some(i => i[0] === state.filter)) state.filter = 'all';
+    $('chips').replaceChildren(...items.map(([k, label, n]) => {
+      const b = el('button', 'chip', label); b.type = 'button';
+      b.append(el('span', 'n', String(n)));
+      b.setAttribute('aria-pressed', String(state.filter === k));
+      b.addEventListener('click', () => { state.filter = k; save(); render(); });
+      return b;
+    }));
+    $('chips').hidden = sorting;
+  }
+
+  function renderRecent() {
+    const list = state.recent.map(id => state.apps.find(a => a.id === id)).filter(Boolean);
+    $('recent').hidden = sorting || list.length === 0;
+    $('recentRow').replaceChildren(...list.map(a => {
+      const link = el('a'); link.href = a.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+      link.append(makeMono(a), el('span', '', a.name));
+      link.dir = 'ltr';
+      wireOpen(link, a.id);
+      return link;
+    }));
+  }
+
+  function renderGrid() {
+    const list = visible();
     grid.replaceChildren(...list.map(a => {
-      const tile = document.createElement('div');
-      tile.className = 'tile';
-      const link = document.createElement('a');
-      link.href = a.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
-      const mono = document.createElement('div');
-      mono.className = 'mono'; mono.style.setProperty('--h', hue(a.name)); mono.textContent = initials(a.name);
-      mono.setAttribute('aria-hidden', 'true');
-      const name = document.createElement('div'); name.className = 'name'; name.textContent = a.name;
-      const desc = document.createElement('div'); desc.className = 'desc'; desc.textContent = a.desc;
-      const h = document.createElement('div'); h.className = 'host'; h.textContent = host(a.url);
-      link.append(mono, name, desc, h);
-      const edit = document.createElement('button');
-      edit.type = 'button'; edit.className = 'edit'; edit.title = 'עריכה';
+      const tile = el('div', 'tile' + (a.fav ? ' fav' : ''));
+      tile.dataset.id = a.id;
+      const link = el('a');
+      link.href = a.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.draggable = false;
+      link.append(makeMono(a), el('div', 'name', a.name), el('div', 'desc', a.desc));
+      if (a.note) link.append(el('div', 'note', a.note));
+      const meta = el('div', 'meta');
+      meta.append(el('span', 'tag cat', CATS[a.cat] || CATS.other));
+      if (a.price) meta.append(el('span', 'tag ' + a.price, PRICES[a.price]));
+      const n = state.opens[a.id] || 0;
+      if (n) meta.append(el('span', 'opens', n === 1 ? 'נפתח פעם אחת' : 'נפתח ' + n + ' פעמים'));
+      link.append(meta);
+      wireOpen(link, a.id);
+      link.addEventListener('pointerdown', e => startDrag(e, tile));
+
+      const btns = el('div', 'tbtns');
+      const star = el('button', 'star'); star.type = 'button';
+      star.setAttribute('aria-pressed', String(a.fav));
+      star.setAttribute('aria-label', (a.fav ? 'הסרה מהמועדפים: ' : 'הוספה למועדפים: ') + a.name);
+      star.title = a.fav ? 'הסרה מהמועדפים' : 'הוספה למועדפים';
+      star.innerHTML = ICON_STAR.replace('FILL', a.fav ? 'currentColor' : 'none');
+      star.addEventListener('click', () => { a.fav = !a.fav; save(); render(); toast(a.fav ? 'נוסף למועדפים' : 'הוסר מהמועדפים'); });
+      const edit = el('button', 'edit'); edit.type = 'button'; edit.title = 'עריכה';
       edit.setAttribute('aria-label', 'עריכת ' + a.name);
-      edit.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+      edit.innerHTML = ICON_EDIT;
       edit.addEventListener('click', () => openDialog(a.id));
-      tile.append(link, edit);
+      btns.append(star, edit);
+      tile.append(link, btns);
       return tile;
     }));
     $('empty').hidden = list.length > 0;
-    $('count').textContent = apps.length + ' כלים · לחיצה על ריבוע פותחת את האפליקציה';
+    $('empty').textContent = state.filter === 'fav' && !$('q').value ? 'עוד אין מועדפים. לחץ על הכוכב בריבוע כדי להוסיף.' : 'לא נמצאו כלים';
+  }
+
+  function render() {
+    $('wrap').classList.toggle('sorting', sorting);
+    $('sortbar').hidden = !sorting;
+    $('sortBtn').classList.toggle('on', sorting);
+    const total = Object.values(state.opens).reduce((s, n) => s + n, 0);
+    $('count').textContent = state.apps.length + ' כלים' + (total ? ' · ' + total + ' פתיחות' : '') + ' · לחיצה על ריבוע פותחת את האפליקציה';
+    renderChips(); renderRecent(); renderGrid();
+  }
+
+  /* Drag to reorder (mouse and touch), active only in sort mode. */
+  let drag = null;
+  function startDrag(e, tile) {
+    if (!sorting || e.button > 0) return;
+    e.preventDefault();
+    drag = { tile, id: tile.dataset.id, moved: false };
+    tile.classList.add('dragging');
+    tile.firstChild.setPointerCapture(e.pointerId);
+    tile.firstChild.addEventListener('pointermove', onMove);
+    tile.firstChild.addEventListener('pointerup', endDrag, { once: true });
+    tile.firstChild.addEventListener('pointercancel', endDrag, { once: true });
+  }
+  function onMove(e) {
+    if (!drag) return;
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const target = under && under.closest('.tile');
+    if (!target || target === drag.tile) return;
+    const tiles = [...grid.children];
+    const from = tiles.indexOf(drag.tile), to = tiles.indexOf(target);
+    grid.insertBefore(drag.tile, from < to ? target.nextSibling : target);
+    drag.moved = true;
+  }
+  function endDrag() {
+    if (!drag) return;
+    const link = drag.tile.firstChild;
+    link.removeEventListener('pointermove', onMove);
+    drag.tile.classList.remove('dragging');
+    if (drag.moved) {
+      const order = [...grid.children].map(t => t.dataset.id);
+      const byId = Object.fromEntries(state.apps.map(a => [a.id, a]));
+      const shown = new Set(order);
+      state.apps = [...order.map(id => byId[id]), ...state.apps.filter(a => !shown.has(a.id))];
+      save();
+    }
+    drag = null;
+    render();
+  }
+
+  /* Edit dialog */
+  function syncPreview() {
+    paintMono($('pv'), { name: $('fName').value || '?', hue: draft.hue, emoji: draft.emoji });
+    $('swatches').querySelectorAll('.sw').forEach(b => b.setAttribute('aria-pressed', String(String(draft.hue) === b.dataset.h)));
+    $('emojis').querySelectorAll('.em').forEach(b => b.setAttribute('aria-pressed', String(draft.emoji === b.textContent)));
+  }
+  function buildPickers() {
+    $('fCat').replaceChildren(...Object.entries(CATS).map(([k, v]) => { const o = el('option', '', v); o.value = k; return o; }));
+    const auto = el('button', 'sw auto', 'אוטו'); auto.type = 'button'; auto.dataset.h = 'null'; auto.title = 'צבע אוטומטי';
+    $('swatches').replaceChildren(auto, ...HUES.map(h => {
+      const b = el('button', 'sw'); b.type = 'button'; b.dataset.h = String(h); b.style.setProperty('--h', h);
+      b.setAttribute('aria-label', 'צבע ' + h); return b;
+    }));
+    $('swatches').addEventListener('click', e => {
+      const b = e.target.closest('.sw'); if (!b) return;
+      draft.hue = b.dataset.h === 'null' ? null : Number(b.dataset.h); syncPreview();
+    });
+    $('emojis').replaceChildren(...EMOJIS.map(x => { const b = el('button', 'em', x); b.type = 'button'; return b; }));
+    $('emojis').addEventListener('click', e => {
+      const b = e.target.closest('.em'); if (!b) return;
+      draft.emoji = draft.emoji === b.textContent ? '' : b.textContent;
+      $('fEmoji').value = draft.emoji; syncPreview();
+    });
+    $('fEmoji').addEventListener('input', () => {
+      const chars = [...$('fEmoji').value.trim()];
+      draft.emoji = chars.slice(0, 4).join(''); syncPreview();
+    });
+    $('fName').addEventListener('input', syncPreview);
   }
 
   function openDialog(id) {
     editingId = id;
-    const a = apps.find(x => x.id === id);
+    const a = state.apps.find(x => x.id === id);
     $('dlgTitle').textContent = a ? 'עריכת אפליקציה' : 'הוספת אפליקציה';
     $('fUrl').value = a ? a.url : '';
     $('fName').value = a ? a.name : '';
     $('fDesc').value = a ? a.desc : '';
+    $('fNote').value = a ? a.note : '';
+    $('fCat').value = a ? a.cat : (CATS[state.filter] ? state.filter : 'other');
+    $('fPrice').value = a ? a.price : '';
+    draft.hue = a ? a.hue : null;
+    draft.emoji = a ? a.emoji : '';
+    $('fEmoji').value = draft.emoji;
     $('err').textContent = '';
     $('delBtn').hidden = !a;
     $('confirmRow').hidden = true;
+    syncPreview();
     dlg.showModal();
     (a ? $('fName') : $('fUrl')).focus();
   }
@@ -272,23 +552,29 @@ form.sheet h2 { font-family: var(--font-display); margin: 0; font-size: 1.3rem; 
     e.preventDefault();
     const url = normUrl($('fUrl').value);
     const name = $('fName').value.trim();
-    const desc = $('fDesc').value.trim();
     if (!url) { $('err').textContent = 'צריך להכניס קישור תקין, למשל https://example.com'; $('fUrl').focus(); return; }
     if (!name) { $('err').textContent = 'צריך להכניס שם לאפליקציה'; $('fName').focus(); return; }
-    const a = apps.find(x => x.id === editingId);
-    if (a) { Object.assign(a, { url, name, desc }); toast('השינויים נשמרו'); }
-    else { apps.push({ id: 'u' + Date.now(), url, name, desc }); toast('האפליקציה נוספה'); }
+    const fields = { url, name, desc: $('fDesc').value.trim(), note: $('fNote').value.trim(),
+      cat: $('fCat').value, price: $('fPrice').value, hue: draft.hue, emoji: draft.emoji };
+    const a = state.apps.find(x => x.id === editingId);
+    if (a) { Object.assign(a, fields); toast('השינויים נשמרו'); }
+    else { state.apps.push(blank({ id: 'u' + Date.now(), ...fields })); toast('האפליקציה נוספה'); }
     save(); render(); dlg.close();
   });
   $('cancelBtn').addEventListener('click', () => dlg.close());
   $('delBtn').addEventListener('click', () => { $('confirmRow').hidden = false; });
   $('noDel').addEventListener('click', () => { $('confirmRow').hidden = true; });
   $('yesDel').addEventListener('click', () => {
-    apps = apps.filter(x => x.id !== editingId);
+    state.apps = state.apps.filter(x => x.id !== editingId);
+    state.recent = state.recent.filter(x => x !== editingId);
+    delete state.opens[editingId];
     save(); render(); dlg.close(); toast('האפליקציה נמחקה');
   });
   $('addBtn').addEventListener('click', () => openDialog(null));
+  $('sortBtn').addEventListener('click', () => { sorting = !sorting; $('q').value = ''; render(); });
+  $('sortDone').addEventListener('click', () => { sorting = false; render(); toast('הסדר נשמר'); });
   $('q').addEventListener('input', render);
+  buildPickers();
   render();
 })();
 </script>
