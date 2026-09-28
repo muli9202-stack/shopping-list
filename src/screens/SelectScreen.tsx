@@ -7,6 +7,8 @@ import { CHAINS, CHAIN_IDS, MODES, type Category, type ChainId, type ListItem, t
 import { Empty, Header, Stepper, Tile } from '../ui/components';
 import { confirmDialog, promptDialog } from '../ui/dialog';
 import { BulkAddSheet, CategorySheet, ProductSheet } from '../ui/catalogSheets';
+import VoiceAdd from '../ui/VoiceAdd';
+import { fmtMoney, listTotals } from '../money';
 
 interface Ctx {
   chainId: ChainId;
@@ -36,7 +38,12 @@ export default function SelectScreen({ chainId, mode }: { chainId: ChainId; mode
   const [bulkFor, setBulkFor] = useState<string | null | undefined>(undefined);
 
   const items = list?.items ?? {};
-  const selectedCount = useMemo(() => visibleKeys(items, categories, products).length, [items, categories, products]);
+  const visibleList = useMemo(() => visibleKeys(items, categories, products), [items, categories, products]);
+  const selectedCount = visibleList.length;
+  const planned = useMemo(() => listTotals(visibleList, items, products).planned, [visibleList, items, products]);
+  const tracked = products.filter((p) => p.chainId === chainId && p.target).length;
+  const { fillFromInventory } = useApp.getState();
+  const [fillMsg, setFillMsg] = useState('');
   const chainCats = useMemo(() => categories.filter((c) => c.chainId === chainId), [categories, chainId]);
   const chainProducts = useMemo(() => products.filter((p) => p.chainId === chainId), [products, chainId]);
   const topCats = childCategories(categories, chainId, null);
@@ -87,9 +94,12 @@ export default function SelectScreen({ chainId, mode }: { chainId: ChainId; mode
         back={`/c/${chainId}`}
         actions={
           !isEmpty && (
-            <button className={`chip ${editMode ? 'active' : ''}`} onClick={() => setEditMode(!editMode)}>
-              {editMode ? '✓ סיום עריכה' : '✎ עריכה'}
-            </button>
+            <>
+              <VoiceAdd chainId={chainId} mode={mode} />
+              <button className={`chip ${editMode ? 'active' : ''}`} onClick={() => setEditMode(!editMode)}>
+                {editMode ? '✓ סיום' : '✎ עריכה'}
+              </button>
+            </>
           )
         }
       />
@@ -126,6 +136,19 @@ export default function SelectScreen({ chainId, mode }: { chainId: ChainId; mode
           <div className="search-row">
             <input className="input search" type="search" placeholder="🔍 חיפוש מוצר" value={query} onChange={(e) => setQuery(e.target.value)} />
           </div>
+
+          {tracked > 0 && (
+            <button
+              className="btn block inventory-btn"
+              onClick={() => {
+                const n = fillFromInventory(chainId, mode);
+                setFillMsg(n ? `נוספו ${n} מוצרים שחסרים בבית` : 'לפי המלאי בבית לא חסר כלום');
+              }}
+            >
+              🏠 הוספת מה שחסר בבית
+            </button>
+          )}
+          {fillMsg && <p className="ok-msg center">{fillMsg}</p>}
 
           {editMode && (
             <div className="notice edit-notice">מצב עריכה: לחיצה על מוצר פותחת עריכה. ב-⋯ שליד קטגוריה אפשר לשנות שם, להזיז או למחוק.</div>
@@ -181,6 +204,7 @@ export default function SelectScreen({ chainId, mode }: { chainId: ChainId; mode
         <Link to={`/c/${chainId}/${mode}/shop`} className={`btn primary block big ${selectedCount ? '' : 'disabled'}`}>
           כניסה לרשימת הקניות של {period}
           {selectedCount > 0 && <span className="count-pill">{selectedCount}</span>}
+          {planned > 0 && <span className="count-pill">{fmtMoney(planned)}</span>}
         </Link>
       </div>
 
@@ -267,6 +291,7 @@ function PickRow({ ctx, product, showPath }: { ctx: Ctx; product: Product; showP
       <span className="pick-name">
         {product.name}
         {showPath && <span className="pick-path">{categoryPath(ctx.categories, product.categoryId)}</span>}
+        {product.price !== undefined && <span className="pick-path">{fmtMoney(product.price)}</span>}
       </span>
       {editMode ? (
         <span className="chev">✎</span>

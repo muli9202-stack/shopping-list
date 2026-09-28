@@ -7,6 +7,7 @@ import {
   type Category,
   type ChainId,
   type HistoryEntry,
+  type HistoryItem,
   type ItemStatus,
   type Mode,
   type Product,
@@ -35,6 +36,8 @@ export const emptyData = (): AppData => ({
   branches: [],
   settings: { apiKey: '', model: 'claude-opus-5', autoExcel: false },
   aiInsights: {},
+  stock: {},
+  budgets: {},
 });
 
 const emptyList = (): ActiveList => ({ items: {}, branchId: null, startedAt: Date.now() });
@@ -58,7 +61,7 @@ interface Actions {
   moveCategory: (id: string, dir: -1 | 1) => void;
 
   addProducts: (chainId: ChainId, names: string[], categoryId: string | null) => void;
-  updateProduct: (id: string, patch: Partial<Pick<Product, 'name' | 'categoryId'>>) => void;
+  updateProduct: (id: string, patch: Partial<Pick<Product, 'name' | 'categoryId' | 'price' | 'barcode' | 'target'>>) => void;
   deleteProduct: (id: string) => void;
   moveProduct: (id: string, dir: -1 | 1) => void;
 
@@ -68,9 +71,15 @@ interface Actions {
   toggleSelect: (chainId: ChainId, mode: Mode, productId: string) => void;
   setQty: (chainId: ChainId, mode: Mode, productId: string, qty: number) => void;
   toggleStatus: (chainId: ChainId, mode: Mode, productId: string, status: Exclude<ItemStatus, 'pending'>) => void;
+  /** Sets an item's status, adding it to the list first if needed. */
+  setStatus: (chainId: ChainId, mode: Mode, key: string, status: ItemStatus) => void;
   setListBranch: (chainId: ChainId, mode: Mode, branchId: string | null) => void;
   clearList: (chainId: ChainId, mode: Mode) => void;
-  finishList: (chainId: ChainId, mode: Mode) => void;
+  /**
+   * Saves the list to history and starts a new one. Items that were out of
+   * stock carry over to the new list; bought products are added to the home inventory.
+   */
+  finishList: (chainId: ChainId, mode: Mode, paid?: number) => void;
   deleteHistory: (id: string) => void;
   /** Adds products to the active list, keeping items already there. */
   mergeIntoList: (chainId: ChainId, mode: Mode, items: { productId: string; qty: number }[]) => void;
@@ -79,6 +88,11 @@ interface Actions {
   /** Adds a product or `cat:` key to the list if it isn't there yet. */
   addToList: (chainId: ChainId, mode: Mode, key: string) => void;
   setAiInsight: (chainId: ChainId, mode: Mode, insight: AiInsight) => void;
+
+  setStock: (productId: string, count: number) => void;
+  /** Adds every product whose home stock is below its target; returns how many were added. */
+  fillFromInventory: (chainId: ChainId, mode: Mode) => number;
+  setBudget: (mode: Mode, amount: number | undefined) => void;
 
   updateSettings: (patch: Partial<Settings>) => void;
   importData: (data: AppData) => void;
@@ -176,7 +190,9 @@ export const useApp = create<Store>()(
               delete items[id];
               lists[k] = { ...l, items };
             }
-            return { products: s.products.filter((p) => p.id !== id), lists };
+            const stock = { ...s.stock };
+            delete stock[id];
+            return { products: s.products.filter((p) => p.id !== id), lists, stock };
           }),
         moveProduct: (id, dir) =>
           set((s) => {
@@ -244,33 +260,47 @@ export const useApp = create<Store>()(
             if (cur) l.items[productId] = { ...cur, status: cur.status === status ? 'pending' : status };
             return l;
           }),
+        setStatus: (chainId, mode, key, status) =>
+          updateList(chainId, mode, (l) => {
+            l.items[key] = { qty: l.items[key]?.qty ?? 1, status };
+            return l;
+          }),
         setListBranch: (chainId, mode, branchId) => updateList(chainId, mode, (l) => ({ ...l, branchId })),
         clearList: (chainId, mode) => updateList(chainId, mode, () => emptyList()),
-        finishList: (chainId, mode) => {
+        finishList: (chainId, mode, paid) => {
           const s = get();
           const list = s.lists[listKey(chainId, mode)];
           if (!list) return;
           const byId = new Map(s.products.map((p) => [p.id, p]));
+          const items: HistoryItem[] = visibleKeys(list.items, s.categories, s.products).flatMap((key): HistoryItem[] => {
+            const it = list.items[key];
+            if (isCatKey(key)) {
+              const cat = s.categories.find((c) => c.id === catIdOf(key));
+              if (!cat) return [];
+              return [{ productId: key, name: cat.name, categoryPath: categoryPath(s.categories, cat.id), qty: it.qty, status: it.status }];
+            }
+            const p = byId.get(key)!;
+            return [{ productId: key, name: p.name, categoryPath: categoryPath(s.categories, p.categoryId), qty: it.qty, status: it.status, price: p.price }];
+          });
+          const estimated = items.reduce((sum, it) => sum + (it.status === 'bought' && it.price ? it.price * it.qty : 0), 0);
           const entry: HistoryEntry = {
             id: uid(),
             chainId,
             mode,
             date: Date.now(),
             branchId: list.branchId,
-            items: visibleKeys(list.items, s.categories, s.products).flatMap((key) => {
-              const it = list.items[key];
-              if (isCatKey(key)) {
-                const cat = s.categories.find((c) => c.id === catIdOf(key));
-                if (!cat) return [];
-                return [{ productId: key, name: cat.name, categoryPath: categoryPath(s.categories, cat.id), qty: it.qty, status: it.status }];
-              }
-              const p = byId.get(key)!;
-              return [{ productId: key, name: p.name, categoryPath: categoryPath(s.categories, p.categoryId), qty: it.qty, status: it.status }];
-            }),
+            items,
+            estimated: Math.round(estimated * 100) / 100,
+            paid: paid && paid > 0 ? paid : undefined,
           };
+          const carried: ActiveList = { ...emptyList(), branchId: list.branchId };
+          for (const it of items) if (it.status === 'missing') carried.items[it.productId] = { qty: it.qty, status: 'pending' };
+          const stock = { ...s.stock };
+          for (const it of items) if (it.status === 'bought' && !isCatKey(it.productId)) stock[it.productId] = (stock[it.productId] ?? 0) + it.qty;
           set((st) => ({
             history: [entry, ...st.history],
-            lists: { ...st.lists, [listKey(chainId, mode)]: { ...emptyList(), branchId: list.branchId } },
+            lists: { ...st.lists, [listKey(chainId, mode)]: carried },
+            stock,
           }));
         },
         deleteHistory: (id) => set((s) => ({ history: s.history.filter((h) => h.id !== id) })),
@@ -295,16 +325,43 @@ export const useApp = create<Store>()(
         setAiInsight: (chainId, mode, insight) =>
           set((s) => ({ aiInsights: { ...s.aiInsights, [listKey(chainId, mode)]: insight } })),
 
+        setStock: (productId, count) =>
+          set((s) => {
+            const stock = { ...s.stock };
+            if (count <= 0) delete stock[productId];
+            else stock[productId] = count;
+            return { stock };
+          }),
+        fillFromInventory: (chainId, mode) => {
+          const s = get();
+          const need = s.products
+            .filter((p) => p.chainId === chainId && p.target && (s.stock[p.id] ?? 0) < p.target)
+            .map((p) => ({ productId: p.id, qty: p.target! - (s.stock[p.id] ?? 0) }));
+          const before = Object.keys(s.lists[listKey(chainId, mode)]?.items ?? {}).length;
+          get().mergeIntoList(chainId, mode, need);
+          return Object.keys(get().lists[listKey(chainId, mode)]?.items ?? {}).length - before;
+        },
+        setBudget: (mode, amount) =>
+          set((s) => {
+            const budgets = { ...s.budgets };
+            if (amount && amount > 0) budgets[mode] = amount;
+            else delete budgets[mode];
+            return { budgets };
+          }),
         updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
-        importData: (data) => set({ ...emptyData(), ...data, aiInsights: data.aiInsights ?? {}, settings: { ...emptyData().settings, ...data.settings } }),
+        importData: (data) => set({ ...emptyData(), ...data, aiInsights: data.aiInsights ?? {}, stock: data.stock ?? {}, budgets: data.budgets ?? {}, settings: { ...emptyData().settings, ...data.settings } }),
         resetAll: () => set(emptyData()),
       };
     },
     {
       name: 'shopping-list-data',
-      version: 2,
+      version: 3,
       migrate: (persisted, version) => {
         const data = persisted as AppData;
+        if (version < 3) {
+          data.stock = {};
+          data.budgets = {};
+        }
         if (version < 2) {
           data.aiInsights = {};
           // v1 stored a default model the user never picked; move it to the current default.
@@ -322,6 +379,8 @@ export const useApp = create<Store>()(
         branches: s.branches,
         settings: s.settings,
         aiInsights: s.aiInsights,
+        stock: s.stock,
+        budgets: s.budgets,
       }),
     },
   ),
@@ -338,6 +397,8 @@ export function exportData(): AppData {
     branches: s.branches,
     settings: { ...s.settings, apiKey: '' },
     aiInsights: s.aiInsights,
+    stock: s.stock,
+    budgets: s.budgets,
   };
 }
 

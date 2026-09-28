@@ -76,6 +76,13 @@ export function ProductSheet({ product, categories, onClose }: { product: Produc
   const { updateProduct, moveProduct, deleteProduct } = useApp.getState();
   const [name, setName] = useState(product.name);
   const [categoryId, setCategoryId] = useState(product.categoryId ?? '');
+  const [price, setPrice] = useState(product.price?.toString() ?? '');
+  const [target, setTarget] = useState(product.target?.toString() ?? '');
+  const [barcode, setBarcode] = useState(product.barcode ?? '');
+  const num = (v: string) => {
+    const n = parseFloat(v.replace(',', '.'));
+    return Number.isFinite(n) && n > 0 ? n : undefined;
+  };
   return (
     <Sheet title="עריכת מוצר" onClose={onClose}>
       <form
@@ -83,7 +90,13 @@ export function ProductSheet({ product, categories, onClose }: { product: Produc
         onSubmit={(e) => {
           e.preventDefault();
           if (!name.trim()) return;
-          updateProduct(product.id, { name: name.trim(), categoryId: categoryId || null });
+          updateProduct(product.id, {
+            name: name.trim(),
+            categoryId: categoryId || null,
+            price: num(price),
+            target: num(target) && Math.round(num(target)!),
+            barcode: barcode.trim() || undefined,
+          });
           onClose();
         }}
       >
@@ -96,6 +109,20 @@ export function ProductSheet({ product, categories, onClose }: { product: Produc
           <select className="input" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
             <CategoryOptions categories={categories} chainId={product.chainId} />
           </select>
+        </label>
+        <div className="row two-col">
+          <label>
+            מחיר ליחידה (₪)
+            <input className="input ltr" inputMode="decimal" placeholder="0.00" value={price} onChange={(e) => setPrice(e.target.value)} />
+          </label>
+          <label>
+            כמה להחזיק בבית
+            <input className="input ltr" inputMode="numeric" placeholder="—" value={target} onChange={(e) => setTarget(e.target.value)} />
+          </label>
+        </div>
+        <label>
+          ברקוד
+          <input className="input ltr" inputMode="numeric" placeholder="נשמר אוטומטית בסריקה" value={barcode} onChange={(e) => setBarcode(e.target.value)} />
         </label>
         <div className="row">
           <button type="button" className="btn ghost" onClick={() => moveProduct(product.id, -1)}>

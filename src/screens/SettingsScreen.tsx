@@ -5,6 +5,8 @@ import { Header } from '../ui/components';
 import { confirmDialog } from '../ui/dialog';
 import { downloadExcel, xlsxToData } from '../excel';
 import { listSnapshots, type Snapshot } from '../autoBackup';
+import { defaultReminder, downloadIcs, googleCalendarUrl, WEEKDAYS } from '../reminder';
+import { MODES, MODE_IDS, type Mode, type Reminder } from '../types';
 
 const fmt = (ts: number) =>
   new Date(ts).toLocaleString('he-IL', { weekday: 'short', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -117,6 +119,9 @@ export default function SettingsScreen() {
         )}
       </section>
 
+      <ReminderCard />
+      <BudgetCard />
+
       <section className="card">
         <h2>בינה מלאכותית (Claude)</h2>
         <p className="muted">מפתח ה-API משמש לניתוח הקנייה הממוצעת. הוא נשמר רק במכשיר הזה ולא נכלל בקובץ הגיבוי.</p>
@@ -163,5 +168,81 @@ export default function SettingsScreen() {
         </button>
       </section>
     </div>
+  );
+}
+
+function ReminderCard() {
+  const saved = useApp((s) => s.settings.reminder);
+  const r: Reminder = saved ?? defaultReminder();
+  const set = (patch: Partial<Reminder>) => useApp.getState().updateSettings({ reminder: { ...r, ...patch } });
+  const when = (m: Mode) => (m === 'weekly' ? `כל יום ${WEEKDAYS[r.weekday]} ב-${r.time}` : `כל ${r.monthDay} בחודש ב-${r.time}`);
+  return (
+    <section className="card">
+      <h2>🔔 תזכורת לקנייה</h2>
+      <p className="muted small">התזכורת נכנסת ליומן של הטלפון כאירוע חוזר, ולכן היא מצלצלת גם כשהאפליקציה סגורה.</p>
+      <div className="row two-col form">
+        <label>
+          יום בשבוע
+          <select className="input" value={r.weekday} onChange={(e) => set({ weekday: Number(e.target.value) })}>
+            {WEEKDAYS.map((d, i) => (
+              <option key={d} value={i}>
+                {d}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          שעה
+          <input className="input ltr" type="time" value={r.time} onChange={(e) => set({ time: e.target.value || '18:00' })} />
+        </label>
+      </div>
+      <label className="form">
+        יום בחודש (לקנייה החודשית)
+        <select className="input" value={r.monthDay} onChange={(e) => set({ monthDay: Number(e.target.value) })}>
+          {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
+        </select>
+      </label>
+      {MODE_IDS.map((m) => (
+        <div key={m} className="reminder-mode">
+          <strong>{MODES[m].name}</strong> <span className="muted small">{when(m)}</span>
+          <div className="row">
+            <a className="btn small" href={googleCalendarUrl(r, m)} target="_blank" rel="noreferrer">
+              ליומן Google
+            </a>
+            <button className="btn small ghost" onClick={() => downloadIcs(r, m)}>
+              ליומן אחר (אייפון)
+            </button>
+          </div>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function BudgetCard() {
+  const budgets = useApp((s) => s.budgets);
+  return (
+    <section className="card">
+      <h2>💰 תקציב</h2>
+      <p className="muted small">בזמן הקנייה תראה כמה נשאר מהתקציב.</p>
+      <div className="row two-col form">
+        {MODE_IDS.map((m) => (
+          <label key={m}>
+            {MODES[m].name} (₪)
+            <input
+              className="input ltr"
+              inputMode="decimal"
+              placeholder="ללא"
+              defaultValue={budgets[m] ?? ''}
+              onBlur={(e) => useApp.getState().setBudget(m, parseFloat(e.target.value) || undefined)}
+            />
+          </label>
+        ))}
+      </div>
+    </section>
   );
 }

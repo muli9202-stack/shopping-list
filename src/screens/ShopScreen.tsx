@@ -1,62 +1,96 @@
-import { useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp, useList } from '../store';
 import { buildSections } from '../catalog';
 import { catKey, visibleKeys } from '../listView';
-import { CHAINS, MODES, type ChainId, type ListItem, type Mode } from '../types';
+import { compareWithChain, fmtMoney, listTotals } from '../money';
+import { CHAINS, CHAIN_IDS, MODES, type ChainId, type ListItem, type Mode, type Product } from '../types';
 import { Empty, Header } from '../ui/components';
-import { confirmDialog } from '../ui/dialog';
+import { promptDialog, Sheet } from '../ui/dialog';
+import { useWakeLock } from '../ui/useWakeLock';
+
+const Scanner = lazy(() => import('../ui/Scanner'));
 
 type SortMode = 'category' | 'route';
 
 export default function ShopScreen({ chainId, mode }: { chainId: ChainId; mode: Mode }) {
   const categories = useApp((s) => s.categories);
   const products = useApp((s) => s.products);
+  const budget = useApp((s) => s.budgets[mode]);
   const list = useList(chainId, mode);
-  const { toggleStatus, finishList } = useApp.getState();
-  const navigate = useNavigate();
+  const { toggleStatus, setBudget } = useApp.getState();
   const [sort, setSort] = useState<SortMode>('category');
-
   const [query, setQuery] = useState('');
+  const [scanning, setScanning] = useState(false);
+  const [scanMsg, setScanMsg] = useState('');
+  const [unknownCode, setUnknownCode] = useState<string | null>(null);
+  const [finishing, setFinishing] = useState(false);
+  useWakeLock();
 
   const items = list?.items ?? {};
-  const visible = useMemo(() => new Set(visibleKeys(items, categories, products)), [items, categories, products]);
+  const visibleList = useMemo(() => visibleKeys(items, categories, products), [items, categories, products]);
+  const visible = useMemo(() => new Set(visibleList), [visibleList]);
   const q = query.trim();
   // Each section: an optional whole-category row ("something from dairy") plus the chosen products.
   const sections = useMemo(
     () =>
       buildSections(categories, products, chainId, (p) => visible.has(p.id), true)
         .map((sec) => {
-          const rows: { key: string; name: string; note?: string }[] = [];
+          const rows: { key: string; name: string; note?: string; product?: Product }[] = [];
           if (sec.category && visible.has(catKey(sec.category.id)))
             rows.push({ key: catKey(sec.category.id), name: sec.category.name, note: 'כל הקטגוריה' });
-          for (const p of sec.products) rows.push({ key: p.id, name: p.name });
+          for (const p of sec.products) rows.push({ key: p.id, name: p.name, product: p });
           return { sec, rows: q ? rows.filter((r) => r.name.includes(q)) : rows };
         })
         .filter((x) => x.rows.length),
     [categories, products, chainId, visible, q],
   );
-  const all = [...visible].map((k) => items[k]);
+  const all = visibleList.map((k) => items[k]);
   const bought = all.filter((i) => i.status === 'bought').length;
   const missing = all.filter((i) => i.status === 'missing').length;
   const period = MODES[mode].period;
+  const totals = useMemo(() => listTotals(visibleList, items, products), [visibleList, items, products]);
+  const otherChain = CHAIN_IDS.find((c) => c !== chainId)!;
+  const compare = useMemo(() => compareWithChain(visibleList, items, products, otherChain), [visibleList, items, products, otherChain]);
 
-  const finish = async () => {
-    const pending = all.length - bought - missing;
-    const ok = await confirmDialog({
-      title: 'סיום קנייה',
-      message: `נקנו ${bought}, לא היו במלאי ${missing}${pending ? `, ${pending} לא סומנו` : ''}. הרשימה תישמר בהיסטוריה ותתחיל רשימה חדשה.`,
-      confirmText: 'סיום ושמירה',
-    });
-    if (ok) {
-      finishList(chainId, mode);
-      navigate(`/c/${chainId}`);
+  const onScan = (code: string) => {
+    const s = useApp.getState();
+    const p = s.products.find((x) => x.chainId === chainId && x.barcode === code);
+    if (!p) {
+      setScanning(false);
+      setUnknownCode(code);
+      return;
     }
+    const inList = !!s.lists[`${chainId}:${mode}`]?.items[p.id];
+    s.setStatus(chainId, mode, p.id, 'bought');
+    setScanMsg(inList ? `✓ ${p.name}` : `✓ ${p.name} (לא היה ברשימה, נוסף)`);
+  };
+
+  const editBudget = async () => {
+    const v = await promptDialog({
+      title: `תקציב ל${MODES[mode].name}`,
+      message: 'השאר ריק כדי לבטל את התקציב.',
+      initial: budget?.toString() ?? '',
+      placeholder: 'לדוגמה: 600',
+    });
+    if (v === null) return;
+    setBudget(mode, parseFloat(v) || undefined);
   };
 
   return (
     <div className={`page with-bottom-bar ${CHAINS[chainId].className}`}>
-      <Header title={`רשימת הקניות של ${period}`} subtitle={CHAINS[chainId].name} back={`/c/${chainId}/${mode}`} />
+      <Header
+        title={`רשימת הקניות של ${period}`}
+        subtitle={CHAINS[chainId].name}
+        back={`/c/${chainId}/${mode}`}
+        actions={
+          all.length > 0 && (
+            <button className="icon-btn" onClick={() => (setScanMsg(''), setScanning(true))} aria-label="סריקת ברקוד">
+              📷
+            </button>
+          )
+        }
+      />
 
       {all.length === 0 ? (
         <Empty icon="📝" title="הרשימה ריקה">
@@ -78,6 +112,19 @@ export default function ShopScreen({ chainId, mode }: { chainId: ChainId; mode: 
               <div className="progress-bought" style={{ width: `${(bought / all.length) * 100}%` }} />
               <div className="progress-missing" style={{ width: `${(missing / all.length) * 100}%` }} />
             </div>
+            <MoneyBox totals={totals} budget={budget} onEditBudget={editBudget} />
+            {compare.matched > 0 && (
+              <div className="compare-line small">
+                ב{CHAINS[otherChain].name}, {compare.matched === compare.total ? 'אותם מוצרים' : `${compare.matched} מהמוצרים`} עולים{' '}
+                <strong>{fmtMoney(compare.there)}</strong> לעומת {fmtMoney(compare.here)} כאן
+                {compare.there !== compare.here &&
+                  (compare.there < compare.here ? (
+                    <span className="cheaper-there"> · זול שם ב-{fmtMoney(compare.here - compare.there)}</span>
+                  ) : (
+                    <span className="cheaper-here"> · כאן זול יותר ב-{fmtMoney(compare.there - compare.here)}</span>
+                  ))}
+              </div>
+            )}
           </div>
 
           <div className="segmented">
@@ -108,6 +155,7 @@ export default function ShopScreen({ chainId, mode }: { chainId: ChainId; mode: 
                   key={r.key}
                   name={r.name}
                   note={r.note}
+                  price={r.product?.price}
                   item={items[r.key]}
                   onToggle={() => toggleStatus(chainId, mode, r.key, 'bought')}
                   onMissing={() => toggleStatus(chainId, mode, r.key, 'missing')}
@@ -120,18 +168,157 @@ export default function ShopScreen({ chainId, mode }: { chainId: ChainId; mode: 
 
       {all.length > 0 && (
         <div className="bottom-bar">
-          <button className="btn primary block big" onClick={finish}>
+          <button className="btn primary block big" onClick={() => setFinishing(true)}>
             ✔ סיום קנייה ושמירה
           </button>
         </div>
       )}
+
+      {scanning && (
+        <Suspense fallback={null}>
+          <Scanner onCode={onScan} onClose={() => setScanning(false)} message={scanMsg} />
+        </Suspense>
+      )}
+      {unknownCode && (
+        <AssignBarcodeSheet
+          code={unknownCode}
+          chainId={chainId}
+          mode={mode}
+          candidates={visibleList.map((k) => products.find((p) => p.id === k)).filter((p): p is Product => !!p)}
+          onDone={(name) => {
+            setUnknownCode(null);
+            setScanMsg(name ? `✓ ${name} (הברקוד נשמר)` : '');
+            setScanning(true);
+          }}
+        />
+      )}
+      {finishing && (
+        <FinishSheet chainId={chainId} mode={mode} counts={{ bought, missing, total: all.length }} totals={totals} onClose={() => setFinishing(false)} />
+      )}
     </div>
+  );
+}
+
+function MoneyBox({ totals, budget, onEditBudget }: { totals: ReturnType<typeof listTotals>; budget?: number; onEditBudget: () => void }) {
+  const over = budget !== undefined && totals.planned > budget;
+  return (
+    <div className="money-box">
+      <div className="money-row">
+        <span>
+          בעגלה <strong>{fmtMoney(totals.bought)}</strong>
+          <span className="muted"> מתוך {fmtMoney(totals.planned)} צפוי</span>
+        </span>
+        <button className="link-btn" onClick={onEditBudget}>
+          {budget ? `תקציב ${fmtMoney(budget)}` : '+ תקציב'}
+        </button>
+      </div>
+      {budget !== undefined && (
+        <>
+          <div className="progress budget-bar">
+            <div className={over ? 'over' : ''} style={{ width: `${Math.min(100, (totals.bought / budget) * 100)}%` }} />
+          </div>
+          <div className={`small ${over ? 'danger-text' : 'muted'}`}>
+            {budget - totals.bought >= 0 ? `נשאר ${fmtMoney(budget - totals.bought)}` : `חריגה של ${fmtMoney(totals.bought - budget)}`}
+            {over && ` · הרשימה צפויה לעבור את התקציב ב-${fmtMoney(totals.planned - budget)}`}
+          </div>
+        </>
+      )}
+      {totals.unpriced > 0 && <div className="muted small">ל-{totals.unpriced} מוצרים אין מחיר (אפשר להוסיף ב-✎ עריכה)</div>}
+    </div>
+  );
+}
+
+function AssignBarcodeSheet({
+  code,
+  chainId,
+  mode,
+  candidates,
+  onDone,
+}: {
+  code: string;
+  chainId: ChainId;
+  mode: Mode;
+  candidates: Product[];
+  onDone: (name?: string) => void;
+}) {
+  const [q, setQ] = useState('');
+  const products = useApp((s) => s.products);
+  const all = products.filter((p) => p.chainId === chainId);
+  const shown = q ? all.filter((p) => p.name.includes(q)) : candidates.filter((p) => !p.barcode);
+  return (
+    <Sheet title="ברקוד חדש" onClose={() => onDone()}>
+      <p className="muted">
+        הברקוד <span dir="ltr">{code}</span> עוד לא מוכר. לאיזה מוצר הוא שייך? מהפעם הבאה הסריקה תזהה אותו לבד.
+      </p>
+      <input className="input" placeholder="🔍 חיפוש מוצר" value={q} onChange={(e) => setQ(e.target.value)} />
+      <div className="menu">
+        {shown.map((p) => (
+          <button
+            key={p.id}
+            onClick={() => {
+              const s = useApp.getState();
+              s.updateProduct(p.id, { barcode: code });
+              s.setStatus(chainId, mode, p.id, 'bought');
+              onDone(p.name);
+            }}
+          >
+            {p.name}
+          </button>
+        ))}
+        {shown.length === 0 && <p className="muted">לא נמצאו מוצרים</p>}
+      </div>
+    </Sheet>
+  );
+}
+
+function FinishSheet({
+  chainId,
+  mode,
+  counts,
+  totals,
+  onClose,
+}: {
+  chainId: ChainId;
+  mode: Mode;
+  counts: { bought: number; missing: number; total: number };
+  totals: ReturnType<typeof listTotals>;
+  onClose: () => void;
+}) {
+  const navigate = useNavigate();
+  const [paid, setPaid] = useState(totals.bought ? String(Math.round(totals.bought * 100) / 100) : '');
+  const pending = counts.total - counts.bought - counts.missing;
+  return (
+    <Sheet title="סיום קנייה" onClose={onClose}>
+      <form
+        className="form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          useApp.getState().finishList(chainId, mode, parseFloat(paid.replace(',', '.')) || undefined);
+          navigate(`/c/${chainId}`);
+        }}
+      >
+        <p className="muted">
+          נקנו {counts.bought}
+          {counts.missing > 0 && `, לא היו במלאי ${counts.missing}`}
+          {pending > 0 && `, ${pending} לא סומנו`}. הרשימה תישמר בהיסטוריה ותתחיל רשימה חדשה.
+        </p>
+        {counts.missing > 0 && <p className="notice">{counts.missing} מוצרים שלא היו במלאי יעברו אוטומטית לרשימה הבאה.</p>}
+        <label>
+          כמה שילמת? (לא חובה, לסיכום ההוצאות)
+          <input className="input ltr" inputMode="decimal" placeholder="₪" value={paid} onChange={(e) => setPaid(e.target.value)} />
+        </label>
+        <button type="submit" className="btn primary block big">
+          ✔ סיום ושמירה
+        </button>
+      </form>
+    </Sheet>
   );
 }
 
 export function ShopRow({
   name,
   note,
+  price,
   item,
   onToggle,
   onMissing,
@@ -139,6 +326,7 @@ export function ShopRow({
 }: {
   name: string;
   note?: string;
+  price?: number;
   item: ListItem;
   onToggle: () => void;
   onMissing: () => void;
@@ -151,6 +339,7 @@ export function ShopRow({
         <span className="shop-name">
           {name}
           {note && <span className="pick-path">{note}</span>}
+          {price !== undefined && <span className="pick-path">{fmtMoney(price * item.qty)}</span>}
         </span>
         {item.qty > 1 && (
           <span className="shop-qty" dir="ltr">

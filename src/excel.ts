@@ -107,8 +107,9 @@ export function dataToXlsx(data: AppData): Uint8Array {
     }
   }
 
-  const catalog: Cell[][] = [['רשת', 'קטגוריה', 'מוצר']];
-  for (const p of data.products) catalog.push([chainName(p.chainId), categoryPath(data.categories, p.categoryId), p.name]);
+  const catalog: Cell[][] = [['רשת', 'קטגוריה', 'מוצר', 'מחיר', 'יש בבית', 'צריך בבית']];
+  for (const p of data.products)
+    catalog.push([chainName(p.chainId), categoryPath(data.categories, p.categoryId), p.name, p.price ?? '', data.stock?.[p.id] ?? '', p.target ?? '']);
 
   const json = JSON.stringify(data);
   const dataRows: Cell[][] = [];
@@ -117,7 +118,7 @@ export function dataToXlsx(data: AppData): Uint8Array {
   return buildXlsx([
     { name: 'רשימות פעילות', rows: active, widths: [14, 14, 28, 30, 8, 16] },
     { name: 'היסטוריה', rows: history, widths: [18, 14, 14, 28, 30, 8, 16] },
-    { name: 'מאגר מוצרים', rows: catalog, widths: [14, 32, 28] },
+    { name: 'מאגר מוצרים', rows: catalog, widths: [14, 32, 28, 10, 10, 10] },
     { name: DATA_SHEET, rows: dataRows, hidden: true },
   ]);
 }

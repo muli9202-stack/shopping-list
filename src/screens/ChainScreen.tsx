@@ -8,6 +8,10 @@ export default function ChainScreen({ chainId }: { chainId: ChainId }) {
   const categories = useApp((s) => s.categories);
   const products = useApp((s) => s.products);
   const historyCount = useApp((s) => s.history.filter((h) => h.chainId === chainId).length);
+  const stock = useApp((s) => s.stock);
+  const trackedProducts = products.filter((p) => p.chainId === chainId && p.target);
+  const tracked = trackedProducts.length;
+  const short = trackedProducts.filter((p) => (stock[p.id] ?? 0) < p.target!).length;
   const chain = CHAINS[chainId];
 
   return (
@@ -27,6 +31,13 @@ export default function ChainScreen({ chainId }: { chainId: ChainId }) {
             />
           );
         })}
+        <Tile
+          to={`/c/${chainId}/inventory`}
+          className="tile-history"
+          icon="🏠"
+          title="מלאי בבית"
+          subtitle={tracked ? `${short} מוצרים חסרים מתוך ${tracked} במעקב` : 'מה יש בבית ומה חסר'}
+        />
         <Tile
           to={`/c/${chainId}/history`}
           className="tile-history"

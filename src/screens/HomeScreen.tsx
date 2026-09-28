@@ -1,10 +1,13 @@
 import { Link } from 'react-router-dom';
 import { useApp } from '../store';
-import { CHAINS, CHAIN_IDS } from '../types';
+import { dueToday } from '../reminder';
+import { CHAINS, CHAIN_IDS, MODES } from '../types';
 import { Tile } from '../ui/components';
 
 export default function HomeScreen() {
   const products = useApp((s) => s.products);
+  const reminder = useApp((s) => s.settings.reminder);
+  const due = dueToday(reminder);
   return (
     <div className="page">
       <header className="home-head">
@@ -16,6 +19,7 @@ export default function HomeScreen() {
           ⚙️
         </Link>
       </header>
+      {due && <div className="reminder-banner">🔔 היום יום {MODES[due].name}: הגיע הזמן להכין רשימה</div>}
       <div className="tiles tiles-big">
         {CHAIN_IDS.map((id) => {
           const count = products.filter((p) => p.chainId === id).length;
@@ -26,10 +30,14 @@ export default function HomeScreen() {
               className={`tile-chain ${CHAINS[id].className}`}
               icon="🛒"
               title={CHAINS[id].name}
-              subtitle={count ? `${count} מוצרים במאגר` : 'המאגר עדיין ריק'}
+              subtitle={count ? `${count} מוצרים` : 'עדיין אין מוצרים'}
             />
           );
         })}
+      </div>
+      <div className="tiles home-extra">
+        <Tile to="/spending" className="tile-small" icon="💰" title="סיכום הוצאות" />
+        <Tile to="/compare" className="tile-small" icon="⚖️" title="השוואת מחירים" />
       </div>
     </div>
   );
