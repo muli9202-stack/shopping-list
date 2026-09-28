@@ -17,6 +17,7 @@ import CompareScreen from './screens/CompareScreen';
 import JoinScreen from './screens/JoinScreen';
 import BranchesScreen from './screens/BranchesScreen';
 import MapEditorScreen from './screens/MapEditorScreen';
+import NavScreen from './screens/NavScreen';
 
 function useHydrated() {
   const [done, setDone] = useState(useApp.persist.hasHydrated());
@@ -67,6 +68,7 @@ export default function App() {
         <Route path="/c/:chain/history" element={<WithChain render={(c) => <HistoryScreen chainId={c} />} />} />
         <Route path="/c/:chain/:mode" element={<WithMode render={(c, m) => <SelectScreen chainId={c} mode={m} />} />} />
         <Route path="/c/:chain/:mode/shop" element={<WithMode render={(c, m) => <ShopScreen chainId={c} mode={m} />} />} />
+        <Route path="/c/:chain/:mode/nav" element={<WithMode render={(c, m) => <NavScreen chainId={c} mode={m} />} />} />
         <Route path="/c/:chain/:mode/average" element={<WithMode render={(c, m) => <AverageScreen chainId={c} mode={m} />} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
