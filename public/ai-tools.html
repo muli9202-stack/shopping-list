@@ -184,10 +184,154 @@ form.sheet h2 { font-family: var(--font-display); margin: 0; font-size: 1.3rem; 
   .row2 { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { .tile a { transition: none; } .tile a:hover { transform: none; } }
+
+/* Home + "my creations" views */
+.back { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 7px 14px; font-weight: 500; }
+.hero-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 8px; }
+.big {
+  display: flex; flex-direction: column; justify-content: space-between; gap: 18px; min-height: 220px; text-align: right;
+  padding: 24px; border-radius: 20px; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  box-shadow: var(--shadow); transition: transform .15s ease, border-color .15s ease;
+}
+.big:hover { transform: translateY(-3px); border-color: var(--accent); }
+.big .glyph { font-size: 2.6rem; line-height: 1; }
+.big .h { display: block; font-family: var(--font-display); font-weight: 800; font-size: 1.7rem; margin: 0; }
+.big .p { display: block; margin-top: 4px; color: var(--muted); }
+.big .stat { font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+.cat {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: right;
+  padding: 18px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface);
+  color: var(--ink); box-shadow: var(--shadow); transition: border-color .15s ease, transform .15s ease;
+}
+.cat:hover { border-color: var(--accent); transform: translateY(-2px); }
+.cat .glyph { font-size: 2rem; line-height: 1; }
+.cat b { font-family: var(--font-display); font-size: 1.15rem; }
+.cat span { color: var(--muted); font-size: .85rem; font-variant-numeric: tabular-nums; }
+.dropping { border: 2px dashed var(--accent) !important; background: var(--accent-soft) !important; }
+.hint { color: var(--muted); font-size: .9rem; margin: 0 0 14px; }
+.drop {
+  border: 2px dashed var(--line); border-radius: var(--radius); padding: 22px 16px; text-align: center;
+  color: var(--muted); margin-bottom: 16px; background: var(--surface);
+}
+.drop strong { color: var(--ink); display: block; font-size: 1.05rem; margin-bottom: 4px; }
+.drop .actions { justify-content: center; margin-top: 12px; }
+.items { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.item { position: relative; }
+.item > button.open, .item > a.open {
+  display: flex; flex-direction: column; width: 100%; height: 100%; padding: 0; overflow: hidden; text-align: right;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--ink);
+  box-shadow: var(--shadow); text-decoration: none;
+}
+.item > .open:hover { border-color: var(--accent); }
+.thumb { aspect-ratio: 4 / 3; width: 100%; max-width: 100%; background: var(--soft); display: grid; place-items: center; overflow: hidden; font-size: 2.4rem; }
+.thumb img, .thumb video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.item .cap { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.item .cap b { font-weight: 700; overflow-wrap: anywhere; }
+.item .cap small { color: var(--muted); font-size: .78rem; }
+.item .tbtns { top: 8px; left: 8px; }
+.viewer-media { background: var(--soft); border-radius: 12px; overflow: hidden; display: grid; place-items: center; min-height: 120px; }
+.viewer-media img, .viewer-media video { max-width: 100%; max-height: 60vh; display: block; }
+.viewer-media audio { width: 100%; margin: 16px; }
+.viewer-media .file { padding: 24px; text-align: center; color: var(--muted); }
+dialog.wide { width: min(720px, calc(100vw - 32px)); }
 </style>
+
+<div class="wrap" id="homeView" dir="rtl" lang="he" hidden>
+  <header>
+    <div>
+      <h1>שלום 👋</h1>
+      <div class="count">לאן נכנסים?</div>
+    </div>
+  </header>
+  <div class="hero-grid">
+    <button class="big" type="button" id="goTools">
+      <span class="glyph" aria-hidden="true">🤖</span>
+      <span><span class="h">כלי AI</span><span class="p">כל הכלים, המועדפים והקטגוריות שסידרת</span></span>
+      <span class="stat" id="toolsStat"></span>
+    </button>
+    <button class="big" type="button" id="goMine">
+      <span class="glyph" aria-hidden="true">🗂️</span>
+      <span><span class="h">הדברים שעשיתי</span><span class="p">אפליקציות, משחקים, תמונות, וידאו, מצגות ועוד</span></span>
+      <span class="stat" id="mineStat"></span>
+    </button>
+  </div>
+</div>
+
+<div class="wrap" id="mineView" dir="rtl" lang="he" hidden>
+  <header>
+    <button class="back" type="button" data-go="home">→ חזרה</button>
+    <div>
+      <h1>הדברים שעשיתי</h1>
+      <div class="count" id="mineCount"></div>
+    </div>
+  </header>
+  <p class="hint">בוחרים קטגוריה, או גוררים קבצים ישר על אחת מהן.</p>
+  <div class="cats" id="cats"></div>
+</div>
+
+<div class="wrap" id="catView" dir="rtl" lang="he" hidden>
+  <header>
+    <button class="back" type="button" data-go="mine">→ חזרה</button>
+    <div>
+      <h1 id="catTitle"></h1>
+      <div class="count" id="catCount"></div>
+    </div>
+  </header>
+  <div class="drop" id="drop">
+    <strong>גרור לכאן קבצים</strong>
+    תמונות, סרטונים, הקלטות או כל קובץ אחר. הם נשמרים כאן במכשיר.
+    <div class="actions">
+      <button class="btn primary" type="button" id="pickBtn">+ בחירת קבצים</button>
+      <button class="btn" type="button" id="linkBtn">+ הוספת קישור</button>
+    </div>
+    <input type="file" id="fileIn" multiple hidden>
+  </div>
+  <div class="items" id="items"></div>
+  <p class="empty" id="itemsEmpty" hidden>עוד אין כאן כלום. גרור קבצים או הוסף קישור.</p>
+</div>
+
+<dialog id="itemDlg" class="wide" dir="rtl" lang="he">
+  <form class="sheet" id="itemForm" novalidate>
+    <div class="viewer-media" id="viewer"></div>
+    <div class="field" id="linkField">
+      <label for="iUrl">קישור</label>
+      <input id="iUrl" dir="ltr" type="url" inputmode="url" placeholder="https://..." autocomplete="off">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label for="iTitle">שם</label>
+        <input id="iTitle" type="text" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="iCat">קטגוריה</label>
+        <select id="iCat"></select>
+      </div>
+    </div>
+    <div class="field">
+      <label for="iNote">הערה</label>
+      <textarea id="iNote" placeholder="למשל: נעשה עם Lovable"></textarea>
+    </div>
+    <div class="err" id="iErr" role="alert"></div>
+    <div class="confirm" id="iConfirm" hidden>
+      <span>למחוק לתמיד?</span>
+      <button class="btn danger" type="button" id="iYes">כן, למחוק</button>
+      <button class="btn" type="button" id="iNo">ביטול</button>
+    </div>
+    <div class="actions">
+      <button class="btn primary" type="submit">שמירה</button>
+      <a class="btn" id="iOpen" target="_blank" rel="noopener noreferrer" hidden>פתיחה ↗</a>
+      <button class="btn" type="button" id="iDownload" hidden>הורדה</button>
+      <button class="btn" type="button" id="iCancel">סגירה</button>
+      <span class="spacer"></span>
+      <button class="btn danger" type="button" id="iDel">מחיקה</button>
+    </div>
+  </form>
+</dialog>
 
 <div class="wrap" id="wrap" dir="rtl" lang="he">
   <header>
+    <button class="back" type="button" data-go="home">→ חזרה</button>
     <div>
       <h1>הכלים שלי</h1>
       <div class="count" id="count"></div>
@@ -574,8 +718,244 @@ form.sheet h2 { font-family: var(--font-display); margin: 0; font-size: 1.3rem; 
   $('sortBtn').addEventListener('click', () => { sorting = !sorting; $('q').value = ''; render(); });
   $('sortDone').addEventListener('click', () => { sorting = false; render(); toast('הסדר נשמר'); });
   $('q').addEventListener('input', render);
+  window.toolsCount = () => state.apps.length;
   buildPickers();
   render();
+})();
+</script>
+<script>
+/* Home screen, navigation and "my creations" (files kept in IndexedDB on this device). */
+(function () {
+  const MCATS = [
+    ['apps', 'אפליקציות', '📱'], ['games', 'משחקים', '🎮'], ['images', 'תמונות', '🖼️'], ['video', 'וידאו', '🎬'],
+    ['slides', 'מצגות', '📊'], ['avatars', 'אווטארים', '🧑‍🎤'], ['podcasts', 'פודקאסטים', '🎙️'], ['misc', 'שונים', '📦'],
+  ];
+  const MC = Object.fromEntries(MCATS.map(([k, n, g]) => [k, { name: n, glyph: g }]));
+  const $ = id => document.getElementById(id);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+  let items = [], current = 'apps', editing = null;
+  const urls = new Map();
+
+  /* Storage: IndexedDB, with an in-memory fallback so the page still works if it is blocked. */
+  let dbp = null;
+  function db() {
+    if (!dbp) dbp = new Promise((res, rej) => {
+      try {
+        const r = indexedDB.open('my-creations', 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('items', { keyPath: 'id' });
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => rej(r.error);
+      } catch (e) { rej(e); }
+    });
+    return dbp;
+  }
+  async function tx(mode, fn) {
+    try {
+      const d = await db();
+      return await new Promise((res, rej) => {
+        const t = d.transaction('items', mode); const st = t.objectStore('items');
+        const out = fn(st);
+        t.oncomplete = () => res(out && out.result);
+        t.onerror = () => rej(t.error);
+      });
+    } catch (e) { console.warn('storage unavailable', e); return undefined; }
+  }
+  const put = it => tx('readwrite', st => st.put(it));
+  const del = id => tx('readwrite', st => st.delete(id));
+  async function loadAll() { const r = await tx('readonly', st => st.getAll()); items = (r || []).sort((a, b) => b.created - a.created); }
+
+  function kindOf(it) {
+    if (it.link) return 'link';
+    const t = it.type || '';
+    if (t.startsWith('image/')) return 'image';
+    if (t.startsWith('video/')) return 'video';
+    if (t.startsWith('audio/')) return 'audio';
+    return 'file';
+  }
+  function blobUrl(it) {
+    if (!it.blob) return '';
+    if (!urls.has(it.id)) urls.set(it.id, URL.createObjectURL(it.blob));
+    return urls.get(it.id);
+  }
+  const cnt = n => n === 1 ? 'פריט אחד' : n + ' פריטים';
+  function size(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
+  function guessCat(f) {
+    const t = f.type || '', n = f.name.toLowerCase();
+    if (t.startsWith('image/')) return 'images';
+    if (t.startsWith('video/')) return 'video';
+    if (t.startsWith('audio/')) return 'podcasts';
+    if (/\.(pptx?|key|odp)$/.test(n) || t.includes('presentation')) return 'slides';
+    return 'misc';
+  }
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; }, 2200);
+  }
+
+  async function addFiles(files, cat) {
+    const list = [...files];
+    if (!list.length) return;
+    for (const f of list) {
+      const it = { id: 'm' + Date.now() + Math.random().toString(36).slice(2, 7), cat: cat || guessCat(f),
+        title: f.name.replace(/\.[^.]+$/, ''), fileName: f.name, type: f.type, size: f.size, blob: f, note: '', created: Date.now() };
+      await put(it); items.unshift(it);
+    }
+    toast(list.length === 1 ? 'נשמר ב' + MC[cat || guessCat(list[0])].name : list.length + ' קבצים נשמרו');
+    renderAll();
+  }
+
+  /* Drop targets */
+  function dropZone(node, getCat) {
+    node.addEventListener('dragover', e => { if ([...e.dataTransfer.types].includes('Files')) { e.preventDefault(); node.classList.add('dropping'); } });
+    node.addEventListener('dragleave', e => { if (!node.contains(e.relatedTarget)) node.classList.remove('dropping'); });
+    node.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); node.classList.remove('dropping'); addFiles(e.dataTransfer.files, getCat()); });
+  }
+  window.addEventListener('dragover', e => e.preventDefault());
+  window.addEventListener('drop', e => e.preventDefault());
+
+  /* Views */
+  function show(view) {
+    ['homeView', 'wrap', 'mineView', 'catView'].forEach(v => { $(v).hidden = v !== view; });
+    window.scrollTo(0, 0);
+  }
+  function route() {
+    const h = location.hash.slice(1);
+    if (h === 'tools') show('wrap');
+    else if (h === 'mine') { renderCats(); show('mineView'); }
+    else if (h.startsWith('mine-') && MC[h.slice(5)]) { current = h.slice(5); renderItems(); show('catView'); }
+    else { renderHome(); show('homeView'); }
+  }
+  function go(h) { if (location.hash.slice(1) === h) route(); else location.hash = h; }
+  window.addEventListener('hashchange', route);
+  document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go === 'home' ? '' : b.dataset.go)));
+  $('goTools').addEventListener('click', () => go('tools'));
+  $('goMine').addEventListener('click', () => go('mine'));
+
+  function renderHome() {
+    const n = window.toolsCount ? window.toolsCount() : 0;
+    $('toolsStat').textContent = n + ' כלים';
+    $('mineStat').textContent = items.length ? cnt(items.length) + ' שמורים' : 'עוד ריק · אפשר להתחיל לגרור קבצים';
+  }
+  function renderCats() {
+    $('mineCount').textContent = cnt(items.length) + ' ב-8 קטגוריות';
+    $('cats').replaceChildren(...MCATS.map(([k, name, glyph]) => {
+      const b = el('button', 'cat'); b.type = 'button';
+      const n = items.filter(i => i.cat === k).length;
+      b.append(el('span', 'glyph', glyph), el('b', '', name), el('span', '', n ? cnt(n) : 'ריק'));
+      b.querySelector('.glyph').setAttribute('aria-hidden', 'true');
+      b.addEventListener('click', () => go('mine-' + k));
+      dropZone(b, () => k);
+      return b;
+    }));
+  }
+  function thumbFor(it) {
+    const th = el('div', 'thumb');
+    const k = kindOf(it);
+    if (k === 'image') { const i = el('img'); i.src = blobUrl(it); i.alt = ''; i.loading = 'lazy'; th.append(i); }
+    else if (k === 'video') { const v = el('video'); v.src = blobUrl(it) + '#t=0.5'; v.muted = true; v.preload = 'metadata'; v.playsInline = true; th.append(v); }
+    else th.textContent = k === 'audio' ? '🎧' : k === 'link' ? '🔗' : MC[it.cat].glyph;
+    return th;
+  }
+  function renderItems() {
+    const c = MC[current];
+    $('catTitle').textContent = c.glyph + ' ' + c.name;
+    const list = items.filter(i => i.cat === current);
+    $('catCount').textContent = cnt(list.length);
+    $('itemsEmpty').hidden = list.length > 0;
+    $('items').replaceChildren(...list.map(it => {
+      const wrap = el('div', 'item');
+      const k = kindOf(it);
+      let open;
+      if (k === 'link') { open = el('a', 'open'); open.href = it.link; open.target = '_blank'; open.rel = 'noopener noreferrer'; }
+      else { open = el('button', 'open'); open.type = 'button'; open.addEventListener('click', () => openItem(it.id)); }
+      const cap = el('div', 'cap');
+      cap.append(el('b', '', it.title || it.fileName || 'ללא שם'),
+        el('small', '', k === 'link' ? it.link.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40) : size(it.size || 0)));
+      if (it.note) cap.append(el('small', '', it.note));
+      open.append(thumbFor(it), cap);
+      const btns = el('div', 'tbtns');
+      const edit = el('button'); edit.type = 'button'; edit.title = 'עריכה'; edit.setAttribute('aria-label', 'עריכת ' + (it.title || ''));
+      edit.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+      edit.addEventListener('click', () => openItem(it.id));
+      btns.append(edit);
+      wrap.append(open, btns);
+      return wrap;
+    }));
+  }
+  function renderAll() {
+    const h = location.hash.slice(1);
+    if (h === 'mine') renderCats(); else if (h.startsWith('mine-')) renderItems(); else renderHome();
+  }
+
+  /* Item dialog: view, rename, move, delete; also used to add a link */
+  $('iCat').replaceChildren(...MCATS.map(([k, n]) => { const o = el('option', '', n); o.value = k; return o; }));
+  function openItem(id) {
+    const it = id ? items.find(i => i.id === id) : null;
+    editing = it ? it.id : null;
+    const isLink = !it || !!it.link;
+    const v = $('viewer'); v.replaceChildren(); v.hidden = !it || isLink;
+    if (it && !isLink) {
+      const k = kindOf(it), src = blobUrl(it);
+      if (k === 'image') { const i = el('img'); i.src = src; i.alt = it.title; v.append(i); }
+      else if (k === 'video') { const m = el('video'); m.src = src; m.controls = true; m.playsInline = true; v.append(m); }
+      else if (k === 'audio') { const m = el('audio'); m.src = src; m.controls = true; v.append(m); }
+      else { const d = el('div', 'file'); d.append(el('div', '', MC[it.cat].glyph), el('div', '', it.fileName + ' · ' + size(it.size || 0))); v.append(d); }
+    }
+    $('linkField').hidden = !isLink;
+    $('iUrl').value = it && it.link ? it.link : '';
+    $('iTitle').value = it ? it.title : '';
+    $('iCat').value = it ? it.cat : current;
+    $('iNote').value = it ? it.note || '' : '';
+    $('iErr').textContent = '';
+    $('iConfirm').hidden = true;
+    $('iDel').hidden = !it;
+    $('iOpen').hidden = !(it && it.link);
+    if (it && it.link) $('iOpen').href = it.link;
+    $('iDownload').hidden = !(it && it.blob);
+    $('itemDlg').showModal();
+    (isLink && !it ? $('iUrl') : $('iTitle')).focus();
+  }
+  $('itemForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const it = items.find(i => i.id === editing);
+    const isLink = !it || !!it.link;
+    let link = '';
+    if (isLink) {
+      link = $('iUrl').value.trim();
+      if (link && !/^https?:\/\//i.test(link)) link = 'https://' + link;
+      try { if (!new URL(link).hostname.includes('.')) link = ''; } catch (err) { link = ''; }
+      if (!link) { $('iErr').textContent = 'צריך להכניס קישור תקין, למשל https://my-app.lovable.app'; $('iUrl').focus(); return; }
+    }
+    const fields = { title: $('iTitle').value.trim() || (it ? it.fileName || '' : link.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]),
+      cat: $('iCat').value, note: $('iNote').value.trim() };
+    if (isLink) fields.link = link;
+    if (it) { Object.assign(it, fields); await put(it); toast('נשמר'); }
+    else { const n = { id: 'm' + Date.now(), created: Date.now(), ...fields }; await put(n); items.unshift(n); toast('הקישור נשמר ב' + MC[n.cat].name); }
+    $('itemDlg').close(); renderAll();
+  });
+  $('iCancel').addEventListener('click', () => $('itemDlg').close());
+  $('iDel').addEventListener('click', () => { $('iConfirm').hidden = false; });
+  $('iNo').addEventListener('click', () => { $('iConfirm').hidden = true; });
+  $('iYes').addEventListener('click', async () => {
+    await del(editing);
+    if (urls.has(editing)) { URL.revokeObjectURL(urls.get(editing)); urls.delete(editing); }
+    items = items.filter(i => i.id !== editing);
+    $('itemDlg').close(); renderAll(); toast('נמחק');
+  });
+  $('iDownload').addEventListener('click', () => {
+    const it = items.find(i => i.id === editing); if (!it) return;
+    const a = el('a'); a.href = blobUrl(it); a.download = it.fileName || 'file'; document.body.append(a); a.click(); a.remove();
+  });
+  $('itemDlg').addEventListener('close', () => { $('viewer').querySelectorAll('video,audio').forEach(m => m.pause()); });
+
+  $('pickBtn').addEventListener('click', () => $('fileIn').click());
+  $('fileIn').addEventListener('change', e => { addFiles(e.target.files, current); e.target.value = ''; });
+  $('linkBtn').addEventListener('click', () => openItem(null));
+  dropZone($('drop'), () => current);
+  dropZone($('catView'), () => current);
+
+  route();
+  loadAll().then(renderAll);
 })();
 </script>
 </body>
