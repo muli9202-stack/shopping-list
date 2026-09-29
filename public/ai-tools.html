@@ -911,7 +911,7 @@ dialog.wide { width: min(720px, calc(100vw - 32px)); }
     $('iDel').hidden = !it;
     $('iOpen').hidden = !(it && it.link);
     if (it && it.link) $('iOpen').href = it.link;
-    $('iDownload').hidden = !(it && it.blob);
+    $('iDownload').hidden = !(it && it.blob) || window.self !== window.top; // framed viewers block downloads
     $('itemDlg').showModal();
     (isLink && !it ? $('iUrl') : $('iTitle')).focus();
   }
