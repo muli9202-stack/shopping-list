@@ -204,21 +204,29 @@ export async function speak(text: string, opts: { rate?: number; force?: boolean
     // 1. the recorded natural voice (everything fixed in the app); slow version for slow speech
     const plan = await planSpeech(text, rate < 0.8);
     if (my !== token) return;
-    if (plan && plan.some((p) => 'clip' in p)) {
-      for (const part of plan) {
-        if (my !== token) return;
-        if ('clip' in part) await playClip(part.clip);
-        else await otherVoice(part.text, rate, my, !!opts.local);
+    if (plan) {
+      // Only the natural voice speaks: pieces that were never recorded are left out rather than read
+      // by a second, robotic voice in the middle of the sentence (the text is on the screen anyway).
+      if (plan.some((p) => 'clip' in p)) {
+        for (const part of plan) {
+          if (my !== token) return;
+          if ('clip' in part) await playClip(part.clip);
+        }
+        return;
       }
+      // nothing recorded: a natural cloud voice if the server has one, otherwise stay quiet
+      const mp3 = opts.local ? null : await cloudAudio(text, rate);
+      if (mp3 && my === token) await playMp3(mp3, my);
       return;
     }
+    // no recorded voice at all (pack missing): the best voice we can find
     await otherVoice(text, rate, my, !!opts.local);
   } catch {
     // speech is a nice-to-have; never break the game because of it
   }
 }
 
-/** Text that was never recorded (e.g. AI feedback): the cloud voice when set up, else the device voice. */
+/** Without the recorded voice pack: the cloud voice when set up, else the device voice. */
 async function otherVoice(text: string, rate: number, my: number, local: boolean) {
   const mp3 = local ? null : await cloudAudio(text, rate);
   if (my !== token) return;

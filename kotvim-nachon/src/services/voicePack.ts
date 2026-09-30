@@ -75,6 +75,11 @@ function decode(c: Clip): Promise<AudioBuffer> {
 
 export type Part = { clip: Clip } | { text: string };
 
+/** Tests can collect the texts that have no recording by setting globalThis.__voiceMisses = new Set(). */
+function miss(text: string) {
+  (globalThis as { __voiceMisses?: Set<string> }).__voiceMisses?.add(text);
+}
+
 /**
  * Turn a text into recorded clips: the whole phrase if it was recorded, otherwise sentence by
  * sentence, otherwise the longest recorded word runs ("כותבים" + "עוּגָה"). Anything never
@@ -118,6 +123,7 @@ export async function planSpeech(text: string, slow: boolean): Promise<Part[] | 
     }
     if (unknown.length) parts.push({ text: unknown.join(' ') });
   }
+  for (const p of parts) if ('text' in p) miss(`${p.text}  ⟵  ${text}`);
   return parts;
 }
 

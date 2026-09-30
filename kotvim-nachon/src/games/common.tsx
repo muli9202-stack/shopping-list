@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { SpeakBtn } from '../ui/kit';
 import type { GameId, Question, SkillId } from '../types';
 import { HelpBtn, Progress } from '../ui/kit';
@@ -142,6 +142,15 @@ const KB_ROWS = [
 ];
 
 /** Big on-screen Hebrew keyboard with handwriting-style keys. */
+/** Standard Israeli layout: a physical keyboard left in English still types Hebrew letters. */
+const LATIN_TO_HEBREW: Record<string, string> = {
+  e: 'ק', r: 'ר', t: 'א', y: 'ט', u: 'ו', i: 'ן', o: 'ם', p: 'פ',
+  a: 'ש', s: 'ד', d: 'ג', f: 'כ', g: 'ע', h: 'י', j: 'ח', k: 'ל', l: 'ך', ';': 'ף',
+  z: 'ז', x: 'ס', c: 'ב', v: 'ה', b: 'נ', n: 'מ', m: 'צ',
+};
+const HEBREW_KEYS = new Set(KB_ROWS.flat());
+
+/** Big on-screen Hebrew keyboard with handwriting-style keys. The computer's own keyboard works too. */
 export function HebrewKeyboard({ onKey, onBack, onSpace, onEnter, punctuation }: { onKey: (k: string) => void; onBack: () => void; onSpace?: () => void; onEnter?: () => void; punctuation?: boolean }) {
   const [pressed, setPressed] = useState<string | null>(null);
   const key = (k: string) => {
@@ -149,6 +158,29 @@ export function HebrewKeyboard({ onKey, onBack, onSpace, onEnter, punctuation }:
     setTimeout(() => setPressed(null), 120);
     onKey(k);
   };
+  // the latest handlers, so the one window listener always calls the current ones
+  const handlers = useRef({ key, onBack, onSpace, onEnter, punctuation });
+  handlers.current = { key, onBack, onSpace, onEnter, punctuation };
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      const h = handlers.current;
+      const k = e.key;
+      let handled = true;
+      if (HEBREW_KEYS.has(k)) h.key(k);
+      else if (LATIN_TO_HEBREW[k.toLowerCase()]) h.key(LATIN_TO_HEBREW[k.toLowerCase()]);
+      else if (k === 'Backspace') h.onBack();
+      else if (k === ' ' && h.onSpace) h.onSpace();
+      else if (k === 'Enter' && h.onEnter) h.onEnter();
+      else if (h.punctuation && ['.', ',', '!', '?'].includes(k)) h.key(k);
+      else handled = false;
+      if (handled) e.preventDefault();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
   return (
     <div style={{ background: '#e9ecef', borderRadius: 20, padding: 8, display: 'flex', flexDirection: 'column', gap: 6 }} dir="rtl">
       {KB_ROWS.map((row, i) => (

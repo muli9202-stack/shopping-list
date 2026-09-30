@@ -99,7 +99,21 @@ def text_phonemes(text: str) -> str:
     return " ".join(p.strip() for p in parts if p.strip())
 
 
+def genuva_stress(ph: str) -> str:
+    """Patach genuva (שָׁבוּעַ, תַּפּוּחַ): the final "a" is a glide, the stress stays on the vowel before it."""
+    bare = ph.replace("ˈ", "")
+    m = re.search(r"([aeiou])a[χʔ]?$", bare)
+    return bare[: m.start(1)] + "ˈ" + bare[m.start(1) :] if m else ph
+
+
 def item_phonemes(item) -> str:
+    ph = base_phonemes(item)
+    if item["text"] not in PHONEME_FIX and re.search("[חע]\u05b7$", item.get("nikud") or ""):
+        ph = genuva_stress(ph)
+    return ph
+
+
+def base_phonemes(item) -> str:
     text = item["text"]
     if text in PHONEME_FIX:
         return PHONEME_FIX[text]

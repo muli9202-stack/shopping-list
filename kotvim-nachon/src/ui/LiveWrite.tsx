@@ -65,7 +65,7 @@ export function LiveWrite({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div className="card" style={{ padding: 10 }}>
         <div className="small muted">✏️ אני כותב:</div>
-        <div className="fix-line kid" style={{ minHeight: 56, padding: '4px 6px' }}>
+        <div dir="rtl" className="fix-line kid" style={{ minHeight: 56, padding: '4px 6px' }}>
           {!value && <span style={{ color: '#adb5bd', fontFamily: 'var(--ui)', fontSize: 20 }}>{placeholder}</span>}
           {toks.map((t, k) =>
             t.typed ? (
@@ -80,7 +80,7 @@ export function LiveWrite({
         <div className="small muted" style={{ marginTop: 6 }}>
           ✅ ככה כותבים נכון:
         </div>
-        <div className="fix-line right" style={{ minHeight: 56, padding: '4px 6px' }}>
+        <div dir="rtl" className="fix-line right" style={{ minHeight: 56, padding: '4px 6px' }}>
           {toks.map((t, k) =>
             t.right ? (
               <span key={`${k}-${t.right}`}>
@@ -92,6 +92,9 @@ export function LiveWrite({
           )}
         </div>
       </div>
+      {typeof matchMedia !== 'undefined' && matchMedia('(pointer: fine)').matches && (
+        <div className="small muted center">💻 אפשר להקליד גם במקלדת של המחשב – גם כשהיא באנגלית</div>
+      )}
       <HebrewKeyboard
         punctuation
         onKey={add}

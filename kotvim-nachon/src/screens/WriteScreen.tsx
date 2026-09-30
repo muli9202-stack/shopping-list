@@ -353,8 +353,8 @@ function ResultView({ outcome, child, onAgain }: { outcome: Outcome; child: Chil
       confetti(outcome.total > 80 ? 200 : 100);
       sfx('win');
       flyPoints(outcome.total);
-      // feedback written by the AI about the child's own story stays on the device
-      speak(`${pick(PRAISE)} ${outcome.feedback}`, { local: outcome.engine === 'ai' });
+      // spoken in the recorded natural voice: the fixed feedback phrases (the AI's own words are shown on screen)
+      speak(`${pick(PRAISE)} ${localFeedback(outcome.tokens)}`);
     }, 300);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -381,7 +381,7 @@ function ResultView({ outcome, child, onAgain }: { outcome: Outcome; child: Chil
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div className="card">
         <div className="small muted">✏️ מה שכתבת:</div>
-        <div className="fix-line kid">
+        <div dir="rtl" className="fix-line kid">
           {outcome.tokens.map((t, k) =>
             t.typed === null ? (
               <span key={k} className="err">
@@ -397,7 +397,7 @@ function ResultView({ outcome, child, onAgain }: { outcome: Outcome; child: Chil
         <div className="small muted" style={{ marginTop: 8 }}>
           ✅ ככה כותבים נכון:
         </div>
-        <div className="fix-line right">
+        <div dir="rtl" className="fix-line right">
           {outcome.tokens
             .filter((t) => t.right !== null)
             .map((t, k) => (
@@ -414,7 +414,7 @@ function ResultView({ outcome, child, onAgain }: { outcome: Outcome; child: Chil
       <div className="card row" style={{ alignItems: 'flex-start' }}>
         <Mascot size={70} cheer />
         <div className="grow">{outcome.feedback}</div>
-        {voiceOn && <button className="icon-btn" onClick={() => speak(outcome.feedback, { force: true, local: outcome.engine === 'ai' })}>🔊</button>}
+        {voiceOn && <button className="icon-btn" onClick={() => speak(localFeedback(outcome.tokens), { force: true })}>🔊</button>}
       </div>
 
       <div className="card">

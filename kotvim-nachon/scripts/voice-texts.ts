@@ -68,6 +68,8 @@ for (const f of ['כותבים', 'זהירות!', 'אופס!', 'בבועה הז�
 // topic names, feedback phrases, shop items
 for (const s of SKILLS) add(s.title);
 for (const s of SKILLS) add(`כדאי לשים לב ל${s.title}, יש לי טריק בשבילך!`);
+for (const s of SKILLS) add(`כמעט! שימו לב ל${s.title}`);
+add('כמעט! ככה כותבים');
 for (const f of ['וואו! אין אף טעות. אתה כותב מושלם!', 'כמעט מושלם! רק כמה טעויות קטנות.', 'עבודה יפה! תיקנו יחד כמה מילים.']) addWithSegments(f);
 const itemsSrc = readFileSync(new URL('../src/room/items.ts', import.meta.url), 'utf8');
 for (const m of itemsSrc.matchAll(/name: '([^']+)'/g)) add(`קנית ${m[1]}!`);
