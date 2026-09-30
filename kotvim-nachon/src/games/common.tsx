@@ -4,6 +4,7 @@ import type { GameId, Question, SkillId } from '../types';
 import { HelpBtn, Progress } from '../ui/kit';
 import { speak } from '../services/tts';
 import { GUIDES, isFirstTime, speakGuide } from '../ui/guide';
+import { isVisualOnly } from '../engine/questions';
 
 /** Resolves when the current game explanation has finished, so the first question is not spoken over it. */
 let guideDone: Promise<void> = Promise.resolve();
@@ -59,6 +60,11 @@ export function GameShell({ title, done, total, game, children }: { title: strin
         </div>
         <HelpBtn guide={key} />
       </div>
+      {isVisualOnly() && (
+        <div className="small" style={{ background: '#fff3bf', borderRadius: 14, padding: '6px 10px', marginBottom: 8 }}>
+          🔇 במכשיר הזה אין קול בעברית, אז משחקים עם תמונות ומילים שרואים.
+        </div>
+      )}
       {children}
       {hand && (
         <div className="tutorial-hand" aria-hidden>

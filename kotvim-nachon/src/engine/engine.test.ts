@@ -75,3 +75,14 @@ test('merge converges: re-merging the result changes nothing', () => {
   const reordered = JSON.parse(JSON.stringify(Object.fromEntries(Object.entries(m1).reverse())));
   assert.ok(sameChild(mergeChild(reordered, m1), m1));
 });
+
+import { setVisualOnly } from './questions.ts';
+
+test('without a Hebrew voice every question can be solved by looking', () => {
+  setVisualOnly(true);
+  for (const s of SKILLS) {
+    const qs = buildQuestions(s.id, 3, 8, 'choose');
+    for (const q of qs) assert.ok(q.kind !== 'choose' || q.emoji, `${s.id}: ${q.word} needs sound`);
+  }
+  setVisualOnly(false);
+});

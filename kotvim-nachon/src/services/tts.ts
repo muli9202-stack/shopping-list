@@ -84,30 +84,114 @@ function playMp3(b64: string, my: number): Promise<void> {
   });
 }
 
-async function deviceSpeak(text: string, rate: number, my: number) {
-  if (Capacitor.isNativePlatform()) {
-    await TextToSpeech.stop().catch(() => undefined);
-    if (my !== token) return;
-    await TextToSpeech.speak({ text, lang: 'he-IL', rate, pitch: 1.1, volume: 1, category: 'playback' });
-    return;
-  }
-  if (!('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
-  await new Promise<void>((resolve) => {
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'he-IL';
-    u.rate = rate;
-    u.pitch = 1.1;
-    const voice = window.speechSynthesis.getVoices().find((v) => v.lang.startsWith('he') || v.lang.startsWith('iw'));
-    if (voice) u.voice = voice;
-    u.onend = () => resolve();
-    u.onerror = () => resolve();
-    window.speechSynthesis.speak(u);
-    setTimeout(resolve, 15000);
+// ---- choosing the best voice the device has ----
+/**
+ * Natural-sounding voices first: browser "Natural"/"Online" neural voices (e.g. Edge's Hila),
+ * Google network voices on Android, enhanced/premium voices on Apple devices.
+ */
+function voiceScore(name: string, local: boolean): number {
+  const n = name.toLowerCase();
+  let s = 0;
+  if (/natural|neural|online|wavenet|studio/.test(n)) s += 50;
+  if (/network/.test(n)) s += 40;
+  if (/premium|enhanced|high/.test(n)) s += 30;
+  if (/google/.test(n)) s += 20;
+  if (!local) s += 5;
+  return s;
+}
+
+let webVoice: SpeechSynthesisVoice | null | undefined;
+/** Browsers fill the voice list asynchronously – wait for it instead of speaking with a wrong (English) voice. */
+function loadWebVoice(): Promise<SpeechSynthesisVoice | null> {
+  if (webVoice !== undefined) return Promise.resolve(webVoice);
+  if (!('speechSynthesis' in window)) return Promise.resolve((webVoice = null));
+  return new Promise((resolve) => {
+    const pickNow = () => {
+      const he = window.speechSynthesis.getVoices().filter((v) => /^(he|iw)/i.test(v.lang));
+      if (!he.length) return false;
+      webVoice = he.sort((a, b) => voiceScore(b.name, b.localService) - voiceScore(a.name, a.localService))[0];
+      resolve(webVoice);
+      return true;
+    };
+    if (pickNow()) return;
+    const onChange = () => {
+      if (pickNow()) window.speechSynthesis.removeEventListener('voiceschanged', onChange);
+    };
+    window.speechSynthesis.addEventListener('voiceschanged', onChange);
+    setTimeout(() => {
+      if (webVoice === undefined) {
+        window.speechSynthesis.removeEventListener('voiceschanged', onChange);
+        resolve((webVoice = null));
+      }
+    }, 2500);
   });
 }
 
-/** Speak Hebrew text. `force` speaks even when voice guidance is off (dictation, "hear the word" buttons). */
+let nativeVoice: number | null | undefined;
+async function loadNativeVoice(): Promise<number | null> {
+  if (nativeVoice !== undefined) return nativeVoice;
+  try {
+    const { voices } = await TextToSpeech.getSupportedVoices();
+    let best = -1;
+    let bestScore = -1;
+    voices.forEach((v, i) => {
+      if (!/^(he|iw)/i.test(v.lang)) return;
+      const sc = voiceScore(`${v.name} ${v.voiceURI}`, v.localService);
+      if (sc > bestScore) {
+        bestScore = sc;
+        best = i;
+      }
+    });
+    nativeVoice = best >= 0 ? best : null;
+  } catch {
+    nativeVoice = null;
+  }
+  return nativeVoice;
+}
+
+/** Is there any Hebrew voice (cloud or device)? Games switch to "see the word" questions when not. */
+export async function hebrewVoiceAvailable(): Promise<boolean> {
+  if (fns && auth?.currentUser && !cloudBroken) return true;
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const { languages } = await TextToSpeech.getSupportedLanguages();
+      return languages.some((l) => /^(he|iw)/i.test(l));
+    } catch {
+      return false;
+    }
+  }
+  return (await loadWebVoice()) !== null;
+}
+
+async function deviceSpeak(text: string, rate: number, my: number) {
+  if (Capacitor.isNativePlatform()) {
+    await TextToSpeech.stop().catch(() => undefined);
+    const voice = await loadNativeVoice();
+    if (my !== token) return;
+    await TextToSpeech.speak({ text, lang: 'he-IL', rate, pitch: 1.05, volume: 1, category: 'playback', ...(voice !== null ? { voice } : {}) });
+    return;
+  }
+  const voice = await loadWebVoice();
+  // no Hebrew voice: stay silent rather than read Hebrew with an English voice
+  if (!voice || my !== token) return;
+  window.speechSynthesis.cancel();
+  await new Promise<void>((resolve) => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = voice.lang;
+    u.voice = voice;
+    u.rate = rate;
+    u.pitch = 1.05;
+    let started = false;
+    u.onstart = () => (started = true);
+    u.onend = () => resolve();
+    u.onerror = () => resolve();
+    window.speechSynthesis.speak(u);
+    // some embedded browsers never start speaking – don't make the game wait for them
+    setTimeout(() => !started && resolve(), 1500);
+    setTimeout(resolve, 20000);
+  });
+}
+
 /** `local` keeps the text on the device (used for feedback about the child's own story). */
 export async function speak(text: string, opts: { rate?: number; force?: boolean; local?: boolean } = {}): Promise<void> {
   if (!text || (!enabled && !opts.force)) return;

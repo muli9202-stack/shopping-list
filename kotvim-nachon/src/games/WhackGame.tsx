@@ -20,7 +20,7 @@ interface Pop {
 export function WhackGame({ skills, grade, level = 2, report, finish }: GameProps) {
   const seconds = level === 1 ? 35 : level === 2 ? 40 : 45;
   const showMs = level === 1 ? 2600 : level === 2 ? 2000 : 1500;
-  const pool = useMemo(() => mixedQuestions(skills, grade, 12, 'choose').filter((q) => q.kind === 'choose'), [skills, grade]);
+  const pool = useMemo(() => mixedQuestions(skills, grade, 12, 'choose', true).filter((q) => q.kind === 'choose'), [skills, grade]);
   const [pops, setPops] = useState<Pop[]>([]);
   const [time, setTime] = useState(seconds);
   const [hits, setHits] = useState<Record<number, 'good' | 'bad'>>({});

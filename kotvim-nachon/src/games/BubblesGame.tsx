@@ -27,7 +27,7 @@ export function BubblesGame({ skills, grade, rounds, level = 2, report, finish }
   const waves = level === 1 ? 2 : level === 2 ? 3 : 4;
   const perWave = level === 1 ? 4 : level === 2 ? 5 : 6;
   const plan = useMemo(() => {
-    const qs = mixedQuestions(skills, grade, Math.ceil((waves * perWave) / skills.length) + 1, 'choose').filter((q) => q.kind === 'choose');
+    const qs = mixedQuestions(skills, grade, Math.ceil((waves * perWave) / skills.length) + 1, 'choose', true).filter((q) => q.kind === 'choose');
     return Array.from({ length: waves }, (_, w) =>
       shuffle(
         qs.slice(w * perWave, w * perWave + perWave).map((q, k): Bubble => {

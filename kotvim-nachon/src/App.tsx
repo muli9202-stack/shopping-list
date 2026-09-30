@@ -4,7 +4,8 @@ import { useNav, useRoute } from './nav';
 import { useStore } from './store';
 import { watchUser } from './services/auth';
 import { startSync, stopSync } from './services/sync';
-import { setVoiceEnabled, stop } from './services/tts';
+import { hebrewVoiceAvailable, setVoiceEnabled, stop } from './services/tts';
+import { setVisualOnly } from './engine/questions';
 import { initAds } from './services/ads';
 import { firebaseEnabled } from './services/firebase';
 import { DeleteAccountScreen } from './screens/DeleteAccountScreen';
@@ -36,6 +37,7 @@ export default function App() {
     if (!firebaseEnabled && useStore.getState().mode !== 'none') useNav.getState().reset({ name: 'family' });
     if (wantsDelete) useNav.getState().go({ name: 'deleteAccount' });
     initAds();
+    hebrewVoiceAvailable().then((ok) => setVisualOnly(!ok));
   }, []);
 
   // parent account: sign in → sync and open the family page; sign out → back to login
@@ -49,6 +51,7 @@ export default function App() {
           if (st.uid && st.uid !== u.uid) st.resetAll();
           useStore.getState().setMode('cloud', u.uid, u.email);
           startSync(u.uid);
+          hebrewVoiceAvailable().then((ok) => setVisualOnly(!ok));
           if (nav.stack[0].name === 'login' && nav.stack[nav.stack.length - 1].name !== 'deleteAccount') nav.reset({ name: 'family' });
         } else if (firebaseEnabled) {
           stopSync();

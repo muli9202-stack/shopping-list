@@ -6,6 +6,18 @@ import DISTRACTORS from '../data/generated/distractors.json' with { type: 'json'
 
 const DIS = DISTRACTORS as Record<string, Record<string, string[]>>;
 
+/**
+ * Without any Hebrew voice the child cannot hear which word is meant, so games switch to questions
+ * where the word can be seen: a word with a missing letter, a sentence, or a picture.
+ */
+let visualOnly = false;
+export function setVisualOnly(on: boolean) {
+  visualOnly = on;
+}
+export function isVisualOnly() {
+  return visualOnly;
+}
+
 export function shuffle<T>(arr: T[]): T[] {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -73,12 +85,17 @@ function imQuestions(grade: number): Question[] {
 }
 
 /** Build `count` questions for a skill. `prefer` chooses the question style when possible. */
-export function buildQuestions(skill: SkillId, grade: number, count: number, prefer: 'choose' | 'missing' = 'choose'): Question[] {
+/** `seeOnly`: the game shows the words themselves (judge right/wrong), so it works without sound. */
+export function buildQuestions(skill: SkillId, grade: number, count: number, prefer: 'choose' | 'missing' = 'choose', seeOnly = false): Question[] {
   if (skill === 'im_im') return cycle(imQuestions(grade), count);
+  const noSound = visualOnly && !seeOnly;
+  if (noSound) prefer = 'missing';
   const qs: Question[] = [];
   const pool = poolFor(skill, grade).filter((e) => hasDistractor(skill, e.w));
   for (const entry of balanceEndings(skill, pool)) {
     const q = makeQuestion(skill, entry, prefer) ?? makeQuestion(skill, entry, 'choose');
+    // a "which spelling?" question with no sound needs a picture to know the word
+    if (q && noSound && q.kind === 'choose' && !q.emoji) continue;
     if (q) qs.push(q);
     if (qs.length >= count) break;
   }
@@ -106,13 +123,14 @@ function cycle<T>(list: T[], count: number): T[] {
 }
 
 /** Mixed questions from several skills, e.g. for review worlds and the diagnostic. */
-export function mixedQuestions(skills: SkillId[], grade: number, perSkill: number, prefer: 'choose' | 'missing' = 'choose'): Question[] {
-  return shuffle(skills.flatMap((s) => buildQuestions(s, grade, perSkill, prefer)));
+export function mixedQuestions(skills: SkillId[], grade: number, perSkill: number, prefer: 'choose' | 'missing' = 'choose', seeOnly = false): Question[] {
+  return shuffle(skills.flatMap((s) => buildQuestions(s, grade, perSkill, prefer, seeOnly)));
 }
 
 /** Plain words for a skill (for typing and building games). */
 export function wordsFor(skill: SkillId, grade: number, count: number): WordEntry[] {
   if (skill === 'im_im') return [];
   const pool = poolFor(skill, grade).filter((w) => norm(w.w).length <= (grade <= 2 ? 6 : 9));
-  return cycle(pool, count);
+  const seen = visualOnly ? pool.filter((w) => w.e) : pool;
+  return cycle(seen.length >= 4 ? seen : pool, count);
 }

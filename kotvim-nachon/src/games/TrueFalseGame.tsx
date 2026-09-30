@@ -10,7 +10,7 @@ import { PRAISE, SpeakBtn, pick } from '../ui/kit';
 /** "Right or wrong?" – the owl shows a spelling, the child decides if it is correct. */
 export function TrueFalseGame({ skills, grade, rounds, report, finish }: GameProps) {
   const items = useMemo(() => {
-    const qs = mixedQuestions(skills, grade, Math.ceil(rounds / skills.length), 'choose').slice(0, rounds);
+    const qs = mixedQuestions(skills, grade, Math.ceil(rounds / skills.length), 'choose', true).slice(0, rounds);
     return qs.map((q) => {
       const wrongs = q.kind === 'sentence' ? [q.options.find((o) => o !== q.answer)!] : q.options.filter((o) => o !== q.answer);
       const showWrong = Math.random() < 0.5 && wrongs.length > 0;
