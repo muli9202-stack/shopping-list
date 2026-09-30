@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { updateActive, useActiveChild } from '../store';
-import { TopBar, useSpeakOnMount } from '../ui/kit';
+import { TopBar } from '../ui/kit';
+import { useGuide } from '../ui/guide';
 import { CATS, COLOR_PRICE, FLOOR_COLORS, ITEMS, ITEM_BY_ID, WALL_COLORS, type ItemCat } from './items';
 import { confetti, sfx } from '../ui/effects';
 import { speak } from '../services/tts';
@@ -20,7 +21,7 @@ export function RoomScreen() {
   const [cat, setCat] = useState<ItemCat | 'colors'>('furniture');
   const [msg, setMsg] = useState('');
   const api = useRef<{ sync: (room: RoomState, sel: string | null) => void } | null>(null);
-  useSpeakOnMount('ברוכים הבאים לחדר שלך! אפשר לסובב את החדר, לקנות דברים בחנות, ולגרור אותם למקום.');
+  useGuide('room');
 
   useEffect(() => {
     if (!wrap.current) return;
@@ -281,7 +282,7 @@ export function RoomScreen() {
 
   return (
     <div className="screen" style={{ background: '#fff4e6', paddingBottom: 8 }}>
-      <TopBar title={`🏠 החדר של ${child.name}`} />
+      <TopBar title={`🏠 החדר של ${child.name}`} guide="room" />
       <div ref={wrap} className="three-wrap" style={{ height: '58vh', minHeight: 320 }}>
         {selItem && (
           <div className="hud">

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useStore } from '../store';
 import { useNav } from '../nav';
 import { Mascot } from '../ui/Mascot';
-import { useSpeakOnMount } from '../ui/kit';
+import { HelpBtn } from '../ui/kit';
+import { useGuide } from '../ui/guide';
 import { speak } from '../services/tts';
 import { SKILL_BY_ID } from '../data/skills';
 import { isWeak, weakestSkills } from '../engine/progress';
@@ -16,7 +17,7 @@ export function FamilyScreen() {
   const email = useStore((s) => s.email);
   const go = useNav((s) => s.go);
   const [adding, setAdding] = useState(false);
-  useSpeakOnMount(children.length ? 'מי לומד עכשיו? לחצו על השם שלכם.' : 'בואו נוסיף ילד. לחצו על הכפתור הגדול.');
+  useGuide('family');
 
   return (
     <div className="screen sky-bg">
@@ -25,7 +26,10 @@ export function FamilyScreen() {
           ⚙️
         </button>
         <h2 style={{ margin: 0 }}>המשפחה שלנו</h2>
-        <Mascot size={56} />
+        <div className="row">
+          <HelpBtn guide="family" />
+          <Mascot size={56} />
+        </div>
       </div>
       {email && <p className="small muted center">מחובר כ-{email}</p>}
 
@@ -37,7 +41,7 @@ export function FamilyScreen() {
             style={{ border: 'none', cursor: 'pointer', textAlign: 'right' }}
             onClick={() => {
               setActive(c.id);
-              speak(`שלום ${c.name}!`);
+              speak('שלום!');
               go({ name: 'child' });
             }}
           >

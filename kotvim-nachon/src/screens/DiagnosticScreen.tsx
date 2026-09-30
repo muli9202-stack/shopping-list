@@ -51,7 +51,7 @@ export function DiagnosticScreen() {
 
   return (
     <div className="screen sky-bg">
-      <TopBar title={round.n === 1 ? '🔍 בודקים מה כבר יודעים' : '🔍 עוד כמה שאלות'} />
+      <TopBar title={round.n === 1 ? '🔍 בודקים מה כבר יודעים' : '🔍 עוד כמה שאלות'} guide="diagnostic" />
       <GameHost
         key={round.n}
         game="cards"

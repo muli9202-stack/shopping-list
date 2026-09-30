@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { GameProps } from './common';
-import { GameShell, showNikud } from './common';
+import { GameShell, showNikud, useSayQuestion } from './common';
 import { shuffle, wordsFor } from '../engine/questions';
 import { SKILL_BY_ID } from '../data/skills';
 import { sfx } from '../ui/effects';
@@ -19,6 +19,8 @@ export function BuilderGame({ skills, grade, rounds, report, finish }: GameProps
   const [state, setState] = useState<null | boolean>(null);
   const [score, setScore] = useState(0);
   const w = words[i];
+
+  useSayQuestion(w ? (w.n ?? w.w) : undefined);
 
   const tiles = useMemo(() => {
     if (!w) return [];
@@ -62,7 +64,7 @@ export function BuilderGame({ skills, grade, rounds, report, finish }: GameProps
   };
 
   return (
-    <GameShell title="🧱 בונים מילה" done={i} total={words.length} instruction="הקשיבו למילה ובנו אותה מהאותיות">
+    <GameShell game="builder" title="🧱 בונים מילה" done={i} total={words.length} instruction="הקשיבו למילה ובנו אותה מהאותיות">
       <div className="card center" key={i} style={{ gap: 10, animation: 'screenIn .35s' }}>
         <div className="row">
           {w.e && <span style={{ fontSize: 54 }}>{w.e}</span>}

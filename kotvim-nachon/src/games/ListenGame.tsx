@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { GameProps } from './common';
-import { GameShell, HebrewKeyboard, showNikud } from './common';
+import { GameShell, HebrewKeyboard, showNikud, useSayQuestion } from './common';
 import { shuffle, wordsFor } from '../engine/questions';
 import { IM_SENTENCES } from '../data/words';
 import { classifyWord, norm } from '../engine/analyze';
@@ -39,12 +39,7 @@ export function ListenGame({ skills, grade, rounds, report, finish, title = '�
   const [score, setScore] = useState(0);
   const it = items[i];
 
-  useEffect(() => {
-    if (it) {
-      const t = setTimeout(() => speak(it.say, { force: true, rate: 0.75 }), 900);
-      return () => clearTimeout(t);
-    }
-  }, [it]);
+  useSayQuestion(it?.say, 0.75);
 
   if (!it) return null;
 
@@ -71,7 +66,7 @@ export function ListenGame({ skills, grade, rounds, report, finish, title = '�
   };
 
   return (
-    <GameShell title={title} done={i} total={items.length} instruction="הקשיבו וכתבו את המילה">
+    <GameShell game="listen" title={title} done={i} total={items.length} instruction="הקשיבו וכתבו את המילה">
       <div className="card center" style={{ gap: 8, marginBottom: 12 }}>
         <div className="row">
           {it.emoji && <span style={{ fontSize: 44 }}>{it.emoji}</span>}

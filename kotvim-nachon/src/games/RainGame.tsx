@@ -125,7 +125,7 @@ export function RainGame({ skills, grade, rounds, report, finish }: GameProps) {
 
   if (!q) return <div className="card">אין מספיק מילים – ממשיכים!</div>;
   return (
-    <GameShell title="🌠 גשם אותיות" done={i} total={qs.length} instruction="תפסו את האות החסרה מבין הקוביות שנופלות">
+    <GameShell game="rain" title="🌠 גשם אותיות" done={i} total={qs.length} instruction="תפסו את האות החסרה מבין הקוביות שנופלות">
       <QuestionPrompt q={q} grade={grade} fill={fill} />
       <div ref={wrap} className="three-wrap" style={{ height: '50vh', minHeight: 300 }} />
     </GameShell>

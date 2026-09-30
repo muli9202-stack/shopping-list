@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { speak } from '../services/tts';
 import { useNav } from '../nav';
+import { speakGuide } from './guide';
 import { useActiveChild } from '../store';
 
 /** Speak `text` once when the screen/component mounts (voice guidance). */
@@ -29,7 +30,7 @@ export function SpeakBtn({ text, force = true, small }: { text: string; force?: 
   );
 }
 
-export function TopBar({ title, onBack, right }: { title?: string; onBack?: () => void; right?: ReactNode }) {
+export function TopBar({ title, onBack, right, guide }: { title?: string; onBack?: () => void; right?: ReactNode; guide?: string }) {
   const back = useNav((s) => s.back);
   const child = useActiveChild();
   return (
@@ -38,8 +39,18 @@ export function TopBar({ title, onBack, right }: { title?: string; onBack?: () =
         ➡️
       </button>
       <div className="title">{title}</div>
+      {guide && <HelpBtn guide={guide} />}
       {right ?? (child ? <PointsPill points={child.points} /> : <span style={{ width: 52 }} />)}
     </div>
+  );
+}
+
+/** ❓ – reads the full explanation of the current screen or game again. */
+export function HelpBtn({ guide }: { guide: string }) {
+  return (
+    <button className="icon-btn" aria-label="הסבר" style={{ width: 44, height: 44, fontSize: 22 }} onClick={() => speakGuide(guide)}>
+      ❓
+    </button>
   );
 }
 

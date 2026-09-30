@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { updateActive, useActiveChild, useStore } from '../store';
 import { useNav } from '../nav';
-import { TopBar, useSpeakOnMount, PRAISE, pick } from '../ui/kit';
+import { TopBar, PRAISE, pick } from '../ui/kit';
+import { isFirstTime, useGuide } from '../ui/guide';
 import { Mascot, MascotSays } from '../ui/Mascot';
 import { DICTATIONS, SHORT_DICTATIONS, STORY_IDEAS, bandFor, type Dictation } from '../data/stories';
 import { WriteBox } from '../games/common';
@@ -40,12 +41,12 @@ export function WriteScreen() {
   const child = useActiveChild();
   const [mode, setMode] = useState<null | 'story' | 'dictation'>(null);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
-  useSpeakOnMount('כתיבה ומבחן. אפשר לכתוב סיפור משלך, או לעשות הכתבה: אני מקריאה וכותבים.');
+  useGuide(mode ? null : 'write');
   if (!child) return null;
 
   return (
     <div className="screen" style={{ background: 'linear-gradient(#fff0f6, #fff7e6)' }}>
-      <TopBar title="✏️ כתיבה ומבחן" onBack={mode && !outcome ? () => setMode(null) : undefined} />
+      <TopBar title="✏️ כתיבה ומבחן" onBack={mode && !outcome ? () => setMode(null) : undefined} guide={mode === 'story' ? 'story' : mode === 'dictation' ? 'dictation' : 'write'} />
       {outcome ? (
         <ResultView outcome={outcome} child={child} onAgain={() => { setOutcome(null); setMode(null); }} />
       ) : mode === 'story' ? (
@@ -99,13 +100,14 @@ function WritingTrend({ child }: { child: Child }) {
 }
 
 function StoryMode({ child, onDone }: { child: Child; onDone: (o: Outcome) => void }) {
+  useGuide('story');
   const ideas = STORY_IDEAS[bandFor(child.grade)];
   const [idx, setIdx] = useState(() => Math.floor(Math.random() * ideas.length));
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const idea = ideas[idx % ideas.length];
   useEffect(() => {
-    const t = setTimeout(() => speak(`הרעיון לסיפור: ${idea.text}`), 500);
+    const t = setTimeout(() => speak(`הרעיון לסיפור: ${idea.text}`), isFirstTime('story') ? 12000 : 2500);
     return () => clearTimeout(t);
   }, [idea]);
   const words = tokenize(text).length;
@@ -173,6 +175,7 @@ function StoryMode({ child, onDone }: { child: Child; onDone: (o: Outcome) => vo
 }
 
 function DictationMode({ child, onDone }: { child: Child; onDone: (o: Outcome) => void }) {
+  useGuide('dictation');
   const band = bandFor(child.grade);
   const done = useMemo(() => new Set(child.writings.filter((w) => w.mode === 'dictation').map((w) => w.text.split('|')[0])), [child.writings]);
   const [d] = useState<Dictation>(() => {

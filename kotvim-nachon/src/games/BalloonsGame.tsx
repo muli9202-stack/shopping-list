@@ -151,7 +151,7 @@ export function BalloonsGame({ skills, grade, rounds, report, finish }: GameProp
 
   if (!q) return null;
   return (
-    <GameShell title="🎈 בלונים" done={i} total={qs.length} instruction="פוצצו את הבלון עם הכתיב הנכון">
+    <GameShell game="balloons" title="🎈 בלונים" done={i} total={qs.length} instruction="פוצצו את הבלון עם הכתיב הנכון">
       <QuestionPrompt q={q} grade={grade} fill={fill} />
       <div ref={wrap} className="three-wrap" style={{ height: '52vh', minHeight: 300 }} />
     </GameShell>

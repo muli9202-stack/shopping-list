@@ -1,7 +1,15 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import type { Question, SkillId } from '../types';
-import { Progress, SpeakBtn } from '../ui/kit';
+import { SpeakBtn } from '../ui/kit';
+import type { GameId, Question, SkillId } from '../types';
+import { HelpBtn, Progress } from '../ui/kit';
 import { speak } from '../services/tts';
+import { GUIDES, isFirstTime, speakGuide } from '../ui/guide';
+
+/** Resolves when the current game explanation has finished, so the first question is not spoken over it. */
+let guideDone: Promise<void> = Promise.resolve();
+export function afterGuide(): Promise<void> {
+  return guideDone;
+}
 
 export interface GameProps {
   /** skills practised in this game (one for a regular world, several for review) */
@@ -17,24 +25,58 @@ export function showNikud(grade: number) {
   return grade <= 2;
 }
 
-export function GameShell({ title, done, total, instruction, children }: { title: string; done: number; total: number; instruction: string; children: ReactNode }) {
+export function GameShell({ title, done, total, game, children }: { title: string; done: number; total: number; game: GameId; instruction?: string; children: ReactNode }) {
+  const key = `game:${game}`;
+  const [first] = useState(() => isFirstTime(key));
+  const [hand, setHand] = useState(first);
   useEffect(() => {
-    const t = setTimeout(() => speak(instruction), 300);
+    // first time: the full "how to play" explanation and a pointing hand; later just a short reminder
+    const g = GUIDES[key];
+    if (g) {
+      guideDone = new Promise((resolve) => {
+        setTimeout(() => {
+          (first ? speakGuide(key) : speak(g.short)).then(resolve);
+          try {
+            localStorage.setItem(`kn-guide-${key}`, '1');
+          } catch {
+            // ignore
+          }
+        }, 300);
+      });
+    }
+    const t = setTimeout(() => setHand(false), 6000);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (
-    <div>
+    <div style={{ position: 'relative' }} onPointerDown={() => hand && setHand(false)}>
       <div className="row" style={{ marginBottom: 10 }}>
         <b style={{ fontSize: 20 }}>{title}</b>
         <div className="grow">
           <Progress value={done / total} />
         </div>
-        <SpeakBtn text={instruction} small />
+        <HelpBtn guide={key} />
       </div>
       {children}
+      {hand && (
+        <div className="tutorial-hand" aria-hidden>
+          👆
+        </div>
+      )}
     </div>
   );
+}
+
+/** Read the current word/sentence aloud (after the game explanation, if one is playing). */
+export function useSayQuestion(text: string | undefined, rate = 0.8) {
+  useEffect(() => {
+    if (!text) return;
+    let alive = true;
+    afterGuide().then(() => setTimeout(() => alive && speak(text, { force: true, rate }), 300));
+    return () => {
+      alive = false;
+    };
+  }, [text, rate]);
 }
 
 /** Prompt area for a question: emoji, "hear it" button and the word with a blank / the sentence. */
@@ -42,8 +84,11 @@ export function QuestionPrompt({ q, grade, fill }: { q: Question; grade: number;
   // the printed word with nikud would give the answer away – show it only once answered
   const nik = showNikud(grade) && q.nikud && fill;
   useEffect(() => {
-    const t = setTimeout(() => speak(q.say, { force: true, rate: 0.8 }), 700);
-    return () => clearTimeout(t);
+    let alive = true;
+    afterGuide().then(() => setTimeout(() => alive && speak(q.say, { force: true, rate: 0.8 }), 300));
+    return () => {
+      alive = false;
+    };
   }, [q]);
   return (
     <div className="card center" style={{ gap: 6, marginBottom: 16 }}>

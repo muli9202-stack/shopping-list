@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { GameProps } from './common';
-import { GameShell, showNikud } from './common';
+import { GameShell, showNikud, useSayQuestion } from './common';
 import { mixedQuestions, shuffle } from '../engine/questions';
 import { sfx } from '../ui/effects';
 import { speak } from '../services/tts';
@@ -24,6 +24,7 @@ export function TrueFalseGame({ skills, grade, rounds, report, finish }: GamePro
   const [result, setResult] = useState<null | boolean>(null);
   const [score, setScore] = useState(0);
   const it = items[i];
+  useSayQuestion(it?.q.say);
   if (!it) return null;
 
   const answer = (saysRight: boolean) => {
@@ -47,7 +48,7 @@ export function TrueFalseGame({ skills, grade, rounds, report, finish }: GamePro
   };
 
   return (
-    <GameShell title="✅ נכון או לא?" done={i} total={items.length} instruction="האם המילה כתובה נכון? לחצו וי או איקס">
+    <GameShell game="truefalse" title="✅ נכון או לא?" done={i} total={items.length} instruction="האם המילה כתובה נכון? לחצו וי או איקס">
       <div className="center" key={i} style={{ gap: 12, animation: 'screenIn .35s' }}>
         <Mascot size={90} mood={result === null ? 'think' : result ? 'happy' : 'wow'} cheer={result === true} />
         <div className="card center" style={{ width: '100%', gap: 8 }}>

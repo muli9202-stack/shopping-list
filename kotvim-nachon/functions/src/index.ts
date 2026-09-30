@@ -2,6 +2,10 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { defineSecret } from 'firebase-functions/params';
 import { setGlobalOptions } from 'firebase-functions/v2';
 import Anthropic from '@anthropic-ai/sdk';
+import { TextToSpeechClient } from '@google-cloud/text-to-speech';
+import { initializeApp, getApps } from 'firebase-admin/app';
+import { getStorage } from 'firebase-admin/storage';
+import { createHash } from 'node:crypto';
 
 /**
  * AI runs on the server so the API key never ships inside the app.
@@ -99,4 +103,43 @@ export const parentSummary = onCall({ secrets: [ANTHROPIC_API_KEY], timeoutSecon
     properties: { summary: { type: 'string' } },
   });
   return out;
+});
+
+// ---------------- natural Hebrew voice ----------------
+
+if (!getApps().length) initializeApp();
+let ttsClient: TextToSpeechClient | null = null;
+
+/**
+ * Neural Hebrew voice (Google Cloud Text-to-Speech) instead of the phone's robotic voice.
+ * Uses the Firebase project's own service account – no extra key. Every phrase is stored in
+ * Cloud Storage after the first request, so repeated phrases cost nothing.
+ * Voice can be changed with the TTS_VOICE environment variable (e.g. he-IL-Wavenet-A … D).
+ */
+export const tts = onCall({ timeoutSeconds: 30, memory: '256MiB' }, async (req) => {
+  if (!req.auth) throw new HttpsError('unauthenticated', 'sign in first');
+  const text = String(req.data?.text ?? '').slice(0, 600).trim();
+  const rate = Math.max(0.5, Math.min(1.3, Number(req.data?.rate) || 1));
+  if (!text) throw new HttpsError('invalid-argument', 'empty text');
+  const voice = process.env.TTS_VOICE || 'he-IL-Wavenet-C';
+  const key = createHash('sha256').update(`${voice}|${rate}|${text}`).digest('hex');
+  const file = getStorage().bucket().file(`tts/${key}.mp3`);
+  try {
+    const [exists] = await file.exists();
+    if (exists) {
+      const [buf] = await file.download();
+      return { audio: buf.toString('base64'), key };
+    }
+  } catch {
+    // storage not set up – just synthesize
+  }
+  ttsClient ??= new TextToSpeechClient();
+  const [res] = await ttsClient.synthesizeSpeech({
+    input: { text },
+    voice: { languageCode: 'he-IL', name: voice },
+    audioConfig: { audioEncoding: 'MP3', speakingRate: rate, pitch: 1.5 },
+  });
+  const audio = Buffer.from(res.audioContent as Uint8Array);
+  file.save(audio, { contentType: 'audio/mpeg', resumable: false }).catch(() => undefined);
+  return { audio: audio.toString('base64'), key };
 });

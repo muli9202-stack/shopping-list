@@ -56,7 +56,7 @@ export function MemoryGame({ skills, grade, report, finish }: GameProps) {
   if (words.length < 3) return <div className="card">אין מספיק מילים עם תמונה – ממשיכים!</div>;
 
   return (
-    <GameShell title="🧠 זיכרון" done={done.length} total={words.length} instruction="מצאו לכל תמונה את המילה שלה">
+    <GameShell game="memory" title="🧠 זיכרון" done={done.length} total={words.length} instruction="מצאו לכל תמונה את המילה שלה">
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
         {cards.map((c) => {
           const shown = open.includes(c.id) || done.includes(c.pair);

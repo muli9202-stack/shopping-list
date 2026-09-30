@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { updateActive, useActiveChild } from '../store';
 import { useNav } from '../nav';
-import { Stars, TopBar, useSpeakOnMount } from '../ui/kit';
+import { Stars, TopBar } from '../ui/kit';
+import { useGuide } from '../ui/guide';
 import { MascotSays } from '../ui/Mascot';
 import { SKILL_BY_ID } from '../data/skills';
 import { STAGES_PER_WORLD, ensureWorld, gamesForSkill, isWeak, stageAt, weakestSkills } from '../engine/progress';
@@ -27,13 +28,13 @@ export function LearnScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [child?.diagnosed]);
 
-  useSpeakOnMount(child?.diagnosed ? 'זו מפת הלמידה שלך. לחץ על השלב שקופץ כדי להמשיך.' : 'לפני שמתחילים, נעשה משחק קצר כדי לראות מה אתה כבר יודע.');
+  useGuide(child?.diagnosed ? 'learn' : 'diagnostic');
   if (!child) return null;
 
   if (!child.diagnosed) {
     return (
       <div className="screen sky-bg">
-        <TopBar title="🎮 למידה" />
+        <TopBar title="🎮 למידה" guide="diagnostic" />
         <div className="center" style={{ gap: 18, marginTop: 30 }}>
           <MascotSays text="לפני שיוצאים לדרך – משחק קצר כדי שאדע במה לעזור לך!" size={120} />
           <button className="btn big green" onClick={() => go({ name: 'diagnostic' })}>
@@ -50,7 +51,7 @@ export function LearnScreen() {
 
   return (
     <div className="screen" style={{ background: 'linear-gradient(#e7f5ff, #fff9db)' }}>
-      <TopBar title="🗺️ מפת הלמידה" />
+      <TopBar title="🗺️ מפת הלמידה" guide="learn" />
 
       <div className="map">
         {worlds.map((w, wi) => {

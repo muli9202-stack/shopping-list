@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { updateActive, useActiveChild } from '../store';
 import { useNav } from '../nav';
-import { PointsPill, SpeakBtn, useSpeakOnMount } from '../ui/kit';
+import { HelpBtn, PointsPill, SpeakBtn } from '../ui/kit';
+import { useGuide } from '../ui/guide';
 import { Mascot } from '../ui/Mascot';
 import { touchDay } from '../engine/progress';
 import { confetti, sfx } from '../ui/effects';
@@ -33,7 +34,7 @@ export function ChildHomeScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useSpeakOnMount(child ? `היי ${child.name}! מה בא לך לעשות? למידה, כתיבה, או החדר שלך?` : null);
+  useGuide(child ? 'child' : null);
 
   if (!child) return null;
   return (
@@ -45,6 +46,7 @@ export function ChildHomeScreen() {
         <div className="title">
           {child.avatar} {child.name}
         </div>
+        <HelpBtn guide="child" />
         <PointsPill points={child.points} />
       </div>
 

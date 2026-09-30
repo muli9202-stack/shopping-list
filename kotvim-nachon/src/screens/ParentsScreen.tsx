@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../store';
 import { useNav } from '../nav';
 import { TopBar } from '../ui/kit';
+import { useGuide } from '../ui/guide';
 import { SKILLS, SKILL_BY_ID } from '../data/skills';
 import { GRADES } from './FamilyScreen';
 import { parentSummary } from '../services/ai';
@@ -14,6 +15,7 @@ export function ParentsScreen() {
   const children = useStore((s) => s.children);
   const go = useNav((s) => s.go);
   const [sel, setSel] = useState(children[0]?.id ?? null);
+  useGuide('parents');
   const child = children.find((c) => c.id === sel);
   return (
     <div className="screen" style={{ background: '#f8f9fa' }}>

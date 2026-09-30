@@ -1,6 +1,7 @@
 import { useActiveChild, updateActive } from '../store';
 import { useNav } from '../nav';
-import { TopBar, useSpeakOnMount } from '../ui/kit';
+import { TopBar } from '../ui/kit';
+import { useGuide } from '../ui/guide';
 import { TRICKS } from '../tricks/tricks';
 import { TrickPlayer } from '../tricks/TrickPlayer';
 import { SKILLS, SKILL_BY_ID } from '../data/skills';
@@ -10,11 +11,11 @@ import type { SkillId } from '../types';
 export function TricksScreen() {
   const child = useActiveChild();
   const go = useNav((s) => s.go);
-  useSpeakOnMount('ספריית הטריקים. בחרו טריק וצפו בו.');
+  useGuide('tricks');
   if (!child) return null;
   return (
     <div className="screen" style={{ background: 'linear-gradient(#fff3bf, #fff7e6)' }}>
-      <TopBar title="💡 ספריית הטריקים" />
+      <TopBar title="💡 ספריית הטריקים" guide="tricks" />
       <div className="grid2">
         {SKILLS.filter((s) => s.minGrade <= child.grade).map((s) => (
           <button
@@ -39,7 +40,7 @@ export function TrickScreen({ skill }: { skill: SkillId }) {
   const back = useNav((s) => s.back);
   return (
     <div className="screen" style={{ background: `linear-gradient(${SKILL_BY_ID[skill].color}33, #fff7e6)` }}>
-      <TopBar title={`💡 ${TRICKS[skill].title}`} />
+      <TopBar title={`💡 ${TRICKS[skill].title}`} guide="trick" />
       <TrickPlayer
         skill={skill}
         onDone={() => {

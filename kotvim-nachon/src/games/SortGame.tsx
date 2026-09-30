@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import type { GameProps } from './common';
-import { BlankWord, GameShell, showNikud } from './common';
+import { BlankWord, GameShell, showNikud, useSayQuestion } from './common';
 import { mixedQuestions } from '../engine/questions';
 import { sfx } from '../ui/effects';
 import { speak } from '../services/tts';
@@ -26,6 +26,7 @@ export function SortGame({ skills, grade, rounds, report, finish }: GameProps) {
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
   const binRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const q = qs[i];
+  useSayQuestion(q?.say);
   if (!q || qs.length < 3) return <CardsGame skills={skills} grade={grade} rounds={rounds} report={report} finish={finish} />;
   const bins = q.options.slice().sort();
   const colors = ['#3a86ff', '#ff5d8f'];
@@ -57,7 +58,7 @@ export function SortGame({ skills, grade, rounds, report, finish }: GameProps) {
     }) ?? null;
 
   return (
-    <GameShell title="🧺 סלסלות" done={i} total={qs.length} instruction="גררו את המילה לסל הנכון, או לחצו על הסל">
+    <GameShell game="sort" title="🧺 סלסלות" done={i} total={qs.length} instruction="גררו את המילה לסל הנכון, או לחצו על הסל">
       <div
         key={i}
         className="card center"

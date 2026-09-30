@@ -37,7 +37,7 @@ export function CardsGame({ skills, grade, rounds, report, finish }: GameProps) 
   };
 
   return (
-    <GameShell title="🃏 קלפי קסם" done={i} total={qs.length} instruction="בחרו את הקלף הנכון כדי להשלים את המילה">
+    <GameShell game="cards" title="🃏 קלפי קסם" done={i} total={qs.length} instruction="בחרו את הקלף הנכון כדי להשלים את המילה">
       <div key={i} style={{ animation: 'screenIn .4s' }}>
         <QuestionPrompt q={q} grade={grade} fill={picked ? q.answer : null} />
         {picked && q.kind === 'choose' && (
