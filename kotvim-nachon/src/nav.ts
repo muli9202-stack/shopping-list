@@ -10,6 +10,7 @@ export type Route =
   | { name: 'privacy' }
   | { name: 'child' }
   | { name: 'learn' }
+  | { name: 'teacher' }
   | { name: 'diagnostic' }
   | { name: 'stage' }
   | { name: 'trick'; skill: SkillId; back?: boolean }

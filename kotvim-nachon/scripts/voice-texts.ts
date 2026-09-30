@@ -55,6 +55,7 @@ add('הרעיון לסיפור:');
 for (const d of DETECTIVE_SENTENCES) add(d.s, { slow: true });
 for (const f of FAMILIES) for (const w of f.words) add(w);
 add('מה השורש של המילה');
+add('עוברים לשלב הבא.');
 add('איזו מילה מאותה משפחה כמו');
 
 // guides and tricks

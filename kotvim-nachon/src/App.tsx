@@ -16,6 +16,7 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { PrivacyScreen } from './screens/PrivacyScreen';
 import { ChildHomeScreen } from './screens/ChildHomeScreen';
 import { LearnScreen } from './screens/LearnScreen';
+import { TeacherScreen } from './screens/TeacherScreen';
 import { DiagnosticScreen } from './screens/DiagnosticScreen';
 import { PracticeScreen, StageScreen } from './screens/StageScreen';
 import { TrickScreen, TricksScreen } from './screens/TricksScreen';
@@ -91,6 +92,8 @@ export default function App() {
       return <ChildHomeScreen />;
     case 'learn':
       return <LearnScreen />;
+    case 'teacher':
+      return <TeacherScreen />;
     case 'diagnostic':
       return <DiagnosticScreen />;
     case 'stage':

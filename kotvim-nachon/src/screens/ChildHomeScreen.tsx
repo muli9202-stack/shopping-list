@@ -9,7 +9,7 @@ import { confetti, sfx } from '../ui/effects';
 import { speak } from '../services/tts';
 
 const SQUARES = [
-  { id: 'learn', emoji: '🎮', title: 'למידה', sub: 'משחקים, טריקים ושלבים', say: 'למידה. כאן משחקים ולומדים טריקים לכתיבה נכונה.', bg: 'linear-gradient(135deg,#3a86ff,#8338ec)' },
+  { id: 'teacher', emoji: '👩‍🏫', title: 'לומדים עם המורה', sub: 'המורה מסביר, מתרגלים, וממשיכים לבד', say: 'לומדים עם המורה. המורה מסביר לך, מתרגלים במשחק, והוא בוחר מה לומדים הלאה.', bg: 'linear-gradient(135deg,#3a86ff,#8338ec)' },
   { id: 'write', emoji: '✏️', title: 'כתיבה ומבחן', sub: 'סיפורים והכתבות', say: 'כתיבה ומבחן. כאן כותבים סיפור או הכתבה, ורואים כמה השתפרתם.', bg: 'linear-gradient(135deg,#fb8500,#ff5d8f)' },
   { id: 'room', emoji: '🏠', title: 'החדר שלי', sub: 'קונים ומעצבים בנקודות', say: 'החדר שלי. כאן קונים רהיטים וחיות עם הנקודות שצברתם.', bg: 'linear-gradient(135deg,#2ec27e,#20c997)' },
 ] as const;
@@ -80,6 +80,9 @@ export function ChildHomeScreen() {
       </div>
 
       <div className="row" style={{ justifyContent: 'center', marginTop: 18 }}>
+        <button className="btn white" onClick={() => go({ name: 'learn' })}>
+          🗺️ מפה ומשחקים
+        </button>
         <button className="btn white" onClick={() => go({ name: 'tricks' })}>
           💡 ספריית הטריקים
         </button>

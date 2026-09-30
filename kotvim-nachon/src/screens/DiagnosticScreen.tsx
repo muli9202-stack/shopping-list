@@ -16,7 +16,7 @@ import type { SkillId } from '../types';
  */
 export function DiagnosticScreen() {
   const child = useActiveChild();
-  // the learning map is already underneath this screen – go back to it instead of opening a second one
+  // the screen that sent the child here (teacher or map) is underneath – go back to it
   const back = useNav((s) => s.back);
   const [round, setRound] = useState<{ n: 1 | 2; skills: SkillId[] }>(() => ({ n: 1, skills: child ? eligibleSkills(child.grade) : [] }));
   const [done, setDone] = useState(false);

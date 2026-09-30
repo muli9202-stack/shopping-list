@@ -80,6 +80,7 @@ export function GameHost({
   level = 2,
   source = 'game',
   onFinish,
+  onAnswer,
   title,
 }: {
   game: GameId;
@@ -88,6 +89,8 @@ export function GameHost({
   level?: Level;
   source?: 'game' | 'learn' | 'diagnostic';
   onFinish: (correct: number, total: number) => void;
+  /** every answer, e.g. so the teacher can re-teach the words that went wrong */
+  onAnswer?: (skill: SkillId, correct: boolean, expected: string) => void;
   title?: string;
 }) {
   const liveGrade = useStore((s) => s.children.find((c) => c.id === s.activeChildId)?.grade ?? 1);
@@ -116,8 +119,11 @@ export function GameHost({
   const finishRef = useRef(onFinish);
   finishRef.current = onFinish;
 
+  const onAnswerRef = useRef(onAnswer);
+  onAnswerRef.current = onAnswer;
   const report = useCallback(
     (skill: SkillId, correct: boolean, expected: string, typed: string) => {
+      onAnswerRef.current?.(skill, correct, expected);
       const issue = correct ? undefined : classifyWord(expected, typed)[0];
       updateActive((c) => {
         let next = recordAnswer(c, skill, correct, correct ? undefined : { expected, typed, pair: issue?.pair, skill: issue?.skill ?? skill, source });
