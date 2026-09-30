@@ -39,7 +39,8 @@ ${chapters}
 </div>
 <script>${read("glossary-a.js")}
 ${read("glossary-b.js")}
-${read("glossary-c.js")}</script>
+${read("glossary-c.js")}
+${read("glossary-d.js")}</script>
 <script>${modules}</script>
 <script>${read("app.js")}</script>`;
 

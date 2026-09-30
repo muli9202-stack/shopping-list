@@ -504,12 +504,15 @@ pre.copy { position: relative; padding-top: 40px; }
     <a href="#computer"><span class="lvl">שלב 1 · יסודות</span><b>מחשבים ומעבדים</b><small>ביטים, שערים, סימולטור מעבד אמיתי, זיכרון ומערכת הפעלה.</small></a>
     <a href="#internet"><span class="lvl">שלב 1 · יסודות</span><b>אינטרנט, גוגל וסייבר</b><small>חבילות ברשת, מנוע חיפוש, הצפנה, גיבוב וסיסמאות.</small></a>
     <a href="#ai"><span class="lvl">שלב 1 · יסודות</span><b>בינה מלאכותית</b><small>תאמן בעצמך רשת נוירונים, מודל שפה, זיהוי תמונות וקבוצות.</small></a>
+    <a href="#seclab"><span class="lvl">שלב 1 · יסודות</span><b>מעבדת סייבר (CTF)</b><small>הזרקת SQL, XSS, זיהוי דיוג, כוח גס — לתקוף מערכות מזויפות כדי ללמוד להגן.</small></a>
     <a href="#javascript"><span class="lvl">שלב 2 · תכנות</span><b>JavaScript ו-Python</b><small>השפות הראשונות שלך, עם עורך קוד שרץ בדפדפן.</small></a>
+    <a href="#toys"><span class="lvl">שלב 2 · תכנות</span><b>20 מעבדות מדעי המחשב</b><small>בסיסי ספירה, מנדלברוט, דייקסטרה, מכונת טיורינג ועוד.</small></a>
     <a href="#challenges"><span class="lvl">שלב 2 · תכנות</span><b>זירת האתגרים</b><small>40 אתגרי קוד עם בדיקה אוטומטית, מקל לקשה.</small></a>
     <a href="#dsa"><span class="lvl">שלב 2 · תכנות</span><b>אלגוריתמים ומתמטיקה</b><small>חיפוש, מיון, רקורסיה, מבוכים, וקטורים וטריגונומטריה.</small></a>
     <a href="#web"><span class="lvl">שלב 3 · בנייה</span><b>אתרים, אפליקציות ונתונים</b><small>HTML, CSS, SQL, אפליקציות לטלפון, Git ו-GitHub.</small></a>
     <a href="#games"><span class="lvl">שלב 4 · משחקים</span><b>משחקים ופיזיקה</b><small>לולאת משחק, פיזיקה, תחושת משחק, סנייק מאפס, צליל.</small></a>
     <a href="#three-d"><span class="lvl">שלב 4 · משחקים</span><b>תלת-ממד ושיידרים</b><small>קובייה ממתמטיקה, עיר לנהיגה, Raycasting ושיידרים חיים.</small></a>
+    <a href="#arcade"><span class="lvl">שלב 4 · משחקים</span><b>ארקייד: 15 משחקים</b><small>טטריס, 2048, שולה מוקשים, ארבע-בשורה מול AI, ועוד לשחק וללמוד מהם.</small></a>
     <a href="#gta"><span class="lvl">שלב 4 · משחקים</span><b>איך בונים GTA</b><small>עולם פתוח, הזרמה, LOD, דמויות חכמות, מנועים ופרסום.</small></a>
     <a href="#aitools"><span class="lvl">שלב 5 · כלים</span><b>כלי AI והיסטוריה</b><small>כל כלי ה-AI של היום, ואיך הגענו עד לכאן.</small></a>
     <a href="#roadmap"><span class="lvl">שלב 6 · מאסטר</span><b>תוכנית לשלוש שנים</b><small>מה ללמוד בכל חודש, קריירה, בריאות והרגלים.</small></a>
@@ -960,6 +963,89 @@ pre.copy { position: relative; padding-top: 40px; }
     {"q":"איך אתר טוב שומר את הסיסמה שלך?","o":["כטקסט רגיל","רק את הגיבוב שלה","במייל","לא שומר כלום ולכן אין התחברות"],"a":1},
     {"q":"מה זה Phishing?","o":["דיג באגם","הודעה או אתר מזויפים שמנסים לגנוב פרטים","סוג של הצפנה","תוכנת אנטי-וירוס"],"a":1},
     {"q":"מה הדרך החוקית ללמוד פריצה?","o":["לפרוץ לחשבון של חבר","תחרויות CTF ואתרי תרגול ייעודיים","לנחש סיסמאות באתרים","אין דרך חוקית"],"a":1}
+  ]</script></div>
+</section>
+
+<section class="chapter" id="seclab" data-title="מעבדת סייבר: לתקוף כדי להגן" data-part="שלב 1 · יסודות">
+  <div class="chapter-head">
+    <div class="eyebrow">פרק 6 · CTF: מעבדות פריצה סגורות</div>
+    <h1>מעבדת סייבר: לתקוף כדי להגן</h1>
+    <p>הדרך הכי טובה ללמוד להגן על מערכת היא להבין איך תוקפים אותה. כל המעבדות כאן תוקפות מערכות מזויפות, שקיימות רק בדף הזה, וכל אחת מלמדת גם את התיקון.</p>
+  </div>
+
+  <div class="box warn">
+    <b>לפני שמתחילים: הקו האדום</b>
+    <p>כל מה שבפרק הזה רץ על מערכות <strong>דמיוניות</strong> בתוך הדף. זו הדרך היחידה החוקית והנכונה ללמוד: בדיוק כמו שרופא לומד על גופות במעבדה ולא על אנשים ברחוב. לתקוף מחשב, חשבון, אתר או רשת אמיתיים <strong>בלי רשות כתובה מהבעלים</strong> זו עבירה פלילית בישראל (חוק המחשבים) ובכל העולם, גם ״רק כדי לנסות״, גם אם לא נגרם נזק, וגם לחבר מהכיתה. הידע הזה נועד להפוך אותך למגן, לא לתוקף. עם אותו ידע אפשר לבנות דברים ולהגן עליהם, או להרוס ולשבת בכלא. הבחירה שלך, ואני סומך עליך.</p>
+  </div>
+
+  <h2>מה זה בכלל ״לפרוץ״?</h2>
+  <p>בסרטים, פריצה היא הקלדה מהירה ומסך ירוק. במציאות, רוב הפריצות מנצלות <strong>טעות שמישהו עשה</strong>: קוד שלא בדק קלט, סיסמה חלשה, הרשאה ששכחו לסגור, או אדם שנתן אמון במקום הלא נכון. תוקף עובר תהליך קבוע:</p>
+  <ol>
+    <li><strong>איסוף מידע</strong> (<span class="t">Reconnaissance</span>): מה יש למטרה? אילו שרתים, אילו פורטים פתוחים, איזו תוכנה.</li>
+    <li><strong>מציאת חולשה</strong> (<span class="t">Vulnerability</span>): איפה יש טעות שאפשר לנצל.</li>
+    <li><strong>ניצול</strong> (<span class="t">Exploit</span>): להשתמש בחולשה כדי להיכנס.</li>
+    <li><strong>העמקה והתמדה:</strong> להשיג יותר הרשאות ולהישאר בפנים.</li>
+  </ol>
+  <p>המגן חושב בדיוק הפוך: לסגור כל שלב. פחות מידע חשוף, פחות חולשות, וגם אם מישהו נכנס, שהנזק יהיה מוגבל. נעבור על ההתקפות הנפוצות, אחת-אחת, בעצמך.</p>
+
+  <h2>1. הזרקת SQL</h2>
+  <p>ראית את הרעיון בפרק מסדי הנתונים. עכשיו תבצע אותו על כניסה מזויפת, ותראה את התיקון עובד. הטריק: אם האתר מדביק את מה שהקלדת ישר לתוך שאילתת מסד הנתונים, אפשר ״לסגור״ את המחרוזת ולהוסיף תנאי משלך.</p>
+  <div class="demo" data-demo="sqlinject"></div>
+
+  <h2>2. XSS: הזרקת סקריפט</h2>
+  <p><span class="t">XSS</span> (Cross-Site Scripting) היא אחות של הזרקת SQL, אבל במקום להזריק למסד הנתונים, מזריקים קוד שרץ אצל <em>משתמשים אחרים</em>. אם אתר מציג תגובות של גולשים בלי לנקות אותן, אפשר לכתוב ״תגובה״ שהיא בעצם קוד שגונב עוגיות מכל מי שקורא אותה.</p>
+  <div class="demo" data-demo="xss"></div>
+
+  <h2>3. דיוג והנדסה חברתית</h2>
+  <p>הפריצה הכי נפוצה לא תוקפת מחשב, אלא <strong>אדם</strong>. קל יותר לשכנע מישהו למסור סיסמה מאשר לשבור הצפנה. זה נקרא <span class="t">Social Engineering</span>, והצורה הנפוצה שלו היא <span class="t">Phishing</span> (דיוג): הודעה מזויפת שנראית אמיתית. תרגל את העין שלך:</p>
+  <div class="demo" data-demo="phish"></div>
+
+  <h2>4. כוח גס ונעילה</h2>
+  <p><span class="t">Brute Force</span> = לנסות את כל הסיסמאות עד שאחת עובדת. תראה כמה מהר מחשב שובר קוד קצר, ולמה נעילה אחרי כמה ניסיונות עוצרת אותו:</p>
+  <div class="demo" data-demo="bruteforce"></div>
+
+  <h2>5. סריקת פורטים והרשאות מינימום</h2>
+  <p>לפני שתוקף פורץ, הוא ״ממפה״ את המטרה: אילו ״דלתות״ (פורטים) פתוחות. כל דלת מיותרת היא סיכון. תסרוק שרת דמיוני, ותסגור את מה שלא צריך:</p>
+  <div class="demo" data-demo="portscan"></div>
+  <p>העיקרון שחוזר כאן, ובכל האבטחה, נקרא <span class="t">Least Privilege</span> (<strong>הרשאות מינימום</strong>): כל חלק במערכת מקבל בדיוק את מה שהוא צריך, ולא יותר. אותו רעיון חל על קבצים:</p>
+  <div class="demo" data-demo="perms"></div>
+
+  <h2>6. ציתות ברשת ולמה HTTPS קריטי</h2>
+  <p>ב-Wi-Fi ציבורי, מישהו ברשת יכול ״להאזין״ לתעבורה. אם היא לא מוצפנת, הוא רואה הכול. תראה למה המנעול הקטן בדפדפן כל כך חשוב:</p>
+  <div class="demo" data-demo="wifi"></div>
+  <p>התקפה שבה מישהו יושב ״באמצע״ בין שני צדדים ומאזין (או משנה) נקראת <span class="t">Man-in-the-Middle</span> (<strong>אדם באמצע</strong>). HTTPS מגן מפניה בשתי דרכים: הוא מצפין את המידע, והוא מוודא (עם ״תעודה״) שאתה מדבר עם השרת האמיתי ולא עם מתחזה.</p>
+
+  <h2>7. עוגיות, טוקנים והתחזות</h2>
+  <p>אחרי שהתחברת, איך האתר ״זוכר״ אותך? הוא נותן לך טוקן סודי. מי שגונב אותו יכול להתחזות אליך. תבין איך זה עובד ואיך מגינים:</p>
+  <div class="demo" data-demo="cookie"></div>
+
+  <h2>עוד סוגי התקפות (שכדאי להכיר)</h2>
+  <div class="table-wrap"><table>
+    <tr><th>התקפה</th><th>מה זה</th><th>הגנה</th></tr>
+    <tr><td><span class="t">DDoS</span></td><td>הצפת שרת במיליוני בקשות עד שהוא קורס. לא ״פריצה״, אלא ״חסימה״</td><td>שירותי סינון (Cloudflare), הגבלת קצב</td></tr>
+    <tr><td><span class="t">Ransomware</span> (כופרה)</td><td>תוכנה שמצפינה את הקבצים שלך ודורשת כופר. פוגעת בבתי חולים ועיריות</td><td>גיבויים, עדכונים, לא ללחוץ על קבצים חשודים</td></tr>
+    <tr><td>Buffer Overflow</td><td>שליחת יותר מדי נתונים לתוכנה עד שהם ״גולשים״ ודורסים קוד</td><td>שפות בטוחות (Rust), בדיקות גבולות</td></tr>
+    <tr><td>Zero-Day</td><td>חולשה שאף אחד עוד לא מכיר, ולכן אין לה תיקון</td><td>הכי מסוכן. עדכונים מהירים ברגע שיוצא תיקון</td></tr>
+    <tr><td>Supply Chain</td><td>פריצה דרך ספרייה או עדכון שאתה סומך עליהם</td><td>לבדוק תלויות, לא להתקין חבילות מזויפות</td></tr>
+  </table></div>
+
+  <h2>איך הופכים למומחה אבטחה (בדרך החוקית)</h2>
+  <ul>
+    <li><strong>picoCTF:</strong> תחרות CTF שנבנתה במיוחד לתלמידי תיכון, עם אתגרים מדורגים ורמזים. המקום הכי טוב להתחיל.</li>
+    <li><strong>OverTheWire (Bandit):</strong> סדרת אתגרים שמלמדת לינוקס וטרמינל, שלב אחרי שלב.</li>
+    <li><strong>TryHackMe</strong> ו-<strong>Hack The Box:</strong> מכונות תרגול חוקיות שאתה מקבל רשות מפורשת לפרוץ אליהן.</li>
+    <li><strong>Bug Bounty:</strong> כשתהיה מנוסה, חברות משלמות למי שמוצא ומדווח על באגים באחריות (Responsible Disclosure).</li>
+    <li><strong>בישראל:</strong> תוכניות סייבר לנוער (״מגשימים״, ״גדנ״ע סייבר״, ״סייבר גירלז״), מגמות סייבר בתיכון, ובהמשך יחידות טכנולוגיות בצבא.</li>
+  </ul>
+  <div class="box tip"><b>הכלל של האקר טוב</b><p>אם מצאת חולשה במערכת אמיתית (של בית הספר, של אתר, של משחק): <strong>אל תנצל אותה. דווח עליה.</strong> זו ההתנהגות שהופכת אותך למישהו שחברות רוצות להעסיק, במקום למישהו שהמשטרה מחפשת. גילוי אחראי הוא חתימת היד של מקצוען.</p></div>
+
+  <div class="quiz"><script type="application/json">[
+    {"q":"מה מבצעת הזרקת SQL?","o":["מציפה שרת בבקשות","מכניסה קוד לתוך שאילתת מסד נתונים דרך קלט","גונבת Wi-Fi","מצפינה קבצים"],"a":1},
+    {"q":"מה הדרך הכי טובה להתגונן מכוח גס?","o":["סיסמה קצרה","נעילה/השהיה אחרי כמה ניסיונות + סיסמה ארוכה + 2FA","לכבות את השרת","להשתמש ב-HTTP"],"a":1},
+    {"q":"למה HTTPS חשוב ב-Wi-Fi ציבורי?","o":["הוא מהיר יותר","הוא מצפין את המידע כך שמצותת לא יכול לקרוא אותו","הוא חוסם פרסומות","אין לו חשיבות"],"a":1},
+    {"q":"מהו עיקרון ״הרשאות מינימום״?","o":["לתת לכל אחד הכול","לתת לכל חלק בדיוק את מה שהוא צריך ולא יותר","לחסום את כל הפורטים","להשתמש בסיסמה אחת"],"a":1},
+    {"q":"מצאת חולשה באתר אמיתי. מה עושים?","o":["מנצלים אותה","מוכרים אותה","מדווחים לבעלים באחריות (Responsible Disclosure)","מספרים לחברים"],"a":2},
+    {"q":"מהי הצורה הנפוצה ביותר של פריצה?","o":["שבירת הצפנה","דיוג והנדסה חברתית (לתקוף אנשים)","Buffer Overflow","Zero-Day"],"a":1}
   ]</script></div>
 </section>
 
@@ -1738,6 +1824,57 @@ min + Math.<span class="f">random</span>() * (max - min)          <span class="c
     {"q":"מה מחזיר lerp(0, 100, 0.25)?","o":["0.25","25","75","100"],"a":1},
     {"q":"למה Math.sin(90) לא שווה 1?","o":["באג ב-JavaScript","כי הפונקציה מצפה לרדיאנים, לא מעלות","כי צריך להוסיף 1","כי 90 גדול מדי"],"a":1}
   ]</script></div>
+</section>
+
+<section class="chapter" id="toys" data-title="מעבדות מדעי המחשב" data-part="שלב 2 · תכנות">
+  <div class="chapter-head">
+    <div class="eyebrow">פרק 14 · 20 צעצועים אינטראקטיביים ללמוד מהם</div>
+    <h1>מעבדות מדעי המחשב</h1>
+    <p>אוסף של מעבדות קצרות, כל אחת מלמדת רעיון אחד דרך משחק. שוטט, לחץ, שבור. אין כאן סדר חובה.</p>
+  </div>
+
+  <h2>מספרים וייצוג</h2>
+  <p>הכול במחשב הוא מספרים. הנה איך הם עובדים באמת: בסיסי ספירה, תווים, ומספרים שליליים.</p>
+  <div class="demo" data-demo="baseconv"></div>
+  <div class="demo" data-demo="ascii"></div>
+  <div class="demo" data-demo="twoscomp"></div>
+
+  <h2>טקסט ומתמטיקה</h2>
+  <p>ביטויים רגולריים מוצאים דפוסים בטקסט, ומחשבון שמבין סדר פעולות מראה איך שפת תכנות מפענחת מה שכתבת.</p>
+  <div class="demo" data-demo="regex"></div>
+  <div class="demo" data-demo="calc"></div>
+
+  <h2>אקראיות והסתברות</h2>
+  <p>מחשבים משתמשים באקראיות כדי לפתור בעיות שקשה לחשב ישירות, וכדי ליצור שלל ואתגר במשחקים.</p>
+  <div class="demo" data-demo="montecarlo"></div>
+  <div class="demo" data-demo="dice"></div>
+
+  <h2>פרקטלים ואוטומטים</h2>
+  <p>נוסחאות קצרות שיוצרות אינסוף פרטים, וחוקים פשוטים שמייצרים מורכבות.</p>
+  <div class="demo" data-demo="mandelbrot"></div>
+  <div class="demo" data-demo="rule30"></div>
+
+  <h2>אלגוריתמים ומבני נתונים</h2>
+  <p>ראית מיון בועות ומהיר בפרק האלגוריתמים. הנה עוד שניים, ושלושה מבני נתונים חיים.</p>
+  <div class="demo" data-demo="sortgallery"></div>
+  <div class="demo" data-demo="linkedlist"></div>
+  <div class="demo" data-demo="bst"></div>
+  <div class="demo" data-demo="dijkstra"></div>
+
+  <h2>בינה מלאכותית קטנה</h2>
+  <p>חמישה סוגי AI שאפשר להריץ בדפדפן: מחפש מהלכים, מתפתח, לומד מפרס, ומסווג.</p>
+  <div class="demo" data-demo="tictactoe"></div>
+  <div class="demo" data-demo="genetic"></div>
+  <div class="demo" data-demo="qlearn"></div>
+  <div class="demo" data-demo="spam"></div>
+  <div class="demo" data-demo="knn"></div>
+
+  <h2>יסודות תיאורטיים</h2>
+  <p>המכונה שהגדירה מהו ״מחשב״, ומכונת המצבים שמאחורי כל דמות במשחק.</p>
+  <div class="demo" data-demo="turing"></div>
+  <div class="demo" data-demo="trafficlight"></div>
+
+  <div class="box tip"><b>מה עכשיו?</b><p>בחר מעבדה אחת שהפתיעה אותך, ונסה לבנות אותה מחדש בעצמך ב-JavaScript. זו הדרך הכי טובה להפוך ״הבנתי״ ל״אני יודע לעשות״.</p></div>
 </section>
 
 <section class="chapter" id="web" data-title="בניית אתרים" data-part="שלב 3 · בנייה">
@@ -3346,6 +3483,47 @@ coin.Touched:<span class="f">Connect</span>(<span class="k">function</span>(hit)
   ]</script></div>
 </section>
 
+<section class="chapter" id="arcade" data-title="ארקייד: 15 משחקים ללמוד מהם" data-part="שלב 4 · משחקים">
+  <div class="chapter-head">
+    <div class="eyebrow">פרק 32 · שחק, ואז פרק לגורמים</div>
+    <h1>ארקייד: 15 משחקים ללמוד מהם</h1>
+    <p>כל משחק כאן נבנה מאותם רעיונות שלמדת: לולאת משחק, מצב, קלט, התנגשויות ו-AI. שחק בהם, ואז חשוב איך היית בונה אותם.</p>
+  </div>
+
+  <div class="box idea"><b>איך ללמוד מהמשחקים האלה</b><p>לכל משחק, שאל את עצמך שלוש שאלות מפרק ״איך משחקים עובדים״: (1) מה ה<strong>מצב</strong> שהמשחק זוכר? (2) מה קורה ב<strong>עדכון</strong> של כל פריים? (3) איך מזהים <strong>התנגשות</strong> או ניצחון? אם תוכל לענות, אתה יכול לבנות אותו.</p></div>
+
+  <h2>קלאסיקות של רשת ומצב</h2>
+  <p>המשחקים האלה הם בעיקר ניהול של רשת דו-ממדית: אריחים, לבנים או דיסקים.</p>
+  <div class="demo" data-demo="tetris"></div>
+  <div class="demo" data-demo="g2048"></div>
+  <div class="demo" data-demo="minesweeper"></div>
+  <div class="demo" data-demo="lightsout"></div>
+
+  <h2>פיזיקה וזמן אמת</h2>
+  <p>כאן הכול זז כל פריים: כדורים, מחבטים וכוח משיכה.</p>
+  <div class="demo" data-demo="breakout"></div>
+  <div class="demo" data-demo="pong"></div>
+  <div class="demo" data-demo="flappy"></div>
+
+  <h2>משחקים עם AI</h2>
+  <p>בשניהם המחשב ״חושב״: פונג עוקב אחרי הכדור, וארבע-בשורה בודק מהלכים קדימה עם Minimax (מפרק ה-AI במשחקים).</p>
+  <div class="demo" data-demo="connect4"></div>
+
+  <h2>זיכרון ותגובה</h2>
+  <div class="demo" data-demo="memory"></div>
+  <div class="demo" data-demo="simon"></div>
+
+  <h2>גרפיקה ואפקטים</h2>
+  <p>לא משחקים, אלא הדגמות ויזואליות: פרספקטיבה, חלקיקים ומתמטיקה שזזה.</p>
+  <div class="demo" data-demo="starfield"></div>
+  <div class="demo" data-demo="mode7"></div>
+  <div class="demo" data-demo="fireworks"></div>
+  <div class="demo" data-demo="matrix"></div>
+  <div class="demo" data-demo="clock"></div>
+
+  <div class="box tip"><b>הפרויקט הבא שלך</b><p>בחר את המשחק שהכי אהבת, ובנה גרסה משלך מאפס. התחל פשוט (רק הליבה), ואז הוסף: צבעים, צלילים (פרק הצליל), טבלת שיאים (localStorage), ומסך פתיחה. כשזה עובד, העלה ל-itch.io ושלח לחברים.</p></div>
+</section>
+
 <section class="chapter" id="aitools" data-title="כל כלי ה-AI של היום" data-part="שלב 5 · כלים">
   <div class="chapter-head">
     <div class="eyebrow">פרק 12 · צ׳אטבוטים, קוד, תמונות, וידאו, קול, מוזיקה ותלת-ממד</div>
@@ -4093,6 +4271,18 @@ window.GLOSSARY.push(
     { en: "Low Poly", say: "לואו פולי", he: "מעט מצולעים", d: "סגנון גרפי של מודלים עם מעט משולשים וצבעים שטוחים. קל ליצור, רץ מהר, ונראה מעולה." }
   );
 })();
+
+// Glossary part 4: security terms from the CTF lab
+window.GLOSSARY.push(
+  { en: "Reconnaissance", say: "ריקונסנס", he: "איסוף מודיעין", alt: ["Recon"], d: "השלב הראשון בהתקפה: לאסוף מידע על המטרה — אילו שרתים, פורטים ותוכנות יש לה — לפני שמנסים לפרוץ." },
+  { en: "Vulnerability", say: "וולנרביליטי", he: "חולשה, פגיעות", alt: ["Vuln"], d: "טעות או חולשה במערכת שאפשר לנצל כדי לפרוץ. המטרה של מגן היא לסגור אותן לפני שתוקף ימצא." },
+  { en: "Exploit", say: "אקספלויט", he: "ניצול חולשה", d: "קוד או שיטה שמנצלים חולשה כדי להיכנס למערכת או להריץ בה קוד." },
+  { en: "XSS", say: "אקס-אס-אס", he: "הזרקת סקריפט חוצה-אתר", full: "Cross-Site Scripting", d: "התקפה שבה מזריקים קוד לתוך אתר, כך שהוא רץ אצל משתמשים אחרים ויכול לגנוב את המידע שלהם. נמנעת עם ״בריחת תווים״." },
+  { en: "Man-in-the-Middle", say: "מן-אין-דה-מידל", he: "אדם באמצע", alt: ["MITM"], d: "התקפה שבה מישהו יושב בין שני צדדים, מאזין ואולי משנה את התקשורת. HTTPS מגן מפניה בהצפנה ובאימות זהות." },
+  { en: "Least Privilege", say: "ליסט פריווילג׳", he: "הרשאות מינימום", d: "עיקרון אבטחה: תן לכל משתמש, תוכנה או קובץ בדיוק את ההרשאות שהם צריכים, ולא יותר. מקטין את הנזק אם משהו נפרץ." },
+  { en: "DDoS", say: "די-דוס", he: "מתקפת מניעת שירות מבוזרת", full: "Distributed Denial of Service", d: "הצפת שרת במיליוני בקשות מהרבה מקורות, עד שהוא קורס ולא יכול לשרת אף אחד. לא ״פריצה״ אלא ״חסימה״." },
+  { en: "Ransomware", say: "רנסומוור", he: "כופרה", d: "תוכנה זדונית שמצפינה את הקבצים של הקורבן ודורשת תשלום (כופר) כדי לשחרר אותם. פוגעת בבתי חולים, עיריות וחברות." }
+);
 </script>
 <script>// Demos: inside the CPU, networks, security
 (function () {
@@ -6594,6 +6784,1228 @@ void main() {
       out.textContent = `chunks loaded ${loaded}/${C * R}   loading ${loading}   memory ${loaded * 64} MB (without streaming: ${C * R * 64} MB)   pop-in frames ${pop}`;
     };
     d.append(cv, el("div", { class: "grid2", style: "margin-top:8px" }, el("label", {}, "מהירות נסיעה", sp), el("label", {}, "רדיוס טעינה", rad), el("label", {}, "סוג דיסק", disk)), out);
+    requestAnimationFrame(loop);
+  };
+})();
+
+// Demos: security lab — sandboxed, defensive, CTF-style. Every attack runs ONLY on fake
+// in-page data, and every sim shows the fix. Nothing here touches a real system.
+(function () {
+  "use strict";
+  const D = window.MG_DEMOS || (window.MG_DEMOS = {});
+
+  // 1. SQL injection against a FAKE login, with the fix
+  D.sqlinject = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · CTF (מעבדה סגורה)", "הזרקת SQL: איך פורצים כניסה, ואיך חוסמים", "זו כניסה מזויפת לגמרי, שקיימת רק בדף הזה. נסה להיכנס בלי לדעת את הסיסמה: הקלד בשדה השם ' OR '1'='1 (עם הגרש). אחר כך הדלק ״שאילתה עם פרמטרים״ ונסה שוב, כדי לראות איך מתגוננים. ככה לומדים אבטחה: תוקפים מערכת תרגול כדי לדעת להגן על אמיתית.");
+    const users = [{ u: "admin", p: "S3cr3t!" }, { u: "noa", p: "pizza42" }];
+    const name = el("input", { type: "text", value: "' OR '1'='1", id: "sqli-u", "aria-label": "שם משתמש" });
+    const pass = el("input", { type: "text", value: "", id: "sqli-p", "aria-label": "סיסמה", placeholder: "(השאר ריק)" });
+    const q = el("div", { class: "out", style: "min-height:0" });
+    const res = el("div", { style: "font-weight:700;margin-top:6px" });
+    let safe = false;
+    const safeBtn = el("button", { onclick: () => { safe = !safe; safeBtn.classList.toggle("on", safe); run(); } }, "שאילתה עם פרמטרים (התיקון)");
+    const run = () => {
+      const u = name.value, p = pass.value;
+      if (safe) {
+        q.textContent = `-- שאילתה מאובטחת: הקלט אף פעם לא הופך לקוד\nSELECT * FROM users WHERE user = ?  AND pass = ?\n-- הפרמטרים: [${JSON.stringify(u)}, ${JSON.stringify(p)}]`;
+        const hit = users.find(x => x.u === u && x.p === p);
+        res.textContent = hit ? "נכנסת (כי הסיסמה נכונה באמת)." : "✕ גישה נדחתה. ההזרקה לא עובדת: הקלט נבדק כטקסט, לא כקוד.";
+        res.style.color = hit ? "#5fd08f" : "#ff7b7b";
+      } else {
+        const query = `SELECT * FROM users WHERE user = '${u}' AND pass = '${p}'`;
+        q.textContent = "-- שאילתה פגיעה: הקלט מודבק ישר לתוך הקוד\n" + query;
+        // simulate the injection on fake data (no real DB)
+        const injected = /'\s*OR\s*'?1'?\s*=\s*'?1/i.test(u) || /'\s*OR\s*1\s*=\s*1/i.test(u) || /'--/.test(u);
+        const legit = users.find(x => x.u === u && x.p === p);
+        if (injected) { res.textContent = "🚨 נכנסת בלי סיסמה! ה-OR '1'='1' תמיד נכון, אז השרת חשב שכל השורות מתאימות."; res.style.color = "#ffb454"; }
+        else if (legit) { res.textContent = "נכנסת (סיסמה נכונה)."; res.style.color = "#5fd08f"; }
+        else { res.textContent = "✕ גישה נדחתה."; res.style.color = "#ff7b7b"; }
+      }
+    };
+    [name, pass].forEach(i => i.addEventListener("input", run));
+    d.append(el("div", { class: "row" }, el("span", {}, "שם:"), name, el("span", {}, "סיסמה:"), pass, el("button", { class: "primary", onclick: run }, "התחבר")),
+      el("div", { class: "row", style: "margin-top:6px" }, safeBtn), q, res,
+      el("div", { class: "note", style: "margin-top:8px" }, "מה קרה: הקוד הפגיע בונה את השאילתה בחיבור מחרוזות, אז הקלט שלך הפך לחלק מהפקודה. התיקון (״פרמטרים״) שולח את הקלט בנפרד, והוא תמיד נשאר טקסט. זה התיקון האמיתי שכל מסד נתונים תומך בו."));
+    run();
+  };
+
+  // 2. XSS in a sandboxed shadow root, with escaping fix
+  D.xss = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · CTF (מעבדה סגורה)", "XSS: כשקלט של משתמש הופך לקוד", "אתר ״ספר אורחים״ מזויף. כתוב תגובה, והיא תופיע בתיבה הלבנה. עכשיו נסה לכתוב תגובה שהיא בעצם קוד. בלי הגנה, הקוד ירוץ! הדלק ״בריחת תווים״ (escaping) כדי לראות את התיקון. הכול קורה בתוך תא סגור (shadow DOM) שלא יכול לגעת בשאר הדף.");
+    const box = el("div", { class: "preview-host", style: "min-height:80px;padding:10px" });
+    const root = box.attachShadow ? box.attachShadow({ mode: "open" }) : box;
+    const ta = el("input", { type: "text", id: "xss-in", style: "flex:1;min-width:0", "aria-label": "תגובה", value: "<b>היי!</b> <span onclick=\"this.textContent='נלחצתי! זה היה יכול לגנוב את החשבון שלך'\" style=\"color:#c00;cursor:pointer\">[לחץ לפרס!]</span>" });
+    const esc = s => s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    let safe = false;
+    const safeBtn = el("button", { onclick: () => { safe = !safe; safeBtn.classList.toggle("on", safe); render(); } }, "בריחת תווים (התיקון)");
+    const render = () => {
+      const val = ta.value;
+      root.innerHTML = "";
+      const wrap = document.createElement("div");
+      wrap.style.cssText = "font-family:sans-serif;direction:rtl";
+      wrap.innerHTML = "<b>תגובות:</b><br>" + (safe ? esc(val) : val.replace(/<script[\s\S]*?<\/script>/gi, "[script חסום ע\"י הדפדפן]"));
+      root.append(wrap);
+    };
+    ta.addEventListener("input", render);
+    d.append(el("div", { class: "row" }, ta), el("div", { class: "row", style: "margin-top:6px" }, safeBtn),
+      el("div", { class: "note" }, "מה שמופיע לכל המבקרים:"), box,
+      el("div", { class: "note", style: "margin-top:8px" }, "בלי הגנה, ה-HTML שכתבת הופך לחלק מהדף (נסה ללחוץ על ״[לחץ לפרס!]״). באתר אמיתי, קוד כזה יכול לגנוב עוגיות ולהשתלט על חשבונות. התיקון: להמיר < ל-&lt; וכו׳, כך שהקלט מוצג כטקסט ולא רץ כקוד. React ורוב הספריות עושות את זה אוטומטית."));
+    render();
+  };
+
+  // 3. Phishing spotter game
+  D.phish = d => {
+    const { el, head, award } = MG;
+    head(d, "מעבדה · זהה דיוג", "אמיתי או מזויף?", "בכל סבב מופיעים הודעה או אתר. החלט אם הם אמיתיים או ניסיון דיוג (phishing), ולמד את הסימנים. זו המיומנות שמגינה עליך יותר מכל אנטי-וירוס.");
+    const items = [
+      { fake: true, from: "support@netflx-billing.com", text: "החשבון שלך יינעל! עדכן אמצעי תשלום עכשיו: netflx-verify.com/login", why: "הדומיין כתוב לא נכון (netflx במקום netflix), והלחץ (״יינעל עכשיו!״) הוא סימן קלאסי." },
+      { fake: false, from: "no-reply@accounts.google.com", text: "התחברות חדשה למכשיר Windows מחיפה. אם זה לא אתה, אבטח את החשבון.", why: "הדומיין הרשמי, אין קישור חשוד, וזו התראה סבירה. עדיין: היכנס דרך האתר ישירות, לא דרך הקישור." },
+      { fake: true, from: "Steam Community", text: "חבר שלח לך מתנה! קבל 50$ ב-Steam: steamcommunlty.com/gift (חינם!)", why: "steamcommunlty (עם l במקום i) הוא זיוף מפורסם. ״חינם 50$״ = כמעט תמיד הונאה." },
+      { fake: true, from: "המורה למתמטיקה", text: "היי, איבדתי את הטלפון. תעביר לי קוד האימות שאשלח לך לרגע?", why: "אף אחד אמיתי לא יבקש קוד אימות. זו הנדסה חברתית: מישהו מנסה להיכנס לחשבון שלך." },
+      { fake: false, from: "GitHub", text: "מישהו פתח Pull Request בפרויקט שלך. צפה בשינויים בלוח הבקרה.", why: "הודעה תקינה. הדומיין רשמי, אין דחיפות מזויפת, אין בקשה למידע." },
+      { fake: true, from: "Epic Games", text: "זכית ב-13,500 V-Bucks! הזן שם משתמש וסיסמה כדי לקבל: free-vbucks-now.net", why: "אתר חיצוני שמבקש סיסמה = דיוג. חברות אמיתיות לא מבקשות סיסמה באתר צד שלישי." },
+      { fake: true, from: "בנק לאומי", text: "לקוח יקר, אמת את פרטי הכרטיס: 4580-____-____-____ בקישור המצורף.", why: "בנק לעולם לא מבקש פרטי כרטיס במייל או SMS. תמיד." },
+      { fake: false, from: "Discord", text: "קוד האימות שלך הוא 481920. אל תשתף אותו עם אף אחד.", why: "קוד שאתה ביקשת בעצמך. הסימן שזה תקין: ההודעה עצמה אומרת לא לשתף." },
+    ];
+    let i = 0, score = 0, done = 0;
+    const card = el("div", { class: "card-q", style: "text-align:right;align-items:stretch" });
+    const stat = el("div", { class: "note" });
+    const btns = el("div", { class: "row", style: "margin-top:8px" });
+    const why = el("div", { class: "note", style: "min-height:36px" });
+    const draw = () => {
+      const it = items[i];
+      card.innerHTML = ""; why.textContent = "";
+      card.append(el("div", { style: "font-family:var(--font-mono);color:var(--screen-ink);font-size:14px" }, "מאת: " + it.from), el("div", { style: "font-size:16px;margin-top:6px" }, it.text));
+      btns.innerHTML = "";
+      const answer = f => {
+        done++;
+        const right = f === it.fake;
+        if (right) { score++; award("phish:" + i, 5, "זיהוי דיוג"); }
+        why.innerHTML = (right ? "<b style='color:#5fd08f'>נכון! </b>" : "<b style='color:#ff7b7b'>לא בדיוק. </b>") + it.why;
+        stat.textContent = `ניקוד: ${score}/${done}`;
+        btns.innerHTML = "";
+        btns.append(el("button", { class: "primary", onclick: () => { i = (i + 1) % items.length; draw(); } }, "הבא ←"));
+      };
+      btns.append(el("button", { onclick: () => answer(false) }, "✓ אמיתי"), el("button", { onclick: () => answer(true) }, "🎣 דיוג"));
+    };
+    d.append(card, btns, why, stat);
+    draw();
+  };
+
+  // 4. Brute force on a toy PIN, showing rate limiting
+  D.bruteforce = d => {
+    const { el, head, sleep } = MG;
+    head(d, "מעבדה · CTF (מעבדה סגורה)", "מתקפת כוח גס, ולמה נעילה עוצרת אותה", "מנעול מזויף עם קוד בן 4 ספרות (10,000 אפשרויות). לחץ ״נסה הכול״ ותראה מחשב שובר אותו בכמה שניות. עכשיו הדלק ״נעילה אחרי 5 ניסיונות״ ותראה למה זה עוצר את התוקף. ככה מגינים על חשבונות אמיתיים.");
+    const secret = String(Math.floor(Math.random() * 10000)).padStart(4, "0");
+    const disp = el("div", { class: "big" }, "????");
+    const info = el("div", { class: "note", style: "font-variant-numeric:tabular-nums" });
+    let lock = false, busy = false;
+    const lockBtn = el("button", { onclick: () => { lock = !lock; lockBtn.classList.toggle("on", lock); } }, "נעילה אחרי 5 ניסיונות");
+    const run = async () => {
+      if (busy) return; busy = true;
+      let tries = 0, locked = 0;
+      for (let n = 0; n < 10000; n++) {
+        const guess = String(n).padStart(4, "0");
+        tries++;
+        disp.textContent = guess;
+        if (lock && tries % 5 === 0 && guess !== secret) {
+          locked++;
+          info.textContent = `ניסיון ${tries}: 🔒 החשבון ננעל ל-30 שניות (ניסיון נעילה מספר ${locked}). תוקף אמיתי היה מחכה שעות על כל 5 ניסיונות.`;
+          await sleep(400);
+        }
+        if (guess === secret) { disp.textContent = guess; info.textContent = lock ? `נשבר אחרי ${tries} ניסיונות — אבל עם נעילה זה היה לוקח לתוקף אמיתי ${(Math.ceil(tries / 5) * 0.5 / 60).toFixed(0)} דקות עד שעות, במקום שנייה.` : `💥 נשבר! הקוד הוא ${secret}, נמצא אחרי ${tries} ניסיונות, בפחות משנייה.`; break; }
+        if (n % 200 === 0) { info.textContent = `בודק... ניסיון ${tries}`; await sleep(1); }
+      }
+      busy = false;
+    };
+    d.append(disp, el("div", { class: "row" }, el("button", { class: "primary", onclick: run }, "▶ נסה הכול (כוח גס)"), lockBtn, el("button", { onclick: () => { disp.textContent = "????"; info.textContent = ""; } }, "אפס")), info,
+      el("div", { class: "note", style: "margin-top:8px" }, "לכן: (1) קודים ארוכים (6 ספרות = פי 100 אפשרויות), (2) נעילה או השהיה אחרי כמה ניסיונות, (3) אימות דו-שלבי. שלושתם ביחד הופכים כוח גס לחסר תועלת."));
+  };
+
+  // 5. Port scan concept on a fictional server
+  D.portscan = d => {
+    const { el, head, sleep } = MG;
+    head(d, "מעבדה · CTF (מעבדה סגורה)", "סריקת פורטים: אילו ״דלתות״ פתוחות", "לכל שרת יש פורטים ממוספרים, כמו דלתות בבניין. תוקף ״דופק״ על כל דלת כדי לראות מה פתוח. זה שרת דמיוני. סרוק אותו, ואז כבה שירותים מיותרים והדלק חומת אש, כדי לראות איך מקטינים את ״שטח התקיפה״.");
+    const ports = [
+      { n: 22, name: "SSH", risk: "גישה מרחוק לשרת. אם הסיסמה חלשה, זו כניסה ישירה", open: true, needed: true },
+      { n: 80, name: "HTTP", risk: "אתר לא מוצפן. עדיף להפנות ל-443", open: true, needed: false },
+      { n: 443, name: "HTTPS", risk: "אתר מוצפן. זה בסדר וצריך להישאר פתוח", open: true, needed: true },
+      { n: 3306, name: "MySQL", risk: "מסד נתונים! לא אמור להיות חשוף לאינטרנט בכלל", open: true, needed: false },
+      { n: 21, name: "FTP", risk: "העברת קבצים ישנה ולא מוצפנת. סכנה", open: true, needed: false },
+      { n: 8080, name: "Dev server", risk: "שרת פיתוח ששכחו לכבות. דליפת מידע", open: true, needed: false },
+    ];
+    let firewall = false;
+    const fw = el("button", { onclick: () => { firewall = !firewall; fw.classList.toggle("on", firewall); draw(); } }, "חומת אש (חוסמת הכול חוץ מ-443)");
+    const list = el("div");
+    const info = el("div", { class: "note", style: "min-height:20px" });
+    const isOpen = p => p.open && !(firewall && p.n !== 443);
+    const draw = () => {
+      list.innerHTML = "";
+      ports.forEach(p => {
+        const open = isOpen(p);
+        list.append(el("div", { class: "bucket" }, el("b", { style: "width:60px" }, ":" + p.n), el("span", { class: open ? "" : "ok", style: open && !p.needed ? "background:#3a1616;color:#ffaaaa" : "" }, `${p.name} — ${open ? "פתוח" : "סגור"}`), el("span", { class: "note", style: "background:none;border:none" }, open ? p.risk : "")));
+      });
+      const risky = ports.filter(p => isOpen(p) && !p.needed).length;
+      info.textContent = risky ? `${risky} פורטים פתוחים ומיותרים = שטח תקיפה גדול.` : "רק מה שצריך פתוח. שטח תקיפה מינימלי!";
+    };
+    const scan = async () => {
+      info.textContent = "סורק...";
+      list.innerHTML = "";
+      for (const p of ports) { await sleep(180); draw(); }
+    };
+    d.append(el("div", { class: "row" }, el("button", { class: "primary", onclick: scan }, "▶ סרוק פורטים"), fw,
+      ...ports.filter(p => !p.needed).slice(0, 3).map(p => el("button", { onclick: () => { p.open = false; draw(); } }, "כבה " + p.name))), list, info,
+      el("div", { class: "note", style: "margin-top:8px" }, "עיקרון הזהב: ״הרשאות מינימום״. כל דלת פתוחה מיותרת היא הזדמנות לתוקף. סוגרים כל מה שלא בשימוש, ומגינים על השאר עם חומת אש וסיסמאות חזקות."));
+    draw();
+  };
+
+  // 6. File permissions / least privilege
+  D.perms = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · הרשאות", "מי מותר לו לעשות מה", "בכל מערכת יש הרשאות: מי יכול לקרוא, לכתוב או להריץ כל קובץ. לחץ על התאים כדי לשנות, ותראה מתי נוצרת סכנת אבטחה. זה בדיוק chmod בלינוקס.");
+    const files = [
+      { name: "index.html", who: "אתר ציבורי", perms: { r: true, w: false, x: false }, safe: p => p.r && !p.w },
+      { name: "passwords.txt", who: "סודי", perms: { r: true, w: true, x: false }, safe: p => true, secret: true },
+      { name: "game.sh", who: "סקריפט", perms: { r: true, w: false, x: true }, safe: p => true },
+    ];
+    const list = el("div");
+    const warn = el("div", { class: "note", style: "min-height:20px" });
+    const draw = () => {
+      list.innerHTML = "";
+      files.forEach(f => {
+        const row = el("div", { class: "bucket" }, el("b", { style: "width:130px" }, f.name));
+        [["r", "קריאה"], ["w", "כתיבה"], ["x", "הרצה"]].forEach(([k, label]) => {
+          const on = f.perms[k];
+          const b = el("button", { class: on ? "on" : "", style: "min-width:70px", onclick: () => { f.perms[k] = !f.perms[k]; check(); draw(); } }, label + (on ? " ✓" : " ✗"));
+          row.append(b);
+        });
+        list.append(row);
+      });
+    };
+    const check = () => {
+      const msgs = [];
+      const pw = files.find(f => f.secret);
+      if (pw && pw.perms.r) msgs.push("🚨 קובץ הסודות ניתן לקריאה. במערכת אמיתית זו דליפה חמורה.");
+      const site = files[0];
+      if (site.perms.w) msgs.push("⚠️ אפשר לכתוב לאתר הציבורי. תוקף יכול לשנות אותו (Defacement).");
+      if (site.perms.x) msgs.push("⚠️ האתר מסומן ״הרצה״ ללא צורך.");
+      warn.textContent = msgs.length ? msgs.join(" ") : "✓ ההרשאות סבירות: כל קובץ מקבל רק את מה שהוא צריך.";
+    };
+    d.append(list, warn, el("div", { class: "note", style: "margin-top:8px" }, "עיקרון ״הרשאות מינימום״ (Least Privilege): תן לכל דבר בדיוק את מה שהוא צריך, לא יותר. הרוב המכריע של פריצות מנצל הרשאה עודפת שמישהו שכח לסגור."));
+    draw(); check();
+  };
+
+  // 7. Public wifi sniffing: why HTTPS matters
+  D.wifi = d => {
+    const { el, head, sleep } = MG;
+    head(d, "מעבדה · CTF (מעבדה סגורה)", "ריגול ב-Wi-Fi ציבורי: HTTP מול HTTPS", "אתה בבית קפה. מישהו ברשת ״מקשיב״ לתעבורה (דמיוני לגמרי). שלח סיסמה דרך אתר לא מוצפן (HTTP) ותראה מה התוקף רואה. אחר כך עבור ל-HTTPS ותראה את ההבדל.");
+    const pass = el("input", { type: "text", value: "MyBankPass!99", id: "wifi-p", "aria-label": "סיסמה לדוגמה" });
+    let https = false;
+    const httpsBtn = el("button", { onclick: () => { https = !https; httpsBtn.classList.toggle("on", https); } }, "השתמש ב-HTTPS 🔒");
+    const eye = el("div", { class: "out", style: "min-height:60px" });
+    const send = async () => {
+      const p = pass.value;
+      eye.textContent = "התוקף מיירט חבילות...";
+      await sleep(700);
+      if (https) {
+        const junk = [...p].map(() => "0123456789abcdef"[Math.floor(Math.random() * 16)]).join("") + Math.random().toString(16).slice(2, 10);
+        eye.textContent = "מה שהתוקף רואה:\nPOST /login  [מוצפן TLS]\n" + junk + junk + "\n\n🔒 ג'יבריש. אי אפשר לקרוא את הסיסמה.";
+        eye.style.color = "#8ff0b5";
+      } else {
+        eye.textContent = `מה שהתוקף רואה:\nPOST /login HTTP/1.1\nHost: mybank.example\nuser=noa&password=${p}\n\n🚨 הסיסמה שלך גלויה לחלוטין!`;
+        eye.style.color = "#ff8b8b";
+      }
+    };
+    d.append(el("div", { class: "row" }, el("span", {}, "סיסמה:"), pass, el("button", { class: "primary", onclick: send }, "שלח"), httpsBtn), eye,
+      el("div", { class: "note", style: "margin-top:8px" }, "לכן: תמיד בדוק שיש מנעול (HTTPS) לפני שמקלידים סיסמה, במיוחד ב-Wi-Fi ציבורי. היום כמעט כל האתרים משתמשים ב-HTTPS, וזו בדיוק הסיבה. אל תזין פרטים רגישים באתר בלי מנעול."));
+  };
+
+  // 8. Session token / cookie concept
+  D.cookie = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · עוגיות וטוקנים", "איך אתר ״זוכר״ שאתה מחובר", "HTTP הוא ״חסר זיכרון״: כל בקשה עומדת בפני עצמה. אז איך האתר יודע שכבר התחברת? הוא נותן לך טוקן סודי (עוגייה), ואתה שולח אותו בכל בקשה. לחץ להתחבר, ותראה איך זה עובד, ולמה גניבת טוקן מסוכנת.");
+    let token = null;
+    const server = el("div", { class: "out", style: "min-height:0" });
+    const client = el("div", { class: "out", style: "min-height:0" });
+    const log = el("div", { class: "note", style: "min-height:20px" });
+    const rnd = () => "eyJ" + Math.random().toString(36).slice(2, 10) + "." + Math.random().toString(36).slice(2, 14);
+    const draw = () => {
+      client.textContent = token ? "העוגייה שלי (נשמרת בדפדפן):\nsession=" + token : "אין עוגייה. אני אנונימי.";
+      server.textContent = token ? "השרת מזהה: הטוקן שייך ל-noa ✓" : "השרת: מי אתה? התחבר בבקשה.";
+    };
+    d.append(el("div", { class: "grid2" }, el("div", {}, el("b", {}, "🖥️ הדפדפן שלך"), client), el("div", {}, el("b", {}, "🏭 השרת"), server)),
+      el("div", { class: "row", style: "margin-top:8px" },
+        el("button", { class: "primary", onclick: () => { token = rnd(); log.textContent = "התחברת! השרת יצר טוקן ושלח לך אותו כעוגייה. מעכשיו כל בקשה נושאת אותו."; draw(); } }, "התחבר"),
+        el("button", { onclick: () => { log.textContent = token ? "שלחת בקשה עם העוגייה. השרת מזהה אותך בלי סיסמה." : "השרת דחה אותך: אין טוקן."; draw(); } }, "בקש דף פרופיל"),
+        el("button", { onclick: () => { if (token) { log.textContent = "🚨 תוקף גנב את הטוקן (למשל דרך XSS)! עכשיו הוא יכול להתחזות אליך בלי הסיסמה. לכן שומרים טוקנים כ-HttpOnly ומשתמשים ב-HTTPS."; } else log.textContent = "אין טוקן לגנוב."; } }, "😈 מה אם גונבים את הטוקן?"),
+        el("button", { onclick: () => { token = null; log.textContent = "התנתקת. הטוקן נמחק."; draw(); } }, "התנתק")), log,
+      el("div", { class: "note", style: "margin-top:8px" }, "טוקן = כמו צמיד כניסה למסיבה: מי שמחזיק בו נכנס. לכן מגינים עליו: HTTPS (שלא ייגנב בדרך), HttpOnly (ש-JavaScript לא יוכל לקרוא אותו), ותפוגה (שיתבטל אחרי זמן)."));
+    draw();
+  };
+})();
+
+// Demos: computer-science, math and algorithm toys
+(function () {
+  "use strict";
+  const D = window.MG_DEMOS || (window.MG_DEMOS = {});
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  // Number base converter
+  D.baseconv = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · בסיסי ספירה", "עשרוני, בינארי, הקסדצימלי", "אותו מספר בשלוש שפות. שנה כל אחד וראה את השאר משתנים. הקסדצימלי (בסיס 16) משתמש ב-0-9 ואז A-F, ומתכנתים אוהבים אותו כי כל ספרה = בדיוק 4 ביטים.");
+    const mk = (label, base, len) => { const i = el("input", { type: "text", id: "bc-" + base, "aria-label": label, style: "flex:1;min-width:0;font-family:var(--font-mono);direction:ltr;text-align:left" }); return { i, row: el("label", {}, label, i), base }; };
+    const dec = mk("עשרוני (בסיס 10)", 10), bin = mk("בינארי (בסיס 2)", 2), hex = mk("הקסדצימלי (בסיס 16)", 16);
+    const bits = el("div", { class: "bits" });
+    const set = (n) => {
+      n = Math.max(0, Math.min(255, n | 0));
+      dec.i.value = n; bin.i.value = n.toString(2).padStart(8, "0"); hex.i.value = "0x" + n.toString(16).toUpperCase().padStart(2, "0");
+      bits.innerHTML = "";
+      for (let k = 7; k >= 0; k--) bits.append(el("div", { class: "bit" }, el("button", { class: (n >> k) & 1 ? "on" : "", onclick: () => set(n ^ (1 << k)) }, String((n >> k) & 1)), el("small", {}, String(1 << k))));
+    };
+    dec.i.oninput = () => set(parseInt(dec.i.value, 10) || 0);
+    bin.i.oninput = () => set(parseInt(bin.i.value.replace(/[^01]/g, "") || "0", 2));
+    hex.i.oninput = () => set(parseInt(hex.i.value.replace(/[^0-9a-fA-F]/g, "") || "0", 16));
+    d.append(bits, dec.row, bin.row, hex.row, el("div", { class: "note" }, "טווח 0-255 (בייט אחד). לחץ על הביטים למעלה, או הקלד בכל שדה."));
+    set(203);
+  };
+
+  // ASCII / Unicode explorer
+  D.ascii = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · תווים ומספרים", "כל אות היא מספר", "הקלד טקסט וראה לאיזה מספר כל תו הופך (Unicode). ככה מחשב שומר טקסט: רק מספרים.");
+    const inp = el("input", { type: "text", value: "Hi! שלום 👋", id: "asc-in", style: "flex:1;min-width:0", "aria-label": "טקסט" });
+    const out = el("div", { class: "chips", style: "direction:ltr" });
+    const draw = () => { out.innerHTML = ""; [...inp.value].forEach(ch => out.append(el("div", { class: "reg", style: "min-width:64px" }, el("b", { style: "font-size:20px" }, ch === " " ? "␣" : ch), el("span", {}, ch.codePointAt(0))))); };
+    inp.oninput = draw;
+    d.append(el("div", { class: "row" }, inp), out, el("div", { class: "note", style: "margin-top:6px" }, "A=65, a=97, 0=48, א=1488. אימוג׳י תופס מספר גדול (מעל 100,000). המספרים האלה קבועים בעולם כולו, ולכן טקסט עובר בין מכשירים."));
+    draw();
+  };
+
+  // Two's complement
+  D.twoscomp = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · מספרים שליליים", "איך המחשב שומר מינוס", "אין למחשב סימן ״−״. הטריק (״משלים ל-2״): הביט השמאלי ביותר שווה מינוס. ככה חיסור הופך לחיבור, והמעגל אותו מעגל.");
+    let n = 5;
+    const bitsEl = el("div", { class: "bits" });
+    const out = el("div", { class: "note ltr", style: "font-variant-numeric:tabular-nums" });
+    const val = b => { let v = 0; for (let k = 0; k < 8; k++) v += ((b >> k) & 1) * (k === 7 ? -128 : (1 << k)); return v; };
+    const draw = () => {
+      bitsEl.innerHTML = "";
+      for (let k = 7; k >= 0; k--) bitsEl.append(el("div", { class: "bit" }, el("button", { class: (n >> k) & 1 ? "on" : "", onclick: () => { n ^= (1 << k); draw(); } }, String((n >> k) & 1)), el("small", {}, k === 7 ? "−128" : String(1 << k))));
+      out.textContent = `הביטים: ${n.toString(2).padStart(8, "0")}  =  ${val(n)}`;
+    };
+    const inp = el("input", { type: "number", min: "-128", max: "127", value: "5", id: "tc-in", "aria-label": "מספר" });
+    inp.oninput = () => { let v = Math.max(-128, Math.min(127, parseInt(inp.value, 10) || 0)); n = v & 255; draw(); };
+    d.append(bitsEl, out, el("div", { class: "row", style: "margin-top:8px" }, el("span", {}, "או הקלד מספר (−128 עד 127):"), inp), el("div", { class: "note" }, "שים לב: הדלק רק את הביט השמאלי → מקבלים −128. זה ה״משלים ל-2״."));
+    draw();
+  };
+
+  // Regex tester
+  D.regex = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · ביטויים רגולריים", "חיפוש דפוסים בטקסט", "Regex הוא ״שפה״ קטנה לתיאור דפוסים: כתובות מייל, מספרי טלפון, מילים. הקלד דפוס וראה מה הוא מוצא. נסה: \\d+ (מספרים), [A-Za-z]+ (מילים), \\w+@\\w+ (מייל).");
+    const pat = el("input", { type: "text", value: "\\d+", id: "rx-p", style: "flex:1;min-width:0;font-family:var(--font-mono);direction:ltr;text-align:left", "aria-label": "דפוס" });
+    const txt = el("textarea", { rows: "4", id: "rx-t", style: "direction:ltr;text-align:left;font-family:var(--font-mono)", "aria-label": "טקסט" });
+    txt.value = "צרו קשר: noa@mail.com או בטלפון 054-1234567. גיל 14, מיקוד 3200003.";
+    const out = el("div", { class: "out", style: "direction:ltr;text-align:left" });
+    const info = el("div", { class: "note" });
+    const draw = () => {
+      out.innerHTML = "";
+      let re; try { re = new RegExp(pat.value, "g"); info.textContent = ""; } catch (e) { info.textContent = "דפוס לא תקין: " + e.message; return; }
+      let last = 0, s = txt.value, n = 0, m;
+      while ((m = re.exec(s)) && n < 200) {
+        if (m.index >= last) out.append(document.createTextNode(s.slice(last, m.index)));
+        out.append(el("span", { style: "background:var(--screen-accent);color:#1d1204;border-radius:3px;padding:0 2px" }, m[0] || "∅"));
+        last = m.index + m[0].length; n++;
+        if (m[0] === "") re.lastIndex++;
+      }
+      out.append(document.createTextNode(s.slice(last)));
+      info.textContent = n + " התאמות";
+    };
+    [pat, txt].forEach(i => i.addEventListener("input", draw));
+    d.append(el("div", { class: "row" }, el("span", { style: "font-family:var(--font-mono)" }, "/"), pat, el("span", { style: "font-family:var(--font-mono)" }, "/g")), txt, el("div", { class: "note", style: "margin-top:6px" }, "מה נמצא:"), out, info);
+    draw();
+  };
+
+  // Calculator with shunting-yard parser
+  D.calc = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · מחשבון שמבין סדר פעולות", "איך שפת תכנות מפענחת ביטוי", "הקלד ביטוי כמו 2 + 3 * 4. המחשב לא קורא משמאל לימין! הוא בונה מבנה שמכבד סדר פעולות (כפל לפני חיבור). זה בדיוק מה שקורה כשאתה כותב חישוב בקוד.");
+    const inp = el("input", { type: "text", value: "2 + 3 * 4 - (5 - 1) / 2", id: "cl-in", style: "flex:1;min-width:0;font-family:var(--font-mono);direction:ltr;text-align:left", "aria-label": "ביטוי" });
+    const rpn = el("div", { class: "note ltr" });
+    const res = el("div", { class: "big" });
+    const prec = { "+": 1, "-": 1, "*": 2, "/": 2 };
+    const draw = () => {
+      const toks = inp.value.match(/\d+\.?\d*|[+\-*/()]/g) || [];
+      const out = [], ops = [];
+      try {
+        for (const t of toks) {
+          if (/\d/.test(t)) out.push(t);
+          else if (t === "(") ops.push(t);
+          else if (t === ")") { while (ops.length && ops[ops.length - 1] !== "(") out.push(ops.pop()); ops.pop(); }
+          else { while (ops.length && prec[ops[ops.length - 1]] >= prec[t]) out.push(ops.pop()); ops.push(t); }
+        }
+        while (ops.length) out.push(ops.pop());
+        rpn.textContent = "בסדר חישוב (RPN): " + out.join(" ");
+        const st = [];
+        for (const t of out) { if (/\d/.test(t)) st.push(+t); else { const b = st.pop(), a = st.pop(); st.push(t === "+" ? a + b : t === "-" ? a - b : t === "*" ? a * b : a / b); } }
+        res.textContent = "= " + (Math.round(st[0] * 1000) / 1000);
+      } catch (e) { res.textContent = "= ?"; rpn.textContent = "ביטוי לא תקין"; }
+    };
+    inp.oninput = draw;
+    d.append(el("div", { class: "row" }, inp), rpn, res, el("div", { class: "note" }, "האלגוריתם (״חצר המיון״ של דייקסטרה) הופך את הביטוי לסדר שבו אין צורך בסוגריים. כל מחשבון וכל קומפיילר עושים משהו כזה."));
+    draw();
+  };
+
+  // Monte Carlo pi
+  D.montecarlo = d => {
+    const { el, head, visible } = MG;
+    head(d, "מעבדה · אקראיות מחשבת", "לחשב את פאי בעזרת גשם אקראי", "זורקים נקודות אקראיות על ריבוע. היחס של אלה שנפלו בתוך הרבע-עיגול, כפול 4, מתקרב לפאי (3.14159...). ככה מדע נתונים פותר בעיות שקשה לחשב ישירות.");
+    const S = 260;
+    const cv = el("canvas", { width: String(S), height: String(S), "aria-label": "מונטה קרלו", style: "max-width:300px" });
+    const ctx = cv.getContext("2d");
+    const out = el("div", { class: "big ltr" });
+    let inside = 0, total = 0, running = false;
+    ctx.fillStyle = "#05080c"; ctx.fillRect(0, 0, S, S);
+    ctx.strokeStyle = "#2b3a50"; ctx.beginPath(); ctx.arc(0, S, S, 0, Math.PI * 2); ctx.stroke();
+    const step = () => {
+      for (let i = 0; i < 200; i++) {
+        const x = Math.random(), y = Math.random();
+        const hit = x * x + y * y <= 1; if (hit) inside++; total++;
+        ctx.fillStyle = hit ? "#5fd08f" : "#ff6b6b"; ctx.fillRect(x * S, S - y * S, 2, 2);
+      }
+      out.textContent = `π ≈ ${(4 * inside / total).toFixed(4)}   (${total.toLocaleString("en")} נקודות)`;
+    };
+    const loop = () => { if (!running) return; requestAnimationFrame(loop); if (visible(d) && total < 200000) step(); };
+    d.append(cv, out, el("div", { class: "row", style: "margin-top:8px" }, el("button", { class: "primary", onclick: () => { if (!running) { running = true; loop(); } else running = false; } }, "▶ הפעל / עצור"), el("button", { onclick: () => { inside = total = 0; ctx.fillStyle = "#05080c"; ctx.fillRect(0, 0, S, S); ctx.strokeStyle = "#2b3a50"; ctx.beginPath(); ctx.arc(0, S, S, 0, 7); ctx.stroke(); out.textContent = ""; } }, "נקה")));
+    step();
+  };
+
+  // Dice probability
+  D.dice = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · הסתברות", "חוק המספרים הגדולים", "מטילים שתי קוביות ומחברים. חלק מהסכומים נפוצים יותר (7 הכי נפוץ, כי יש הכי הרבה דרכים לקבל אותו). ככל שמטילים יותר, הגרף מתקרב לצורה התיאורטית. ככה עובד ״שלל אקראי״ במשחקים.");
+    const counts = Array(13).fill(0);
+    const bars = el("div", { class: "bars" });
+    const info = el("div", { class: "note" });
+    let total = 0;
+    const roll = n => { for (let i = 0; i < n; i++) { counts[(1 + Math.floor(Math.random() * 6)) + (1 + Math.floor(Math.random() * 6))]++; total++; } draw(); };
+    const draw = () => {
+      const mx = Math.max(1, ...counts);
+      bars.innerHTML = "";
+      for (let s = 2; s <= 12; s++) bars.append(el("div", { class: "bar-row" }, el("span", {}, String(s)), el("div", { class: "track" }, el("i", { style: `width:${counts[s] / mx * 100}%`, class: s === 7 ? "" : "" })), el("span", {}, counts[s])));
+      info.textContent = total + " הטלות. 7 הוא הנפוץ ביותר: 6 דרכים לקבל אותו (1+6, 2+5, ...), מול דרך אחת ל-2 או ל-12.";
+    };
+    d.append(bars, info, el("div", { class: "row", style: "margin-top:8px" }, el("button", { class: "primary", onclick: () => roll(1) }, "הטל פעם אחת"), el("button", { onclick: () => roll(100) }, "×100"), el("button", { onclick: () => roll(5000) }, "×5000"), el("button", { onclick: () => { counts.fill(0); total = 0; draw(); } }, "אפס")));
+    draw();
+  };
+
+  // Mandelbrot
+  D.mandelbrot = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · פרקטל מנדלברוט", "אינסוף מנוסחה של שורה אחת", "כל פיקסל בודק: אם מריצים עליו z = z² + c שוב ושוב, האם המספר בורח לאינסוף או נשאר קטן? מזה נוצרת צורה אינסופית של פרטים. לחץ כדי להתקרב.");
+    const W = 300, H = 220;
+    const cv = el("canvas", { width: String(W), height: String(H), "aria-label": "מנדלברוט", style: "cursor:zoom-in;max-width:100%" });
+    const ctx = cv.getContext("2d");
+    let cx = -0.6, cy = 0, scale = 3;
+    const info = el("div", { class: "note ltr" });
+    const draw = () => {
+      const img = ctx.createImageData(W, H);
+      for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) {
+        const x0 = cx + (px / W - 0.5) * scale, y0 = cy + (py / H - 0.5) * scale * H / W;
+        let x = 0, y = 0, i = 0;
+        while (x * x + y * y <= 4 && i < 100) { const xt = x * x - y * y + x0; y = 2 * x * y + y0; x = xt; i++; }
+        const k = (py * W + px) * 4;
+        if (i === 100) { img.data[k] = img.data[k + 1] = img.data[k + 2] = 8; }
+        else { const t = i / 100; img.data[k] = 9 + 255 * t; img.data[k + 1] = 50 + 150 * Math.sin(t * 3); img.data[k + 2] = 100 + 155 * (1 - t); }
+        img.data[k + 3] = 255;
+      }
+      ctx.putImageData(img, 0, 0);
+      info.textContent = `מרכז (${cx.toFixed(4)}, ${cy.toFixed(4)})  זום ×${(3 / scale).toFixed(1)}`;
+    };
+    cv.addEventListener("click", e => { const r = cv.getBoundingClientRect(); cx += ((e.clientX - r.left) / r.width - 0.5) * scale; cy += ((e.clientY - r.top) / r.height - 0.5) * scale * H / W; scale *= 0.5; draw(); });
+    d.append(cv, el("div", { class: "row", style: "margin-top:8px" }, el("button", { onclick: () => { cx = -0.6; cy = 0; scale = 3; draw(); } }, "אפס זום")), info);
+    draw();
+  };
+
+  // Elementary cellular automaton (rule 30 / 110)
+  D.rule30 = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · אוטומט חד-ממדי", "שורה אחת של חוקים יוצרת עולם", "כל תא בשורה חדשה נקבע לפי 3 התאים שמעליו, לפי ״חוק״ מספרי. חוק 30 יוצר כאוס (שמשמש למחוללי אקראיות!), וחוק 110 מסובך מספיק כדי לחשב הכול. שנה את החוק.");
+    const W = 320, H = 180;
+    const cv = el("canvas", { width: String(W), height: String(H), "aria-label": "אוטומט", style: "max-width:100%" });
+    const ctx = cv.getContext("2d");
+    const rule = el("input", { type: "number", min: "0", max: "255", value: "30", id: "r30", "aria-label": "חוק" });
+    const draw = () => {
+      const R = Math.max(0, Math.min(255, +rule.value | 0));
+      ctx.fillStyle = "#05080c"; ctx.fillRect(0, 0, W, H);
+      let row = Array(W).fill(0); row[W >> 1] = 1;
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) if (row[x]) { ctx.fillStyle = "#5fd08f"; ctx.fillRect(x, y, 1, 1); }
+        const next = Array(W).fill(0);
+        for (let x = 0; x < W; x++) { const p = (row[(x - 1 + W) % W] << 2) | (row[x] << 1) | row[(x + 1) % W]; next[x] = (R >> p) & 1; }
+        row = next;
+      }
+    };
+    rule.oninput = draw;
+    d.append(cv, el("div", { class: "row", style: "margin-top:8px" }, el("span", {}, "חוק (0-255):"), rule, el("button", { onclick: () => { rule.value = "110"; draw(); } }, "חוק 110"), el("button", { onclick: () => { rule.value = "90"; draw(); } }, "חוק 90 (משולש)"), el("button", { onclick: () => { rule.value = "30"; draw(); } }, "חוק 30")));
+    draw();
+  };
+
+  // Merge & insertion sort visual
+  D.sortgallery = d => {
+    const { el, head, sleep } = MG;
+    head(d, "מעבדה · עוד אלגוריתמי מיון", "מיון הכנסה מול מיון מיזוג", "מיון הכנסה (Insertion) פשוט אבל איטי — כמו לסדר קלפים ביד. מיון מיזוג (Merge) מחלק לחצאים, ממיין כל חצי, וממזג — מהיר גם עם המון נתונים.");
+    let arr = [], busy = false;
+    const N = 40;
+    const wrap = el("div", { class: "sort-bars" });
+    const info = el("div", { class: "note", style: "font-variant-numeric:tabular-nums" });
+    const shuffle = () => { arr = Array.from({ length: N }, (_, i) => i + 1).sort(() => Math.random() - .5); draw(); };
+    const draw = (hl = [], done = []) => { wrap.innerHTML = ""; arr.forEach((v, i) => wrap.append(el("i", { class: hl.includes(i) ? "cmp" : done.includes(i) ? "ok" : "", style: `height:${v / N * 100}%` }))); };
+    const insertion = async () => {
+      if (busy) return; busy = true; let ops = 0;
+      for (let i = 1; i < N; i++) { let j = i; while (j > 0 && arr[j - 1] > arr[j]) { [arr[j - 1], arr[j]] = [arr[j], arr[j - 1]]; j--; ops++; draw([j, j - 1]); await sleep(15); } info.textContent = "מיון הכנסה · פעולות: " + ops; }
+      draw([], arr.map((_, i) => i)); busy = false;
+    };
+    const merge = async () => {
+      if (busy) return; busy = true; let ops = 0;
+      const ms = async (lo, hi) => { if (hi - lo < 1) return; const mid = (lo + hi) >> 1; await ms(lo, mid); await ms(mid + 1, hi); const tmp = []; let i = lo, j = mid + 1; while (i <= mid && j <= hi) { ops++; tmp.push(arr[i] <= arr[j] ? arr[i++] : arr[j++]); } while (i <= mid) tmp.push(arr[i++]); while (j <= hi) tmp.push(arr[j++]); for (let k = 0; k < tmp.length; k++) { arr[lo + k] = tmp[k]; draw([lo + k]); await sleep(18); } info.textContent = "מיון מיזוג · פעולות: " + ops; };
+      await ms(0, N - 1); draw([], arr.map((_, i) => i)); busy = false;
+    };
+    d.append(wrap, el("div", { class: "row", style: "margin-top:8px" }, el("button", { onclick: () => !busy && shuffle() }, "ערבב"), el("button", { class: "primary", onclick: insertion }, "מיון הכנסה"), el("button", { class: "primary", onclick: merge }, "מיון מיזוג")), info);
+    shuffle();
+  };
+
+  // Linked list
+  D.linkedlist = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · רשימה מקושרת", "כל תא מצביע על הבא", "בניגוד למערך שיושב ברצף בזיכרון, ברשימה מקושרת כל תא (״צומת״) שומר ערך + חץ לתא הבא. הוספה באמצע = רק לשנות חצים, בלי להזיז הכול. לחץ על החצים כדי להוסיף.");
+    let list = [10, 25, 40];
+    const view = el("div", { style: "display:flex;flex-wrap:wrap;gap:0;align-items:center;direction:ltr;padding:10px;background:#05080c;border-radius:8px;min-height:60px" });
+    const draw = () => {
+      view.innerHTML = "";
+      list.forEach((v, i) => {
+        view.append(el("div", { style: "background:var(--screen-ink);color:#06101f;border-radius:8px;padding:8px 12px;font-family:var(--font-mono);font-weight:700" }, String(v)));
+        const arrow = el("button", { title: "הוסף כאן", style: "background:none;border:none;color:var(--screen-accent);font-size:18px;cursor:pointer;padding:0 4px", onclick: () => { list.splice(i + 1, 0, Math.floor(rand(1, 99))); draw(); } }, i < list.length - 1 ? "→+" : "→∅");
+        view.append(arrow);
+      });
+      view.append(el("button", { style: "background:none;border:1px dashed #2b3a50;color:var(--screen-dim);border-radius:8px;padding:8px;cursor:pointer", onclick: () => { list.push(Math.floor(rand(1, 99))); draw(); } }, "+ הוסף לסוף"));
+    };
+    d.append(view, el("div", { class: "row", style: "margin-top:8px" }, el("button", { onclick: () => { if (list.length) list.shift(); draw(); } }, "מחק ראשון"), el("button", { onclick: () => { list = [10, 25, 40]; draw(); } }, "אפס")), el("div", { class: "note", style: "margin-top:6px" }, "∅ (null) מסמן את סוף הרשימה. יתרון: הוספה/מחיקה מהירה. חיסרון: אין קפיצה ישירה לפריט מספר 5 — צריך ללכת צעד-צעד."));
+    draw();
+  };
+
+  // Binary search tree
+  D.bst = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · עץ חיפוש בינארי", "מבנה שמחפש מהר", "כל צומת: קטנים ממנו משמאל, גדולים מימין. חיפוש = בכל צעד לפסול חצי מהעץ, בדיוק כמו חיפוש בינארי. הוסף מספרים ותראה את העץ נבנה.");
+    const W = 340, H = 220;
+    const cv = el("canvas", { width: String(W), height: String(H), "aria-label": "עץ", style: "max-width:100%" });
+    const ctx = cv.getContext("2d");
+    let root = null;
+    const insert = (node, v, depth) => { if (!node) return { v, l: null, r: null }; if (v < node.v) node.l = insert(node.l, v, depth + 1); else if (v > node.v) node.r = insert(node.r, v, depth + 1); return node; };
+    const inp = el("input", { type: "number", value: "50", id: "bst-in", "aria-label": "ערך", style: "width:90px" });
+    const info = el("div", { class: "note" });
+    const draw = () => {
+      ctx.fillStyle = "#05080c"; ctx.fillRect(0, 0, W, H);
+      const rec = (node, x, y, dx) => { if (!node) return; if (node.l) { ctx.strokeStyle = "#2b3a50"; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - dx, y + 44); ctx.stroke(); rec(node.l, x - dx, y + 44, dx / 1.8); } if (node.r) { ctx.strokeStyle = "#2b3a50"; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + dx, y + 44); ctx.stroke(); rec(node.r, x + dx, y + 44, dx / 1.8); } ctx.fillStyle = "#7fb0ff"; ctx.beginPath(); ctx.arc(x, y, 15, 0, 7); ctx.fill(); ctx.fillStyle = "#06101f"; ctx.font = "bold 12px monospace"; ctx.textAlign = "center"; ctx.fillText(node.v, x, y + 4); };
+      rec(root, W / 2, 24, W / 4.5);
+    };
+    const add = v => { root = insert(root, v, 0); draw(); };
+    [50, 30, 70, 20, 40, 60, 85].forEach(add);
+    d.append(cv, el("div", { class: "row", style: "margin-top:8px" }, el("span", {}, "הוסף:"), inp, el("button", { class: "primary", onclick: () => add(Math.max(1, Math.min(99, +inp.value | 0))) }, "הוסף"), el("button", { onclick: () => add(Math.floor(rand(1, 99))) }, "אקראי"), el("button", { onclick: () => { root = null; draw(); } }, "נקה")), info);
+    draw();
+  };
+
+  // Dijkstra on a small weighted graph
+  D.dijkstra = d => {
+    const { el, head, sleep } = MG;
+    head(d, "מעבדה · דרך קצרה עם מחירים", "אלגוריתם דייקסטרה (הלב של Waze)", "בגרף הזה לכל כביש יש ״מחיר״ (זמן נסיעה). דייקסטרה מוצא את הדרך הזולה ביותר מ-A ליעד, לא הכי מעטת צמתים אלא הכי מהירה. לחץ על צומת כדי לבחור יעד.");
+    const W = 360, H = 240;
+    const cv = el("canvas", { width: String(W), height: String(H), "aria-label": "גרף", style: "max-width:100%;cursor:pointer" });
+    const ctx = cv.getContext("2d");
+    const nodes = { A: [40, 120], B: [130, 40], C: [130, 200], D: [230, 110], E: [320, 50], F: [320, 190] };
+    const edges = [["A", "B", 4], ["A", "C", 3], ["B", "D", 5], ["C", "D", 2], ["C", "F", 8], ["D", "E", 3], ["D", "F", 6], ["E", "F", 2]];
+    let goal = "F", path = [], dist = {};
+    const run = async () => {
+      const D2 = {}, prev = {}, Q = new Set(Object.keys(nodes));
+      Object.keys(nodes).forEach(n => D2[n] = Infinity); D2.A = 0;
+      while (Q.size) {
+        let u = null; Q.forEach(n => { if (u === null || D2[n] < D2[u]) u = n; });
+        Q.delete(u);
+        edges.forEach(([a, b, w]) => { let nb = a === u ? b : b === u ? a : null; if (nb && Q.has(nb) && D2[u] + w < D2[nb]) { D2[nb] = D2[u] + w; prev[nb] = u; } });
+        dist = D2; draw(); await sleep(300);
+      }
+      path = []; let c = goal; while (c) { path.unshift(c); c = prev[c]; } draw();
+    };
+    const draw = () => {
+      ctx.fillStyle = "#05080c"; ctx.fillRect(0, 0, W, H);
+      edges.forEach(([a, b, w]) => { const inPath = path.includes(a) && path.includes(b) && Math.abs(path.indexOf(a) - path.indexOf(b)) === 1; ctx.strokeStyle = inPath ? "#ffb454" : "#2b3a50"; ctx.lineWidth = inPath ? 4 : 2; ctx.beginPath(); ctx.moveTo(...nodes[a]); ctx.lineTo(...nodes[b]); ctx.stroke(); const mx = (nodes[a][0] + nodes[b][0]) / 2, my = (nodes[a][1] + nodes[b][1]) / 2; ctx.fillStyle = "#0e1726"; ctx.fillRect(mx - 9, my - 8, 18, 16); ctx.fillStyle = "#d9e6f2"; ctx.font = "11px monospace"; ctx.textAlign = "center"; ctx.fillText(w, mx, my + 4); });
+      ctx.lineWidth = 1;
+      Object.entries(nodes).forEach(([n, [x, y]]) => { ctx.fillStyle = n === "A" ? "#5fd08f" : n === goal ? "#ff6b6b" : path.includes(n) ? "#ffb454" : "#1b2a40"; ctx.beginPath(); ctx.arc(x, y, 16, 0, 7); ctx.fill(); ctx.fillStyle = "#fff"; ctx.font = "bold 12px monospace"; ctx.fillText(n, x, y - 2); if (dist[n] !== undefined && dist[n] !== Infinity) { ctx.font = "10px monospace"; ctx.fillText(dist[n], x, y + 10); } });
+    };
+    cv.addEventListener("click", e => { const r = cv.getBoundingClientRect(); const mx = (e.clientX - r.left) / r.width * W, my = (e.clientY - r.top) / r.height * H; for (const [n, [x, y]] of Object.entries(nodes)) if (Math.hypot(mx - x, my - y) < 18 && n !== "A") { goal = n; path = []; dist = {}; draw(); } });
+    d.append(cv, el("div", { class: "row", style: "margin-top:8px" }, el("button", { class: "primary", onclick: run }, "▶ מצא דרך זולה ל-" + goal), el("span", { class: "note" }, "ירוק=התחלה · אדום=יעד · מספר=זמן נסיעה")));
+    draw();
+  };
+
+  // Tic-tac-toe with unbeatable minimax
+  D.tictactoe = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · AI שלא מפסיד", "איקס-עיגול עם Minimax", "המחשב בודק את כל העתידים האפשריים ובוחר את המהלך שמבטיח לו את התוצאה הכי טובה, בהנחה שגם אתה תשחק מצוין. אי אפשר לנצח אותו — לכל היותר תיקו. אתה X.");
+    let bd = Array(9).fill(""), over = false;
+    const wins = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+    const winner = b => { for (const [a, c, e] of wins) if (b[a] && b[a] === b[c] && b[a] === b[e]) return b[a]; return b.every(x => x) ? "tie" : null; };
+    const minimax = (b, me) => {
+      const w = winner(b); if (w === "O") return { s: 10 }; if (w === "X") return { s: -10 }; if (w === "tie") return { s: 0 };
+      let best = { s: me ? -99 : 99 };
+      for (let i = 0; i < 9; i++) if (!b[i]) { b[i] = me ? "O" : "X"; const r = minimax(b, !me).s; b[i] = ""; if (me ? r > best.s : r < best.s) best = { s: r, i }; }
+      return best;
+    };
+    const grid = el("div", { style: "display:grid;grid-template-columns:repeat(3,64px);gap:4px;justify-content:center" });
+    const msg = el("div", { style: "font-weight:700;text-align:center;min-height:24px" });
+    const draw = () => {
+      grid.innerHTML = "";
+      bd.forEach((v, i) => grid.append(el("button", { style: `width:64px;height:64px;font-size:30px;background:var(--screen-2);border:1px solid #2b3a50;border-radius:8px;color:${v === "X" ? "#ffb454" : "#7fb0ff"};cursor:pointer`, onclick: () => play(i) }, v)));
+      const w = winner(bd);
+      msg.textContent = w === "tie" ? "תיקו! (כמו תמיד מול Minimax)" : w === "X" ? "ניצחת?! (יש באג...)" : w === "O" ? "המחשב ניצח." : "תורך (X)";
+    };
+    const play = i => { if (bd[i] || over) return; bd[i] = "X"; if (winner(bd)) { over = true; return draw(); } const m = minimax(bd.slice(), true); if (m.i !== undefined) bd[m.i] = "O"; if (winner(bd)) over = true; draw(); };
+    d.append(grid, msg, el("div", { class: "row", style: "justify-content:center;margin-top:8px" }, el("button", { onclick: () => { bd = Array(9).fill(""); over = false; draw(); } }, "משחק חדש")));
+    draw();
+  };
+
+  // Genetic algorithm evolving a string
+  D.genetic = d => {
+    const { el, head, visible } = MG;
+    head(d, "מעבדה · אלגוריתם גנטי", "אבולוציה פותרת בעיה", "מתחילים מ-200 מחרוזות אקראיות. בכל דור: שומרים את הקרובות ביותר למטרה, ״מזווגים״ אותן, ומוסיפים ״מוטציות״ קטנות. תוך דורות ספורים, אקראיות הופכת לתשובה. ככה מתפתחים גם דמויות ורובוטים במשחקים.");
+    const target = el("input", { type: "text", value: "GAME OVER", id: "ga-t", style: "flex:1;min-width:0", "aria-label": "מטרה", maxlength: "20" });
+    const out = el("div", { class: "big ltr", style: "font-size:22px;word-break:break-all" });
+    const info = el("div", { class: "note ltr" });
+    let pop = [], gen = 0, running = false, TARGET = "";
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ !?.";
+    const rc = () => chars[Math.floor(Math.random() * chars.length)];
+    const fit = s => { let f = 0; for (let i = 0; i < TARGET.length; i++) if (s[i] === TARGET[i]) f++; return f; };
+    const init = () => { TARGET = target.value.toUpperCase().slice(0, 20); pop = Array.from({ length: 200 }, () => Array.from(TARGET, rc).join("")); gen = 0; };
+    const step = () => {
+      pop.sort((a, b) => fit(b) - fit(a));
+      const best = pop[0];
+      out.textContent = best; info.textContent = `דור ${gen} · התאמה ${fit(best)}/${TARGET.length}`;
+      if (best === TARGET) { running = false; info.textContent += " · הושג!"; return; }
+      const parents = pop.slice(0, 40);
+      pop = [best]; while (pop.length < 200) { const a = parents[Math.floor(Math.random() * 40)], b = parents[Math.floor(Math.random() * 40)]; let child = ""; for (let i = 0; i < TARGET.length; i++) child += Math.random() < 0.03 ? rc() : (Math.random() < 0.5 ? a[i] : b[i]); pop.push(child); }
+      gen++;
+    };
+    const loop = () => { if (!running) return; requestAnimationFrame(loop); if (visible(d)) step(); };
+    d.append(el("div", { class: "row" }, el("span", {}, "מטרה:"), target, el("button", { class: "primary", onclick: () => { init(); running = true; loop(); } }, "▶ התפתח")), out, info);
+  };
+
+  // Q-learning gridworld
+  D.qlearn = d => {
+    const { el, head, sleep } = MG;
+    head(d, "מעבדה · למידת חיזוק", "עכבר שלומד למצוא גבינה", "העכבר לא יודע כלום בהתחלה. הוא מנסה, מקבל פרס (גבינה +1) או עונש (מלכודת −1), וזוכר מה עבד. אחרי אימון, הוא הולך ישר למטרה. זו למידת חיזוק, השיטה שמאחורי AI ששולט במשחקים.");
+    const C = 6, R = 5;
+    const walls = new Set(["2,1", "2,2", "2,3", "4,2"]);
+    const goal = [5, 0], trap = [5, 2], start = [0, 4];
+    const Q = {};
+    const key = (x, y) => x + "," + y;
+    Object.keys({}).forEach(() => { });
+    for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) Q[key(x, y)] = [0, 0, 0, 0];
+    const DX = [1, -1, 0, 0], DY = [0, 0, 1, -1];
+    const grid = el("div", { class: "robot-grid", style: `grid-template-columns:repeat(${C},1fr);max-width:360px` });
+    const info = el("div", { class: "note" });
+    let bot = [...start], episodes = 0;
+    const valid = (x, y) => x >= 0 && y >= 0 && x < C && y < R && !walls.has(key(x, y));
+    const train = async (n) => {
+      for (let e = 0; e < n; e++) {
+        let [x, y] = start;
+        for (let step = 0; step < 60; step++) {
+          const s = key(x, y);
+          const a = Math.random() < 0.2 ? Math.floor(Math.random() * 4) : Q[s].indexOf(Math.max(...Q[s]));
+          let nx = x + DX[a], ny = y + DY[a]; if (!valid(nx, ny)) { nx = x; ny = y; }
+          let r = -0.02; let done = false;
+          if (nx === goal[0] && ny === goal[1]) { r = 1; done = true; } if (nx === trap[0] && ny === trap[1]) { r = -1; done = true; }
+          const ns = key(nx, ny);
+          Q[s][a] += 0.3 * (r + 0.9 * Math.max(...Q[ns]) - Q[s][a]);
+          x = nx; y = ny; if (done) break;
+        }
+        episodes++;
+      }
+      await runGreedy();
+    };
+    const runGreedy = async () => {
+      bot = [...start]; draw();
+      for (let step = 0; step < 30; step++) {
+        const [x, y] = bot; if (x === goal[0] && y === goal[1]) break;
+        const a = Q[key(x, y)].indexOf(Math.max(...Q[key(x, y)]));
+        let nx = x + DX[a], ny = y + DY[a]; if (!valid(nx, ny)) break;
+        bot = [nx, ny]; draw(); await sleep(150); if (nx === trap[0] && ny === trap[1]) break;
+      }
+    };
+    const draw = () => {
+      grid.innerHTML = "";
+      for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) {
+        const c = el("div"); const best = Math.max(...Q[key(x, y)]);
+        if (walls.has(key(x, y))) c.className = "wall";
+        else if (x === goal[0] && y === goal[1]) { c.className = "goal"; c.textContent = "🧀"; }
+        else if (x === trap[0] && y === trap[1]) { c.style.background = "#3a1616"; c.textContent = "⚡"; }
+        else if (best > 0.01) c.style.background = `rgba(95,208,143,${Math.min(0.7, best)})`;
+        if (bot[0] === x && bot[1] === y) { c.className = "bot"; c.textContent = "🐭"; }
+        grid.append(c);
+      }
+      info.textContent = `אימונים: ${episodes}. ירוק = מקום ״טוב״ שהעכבר למד.`;
+    };
+    d.append(grid, el("div", { class: "row", style: "margin-top:8px" }, el("button", { class: "primary", onclick: () => train(1) }, "אימון 1"), el("button", { onclick: () => train(50) }, "×50"), el("button", { onclick: () => train(300) }, "×300"), el("button", { onclick: runGreedy }, "הראה מה למד")), info);
+    draw();
+  };
+
+  // Naive Bayes spam
+  D.spam = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · מסווג ספאם", "AI שלומד לזהות הודעות זבל", "אימנו מסווג על הודעות מתויגות. הקלד הודעה, והוא ינחש: ספאם או תקין, לפי כמה ״ספאמיות״ המילים שבה. זו בדיוק השיטה (Naive Bayes) ששימשה שנים לסינון ספאם במייל.");
+    const train = [
+      ["חינם זכית פרס עכשיו לחץ כאן כסף", 1], ["מבצע בלעדי הנחה ענקית קנה עכשיו", 1], ["דחוף החשבון שלך ננעל אמת פרטים", 1], ["ויאגרה זול משלוח חינם הזמן", 1], ["זכייה מיליון דולר לחץ קישור", 1],
+      ["היי מה שלומך נפגש מחר", 0], ["שיעורי בית למתמטיקה לעמוד 42", 0], ["תודה על הארוחה היה טעים", 0], ["הפגישה נדחתה ליום שלישי", 0], ["שלחתי לך את הקובץ תבדוק", 0],
+    ];
+    const spamW = {}, hamW = {}; let spamN = 0, hamN = 0;
+    train.forEach(([t, s]) => t.split(/\s+/).forEach(w => { if (s) { spamW[w] = (spamW[w] || 0) + 1; spamN++; } else { hamW[w] = (hamW[w] || 0) + 1; hamN++; } }));
+    const vocab = new Set([...Object.keys(spamW), ...Object.keys(hamW)]).size;
+    const inp = el("input", { type: "text", value: "חינם מבצע לחץ כאן", id: "sp-in", style: "flex:1;min-width:0", "aria-label": "הודעה" });
+    const out = el("div", { style: "font-weight:700;font-size:18px" });
+    const detail = el("div", { class: "note" });
+    const draw = () => {
+      let ls = Math.log(0.5), lh = Math.log(0.5);
+      inp.value.split(/\s+/).filter(Boolean).forEach(w => { ls += Math.log(((spamW[w] || 0) + 1) / (spamN + vocab)); lh += Math.log(((hamW[w] || 0) + 1) / (hamN + vocab)); });
+      const p = 1 / (1 + Math.exp(lh - ls));
+      out.textContent = p > 0.5 ? `🚫 ספאם (${Math.round(p * 100)}% ביטחון)` : `✓ תקין (${Math.round((1 - p) * 100)}% ביטחון)`;
+      out.style.color = p > 0.5 ? "#ff7b7b" : "#5fd08f";
+      detail.textContent = "מילים ״ספאמיות״ באימון: חינם, מבצע, זכית, דחוף, לחץ. המסווג מכפיל הסתברויות של כל מילה.";
+    };
+    inp.oninput = draw;
+    d.append(el("div", { class: "row" }, inp), out, detail);
+    draw();
+  };
+
+  // KNN classifier
+  D.knn = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · שכן קרוב (KNN)", "סיווג לפי מי שקרוב", "יש נקודות משתי קבוצות. לחץ בכל מקום, וה-AI יסווג את הנקודה החדשה לפי K השכנים הקרובים אליה. אלגוריתם פשוט אבל חזק, בלי ״אימון״ בכלל.");
+    const W = 300, H = 240;
+    const cv = el("canvas", { width: String(W), height: String(H), "aria-label": "KNN", style: "max-width:100%;cursor:crosshair" });
+    const ctx = cv.getContext("2d");
+    const pts = []; for (let i = 0; i < 25; i++) pts.push({ x: rand(20, W / 2 - 10), y: rand(20, H - 20), c: 0 }); for (let i = 0; i < 25; i++) pts.push({ x: rand(W / 2 + 10, W - 20), y: rand(20, H - 20), c: 1 });
+    const kS = el("input", { type: "range", min: "1", max: "15", step: "2", value: "5", id: "knn-k", "aria-label": "K" });
+    const kL = el("b", {}, "5");
+    let query = null;
+    const COL = ["#ff9a4a", "#6aa2ff"];
+    const draw = () => {
+      ctx.fillStyle = "#05080c"; ctx.fillRect(0, 0, W, H);
+      let near = [];
+      if (query) { near = pts.map(p => ({ p, d: Math.hypot(p.x - query.x, p.y - query.y) })).sort((a, b) => a.d - b.d).slice(0, +kS.value); }
+      pts.forEach(p => { ctx.fillStyle = COL[p.c]; ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, 7); ctx.fill(); });
+      if (query) {
+        near.forEach(({ p }) => { ctx.strokeStyle = "#556"; ctx.beginPath(); ctx.moveTo(query.x, query.y); ctx.lineTo(p.x, p.y); ctx.stroke(); });
+        const votes = near.filter(n => n.p.c === 1).length;
+        const cls = votes > +kS.value / 2 ? 1 : 0;
+        ctx.fillStyle = COL[cls]; ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(query.x, query.y, 9, 0, 7); ctx.fill(); ctx.stroke(); ctx.lineWidth = 1;
+      }
+    };
+    cv.addEventListener("click", e => { const r = cv.getBoundingClientRect(); query = { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H }; draw(); });
+    kS.oninput = () => { kL.textContent = kS.value; draw(); };
+    d.append(cv, el("label", { style: "margin-top:8px" }, el("span", {}, "K (מספר שכנים) = ", kL), kS), el("div", { class: "note" }, "לחץ על הלוח כדי לסווג נקודה חדשה. הנקודה נצבעת לפי רוב השכנים."));
+    draw();
+  };
+
+  // Turing machine
+  D.turing = d => {
+    const { el, head, sleep } = MG;
+    head(d, "מעבדה · מכונת טיורינג", "המכונה שהגדירה ״מחשב״", "סרט אינסופי של תאים, ראש שקורא וכותב, וטבלת חוקים. זה המודל התיאורטי של כל מחשב שקיים. התוכנית כאן הופכת סדרת 1-ים לכפול (מוסיפה 0 באמצע). לחץ ״הרץ״.");
+    let tape = [], head_ = 0, state = "A", running = false;
+    const rules = { "A,1": ["1", 1, "A"], "A,0": ["0", 1, "B"], "A,_": ["_", -1, "H"], "B,0": ["0", 1, "B"], "B,_": ["0", -1, "C"], "C,0": ["0", -1, "C"], "C,1": ["1", -1, "C"], "C,_": ["_", 1, "H"] };
+    const disp = el("div", { style: "display:flex;gap:3px;justify-content:center;direction:ltr;flex-wrap:wrap" });
+    const info = el("div", { class: "note ltr", style: "text-align:center" });
+    const reset = () => { tape = "111".split("").concat("0"); tape = ["1", "1", "1", "0", "_", "_", "_", "_"]; head_ = 0; state = "A"; draw(); };
+    const draw = () => {
+      disp.innerHTML = "";
+      tape.forEach((c, i) => disp.append(el("div", { style: `width:30px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:5px;font-family:var(--font-mono);font-weight:700;background:${i === head_ ? "var(--screen-accent)" : "var(--screen-2)"};color:${i === head_ ? "#1d1204" : "#d9e6f2"}` }, c === "_" ? "␣" : c)));
+      info.textContent = state === "H" ? "עצר. הסרט הוכפל." : "מצב: " + state;
+    };
+    const stepM = () => {
+      if (state === "H") return false;
+      while (head_ < 0) { tape.unshift("_"); head_++; } while (head_ >= tape.length) tape.push("_");
+      const r = rules[state + "," + tape[head_]]; if (!r) { state = "H"; draw(); return false; }
+      tape[head_] = r[0]; head_ += r[1]; state = r[2]; draw(); return true;
+    };
+    const run = async () => { if (running) return; running = true; reset(); await sleep(200); while (stepM()) await sleep(250); running = false; };
+    d.append(disp, info, el("div", { class: "row", style: "justify-content:center;margin-top:8px" }, el("button", { class: "primary", onclick: run }, "▶ הרץ"), el("button", { onclick: () => { if (!running) stepM(); } }, "צעד"), el("button", { onclick: () => !running && reset() }, "אפס")), el("div", { class: "note", style: "margin-top:6px" }, "טיורינג הוכיח ב-1936 שמכונה פשוטה כזאת יכולה לחשב כל דבר שמחשב יכול. זה הבסיס התיאורטי של כל המחשוב."));
+    reset();
+  };
+
+  // Traffic light FSM
+  D.trafficlight = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · מכונת מצבים", "רמזור: ארבעה מצבים בלולאה", "מכונת מצבים פשוטה: כל מצב יודע מה הצבע ומה המצב הבא. זה בדיוק הכלי שבו בונים AI של דמויות במשחקים.");
+    const states = [["אדום", "#ff5a5a", 4], ["אדום+כתום", "#ffb454", 1], ["ירוק", "#5fd08f", 4], ["כתום", "#ffd84a", 1]];
+    let i = 0, t = 0, auto = null;
+    const lights = el("div", { style: "display:flex;flex-direction:column;gap:6px;width:60px;margin:0 auto;background:#111;padding:10px;border-radius:12px" });
+    const info = el("div", { class: "note", style: "text-align:center" });
+    const colors = ["#ff5a5a", "#ffd84a", "#5fd08f"];
+    const draw = () => {
+      const [name, col] = states[i];
+      lights.innerHTML = "";
+      colors.forEach(c => { const on = (col === c) || (name === "אדום+כתום" && (c === "#ff5a5a" || c === "#ffd84a")); lights.append(el("div", { style: `width:40px;height:40px;border-radius:50%;margin:0 auto;background:${on ? c : "#222"};box-shadow:${on ? "0 0 16px " + c : "none"}` })); });
+      info.textContent = "מצב: " + name;
+    };
+    const next = () => { i = (i + 1) % states.length; draw(); };
+    d.append(lights, info, el("div", { class: "row", style: "justify-content:center;margin-top:8px" }, el("button", { class: "primary", onclick: next }, "מצב הבא ⏭"), el("button", { onclick: () => { if (auto) { clearInterval(auto); auto = null; } else auto = setInterval(next, 1200); } }, "אוטומטי")));
+    draw();
+  };
+})();
+
+// Demos: arcade — mini-games and graphics toys, all playable
+(function () {
+  "use strict";
+  const D = window.MG_DEMOS || (window.MG_DEMOS = {});
+  const key = (d, map) => { window.addEventListener("keydown", e => { if (d.closest(".chapter").hidden) return; if (map[e.key]) { map[e.key](); e.preventDefault(); } }); };
+
+  // Tetris
+  D.tetris = d => {
+    const { el, head, visible, makeInput } = MG;
+    head(d, "מעבדה · טטריס", "המשחק שכולם מכירים", "חיצים או הכפתורים: ◀ ▶ להזיז, ▲ לסובב, ▼ להאיץ. שורה מלאה נמחקת. זה משחק שלם ב-100 שורות קוד, עם רשת, התנגשויות וסיבוב חלקים.");
+    const C = 10, R = 18, S = 20;
+    const cv = el("canvas", { width: String(C * S), height: String(R * S), "aria-label": "טטריס" });
+    const ctx = cv.getContext("2d");
+    const input = makeInput(d);
+    const SHAPES = [[[1, 1, 1, 1]], [[1, 1], [1, 1]], [[0, 1, 0], [1, 1, 1]], [[1, 0, 0], [1, 1, 1]], [[0, 0, 1], [1, 1, 1]], [[1, 1, 0], [0, 1, 1]], [[0, 1, 1], [1, 1, 0]]];
+    const COL = ["#5fd0d0", "#ffd84a", "#c77dff", "#6aa2ff", "#ffb454", "#5fd08f", "#ff6b6b"];
+    let grid, piece, px, py, pc, score, over, acc, drop, running = false;
+    const reset = () => { grid = Array.from({ length: R }, () => Array(C).fill(-1)); score = 0; over = false; acc = 0; drop = 0.5; spawn(); };
+    const spawn = () => { pc = Math.floor(Math.random() * 7); piece = SHAPES[pc].map(r => r.slice()); px = 3; py = 0; if (hit(px, py, piece)) over = true; };
+    const hit = (x, y, p) => p.some((row, dy) => row.some((v, dx) => v && (x + dx < 0 || x + dx >= C || y + dy >= R || (y + dy >= 0 && grid[y + dy][x + dx] >= 0))));
+    const merge = () => { piece.forEach((row, dy) => row.forEach((v, dx) => { if (v && py + dy >= 0) grid[py + dy][px + dx] = pc; })); let lines = 0; for (let y = R - 1; y >= 0; y--) if (grid[y].every(c => c >= 0)) { grid.splice(y, 1); grid.unshift(Array(C).fill(-1)); lines++; y++; } score += [0, 100, 300, 500, 800][lines]; drop = Math.max(0.08, 0.5 - score / 6000); spawn(); };
+    const rotate = () => { const r = piece[0].map((_, i) => piece.map(row => row[i]).reverse()); if (!hit(px, py, r)) piece = r; };
+    const move = dx => { if (!hit(px + dx, py, piece)) px += dx; };
+    const down = () => { if (!hit(px, py + 1, piece)) py++; else merge(); };
+    let held = {};
+    const press = k => { if (over) return; if (k === "l") move(-1); if (k === "r") move(1); if (k === "u") rotate(); if (k === "d") down(); };
+    ["l", "r", "u", "d"].forEach(k => { });
+    let last = 0;
+    const loop = now => {
+      requestAnimationFrame(loop);
+      const dt = Math.min(.1, (now - last) / 1000 || 0); last = now;
+      if (!visible(d)) return;
+      if (running && !over) { acc += dt; const spd = input.keys.has("d") ? 0.05 : drop; if (acc > spd) { acc = 0; down(); } for (const k of ["l", "r", "u"]) { if (input.keys.has(k) && !held[k]) press(k); held[k] = input.keys.has(k); } }
+      ctx.fillStyle = "#05080c"; ctx.fillRect(0, 0, C * S, R * S);
+      for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) if (grid[y][x] >= 0) { ctx.fillStyle = COL[grid[y][x]]; ctx.fillRect(x * S + 1, y * S + 1, S - 2, S - 2); }
+      if (!over) piece.forEach((row, dy) => row.forEach((v, dx) => { if (v) { ctx.fillStyle = COL[pc]; ctx.fillRect((px + dx) * S + 1, (py + dy) * S + 1, S - 2, S - 2); } }));
+      ctx.fillStyle = "#fff"; ctx.font = "bold 14px monospace"; ctx.fillText(score, 8, 20);
+      if (over) { ctx.fillStyle = "rgba(0,0,0,.6)"; ctx.fillRect(0, 0, C * S, R * S); ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.font = "bold 22px sans-serif"; ctx.fillText("Game Over", C * S / 2, R * S / 2); ctx.textAlign = "left"; }
+    };
+    reset();
+    d.append(cv, el("div", { class: "row", style: "margin-top:8px;justify-content:space-between" }, el("button", { class: "primary", onclick: () => { reset(); running = true; input.setActive(true); } }, "▶ שחק"), input.pad));
+    requestAnimationFrame(loop);
+  };
+
+  // Minesweeper
+  D.minesweeper = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · שולה מוקשים", "היגיון, לא מזל", "לחץ לחשוף תא. מספר = כמה מוקשים גובלים בו. לחיצה ארוכה (או כפתור הדגל) מסמנת מוקש. גלה את כל התאים הבטוחים. זה תרגיל קלאסי בהיגיון ובאלגוריתם ״הצפה״.");
+    const C = 10, R = 10, MINES = 15;
+    let mines, revealed, flags, over, won, flagMode = false, first;
+    const grid = el("div", { style: `display:grid;grid-template-columns:repeat(${C},28px);gap:2px;justify-content:center` });
+    const msg = el("div", { style: "text-align:center;font-weight:700;min-height:24px" });
+    const reset = () => { mines = Array.from({ length: R }, () => Array(C).fill(false)); revealed = Array.from({ length: R }, () => Array(C).fill(false)); flags = Array.from({ length: R }, () => Array(C).fill(false)); over = won = false; first = true; draw(); };
+    const place = (sx, sy) => { let n = 0; while (n < MINES) { const x = Math.floor(Math.random() * C), y = Math.floor(Math.random() * R); if (!mines[y][x] && !(Math.abs(x - sx) <= 1 && Math.abs(y - sy) <= 1)) { mines[y][x] = true; n++; } } };
+    const count = (x, y) => { let n = 0; for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) { const nx = x + i, ny = y + j; if (nx >= 0 && ny >= 0 && nx < C && ny < R && mines[ny][nx]) n++; } return n; };
+    const reveal = (x, y) => { if (x < 0 || y < 0 || x >= C || y >= R || revealed[y][x] || flags[y][x]) return; revealed[y][x] = true; if (mines[y][x]) { over = true; return; } if (count(x, y) === 0) for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) reveal(x + i, y + j); };
+    const checkWin = () => { let safe = 0; for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) if (revealed[y][x] && !mines[y][x]) safe++; if (safe === C * R - MINES) won = true; };
+    const draw = () => {
+      grid.innerHTML = "";
+      for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) {
+        const rev = revealed[y][x], c = rev ? count(x, y) : 0;
+        const b = el("button", { style: `width:28px;height:28px;border-radius:4px;font-weight:700;font-family:var(--font-mono);cursor:pointer;border:1px solid #2b3a50;background:${rev ? "#0e1726" : "var(--screen-2)"};color:${["", "#6aa2ff", "#5fd08f", "#ff6b6b", "#c77dff", "#ffb454", "#5fd0d0", "#fff", "#f88"][c]}` },
+          over && mines[y][x] ? "💣" : flags[y][x] ? "🚩" : rev && c ? String(c) : "");
+        const act = () => { if (over || won) return; if (flagMode) { flags[y][x] = !flags[y][x]; } else { if (first) { place(x, y); first = false; } reveal(x, y); checkWin(); } draw(); };
+        b.onclick = act;
+        b.oncontextmenu = e => { e.preventDefault(); if (!over && !won) { flags[y][x] = !flags[y][x]; draw(); } };
+        grid.append(b);
+      }
+      msg.textContent = over ? "💥 נגעת במוקש!" : won ? "🎉 ניצחת!" : `מוקשים: ${MINES}`;
+    };
+    const fmBtn = el("button", { onclick: () => { flagMode = !flagMode; fmBtn.classList.toggle("on", flagMode); } }, "🚩 מצב דגל");
+    d.append(grid, msg, el("div", { class: "row", style: "justify-content:center;margin-top:8px" }, fmBtn, el("button", { class: "primary", onclick: reset }, "משחק חדש")));
+    reset();
+  };
+
+  // 2048
+  D.g2048 = d => {
+    const { el, head, makeInput } = MG;
+    head(d, "מעבדה · 2048", "מזג מספרים עד 2048", "חיצים או הכפתורים מזיזים את כל האריחים. שני אריחים זהים נדבקים ומתחברים. ניהול לוגי של רשת, עם אנימציית מיזוג.");
+    let g, score, over;
+    const board = el("div", { style: "display:grid;grid-template-columns:repeat(4,64px);gap:6px;justify-content:center;background:#1a2330;padding:6px;border-radius:8px" });
+    const msg = el("div", { style: "text-align:center;font-weight:700;min-height:24px" });
+    const input = makeInput(d);
+    const COL = { 2: "#3a4659", 4: "#4a5870", 8: "#ffb454", 16: "#ff9a4a", 32: "#ff6b6b", 64: "#ff5a5a", 128: "#5fd08f", 256: "#5fd0d0", 512: "#6aa2ff", 1024: "#c77dff", 2048: "#ffd84a" };
+    const add = () => { const empty = []; g.forEach((r, y) => r.forEach((v, x) => { if (!v) empty.push([x, y]); })); if (empty.length) { const [x, y] = empty[Math.floor(Math.random() * empty.length)]; g[y][x] = Math.random() < 0.9 ? 2 : 4; } };
+    const reset = () => { g = Array.from({ length: 4 }, () => Array(4).fill(0)); score = 0; over = false; add(); add(); draw(); };
+    const slide = row => { let a = row.filter(v => v); for (let i = 0; i < a.length - 1; i++) if (a[i] === a[i + 1]) { a[i] *= 2; score += a[i]; a.splice(i + 1, 1); } while (a.length < 4) a.push(0); return a; };
+    const move = dir => {
+      if (over) return;
+      const before = JSON.stringify(g);
+      const rot = (m, n) => { for (let k = 0; k < n; k++) m = m[0].map((_, i) => m.map(r => r[i]).reverse()); return m; };
+      let m = rot(g, dir); m = m.map(slide); g = rot(m, (4 - dir) % 4);
+      if (JSON.stringify(g) !== before) add();
+      if (!g.flat().includes(0) && !canMove()) over = true;
+      draw();
+    };
+    const canMove = () => { for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) { if (!g[y][x]) return true; if (x < 3 && g[y][x] === g[y][x + 1]) return true; if (y < 3 && g[y][x] === g[y + 1][x]) return true; } return false; };
+    const draw = () => {
+      board.innerHTML = "";
+      g.forEach(r => r.forEach(v => board.append(el("div", { style: `width:64px;height:64px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-weight:700;font-size:${v > 512 ? 20 : 26}px;background:${v ? COL[v] || "#ffd84a" : "#0e1726"};color:${v > 4 ? "#1d1204" : "#d9e6f2"}` }, v ? String(v) : ""))));
+      msg.textContent = over ? "אין מהלכים · ניקוד " + score : "ניקוד: " + score;
+    };
+    let held = {};
+    const dirMap = { u: 3, d: 1, l: 0, r: 2 };
+    setInterval(() => { if (d.closest(".chapter").hidden) return; for (const k in dirMap) { if (input.keys.has(k) && !held[k]) move(dirMap[k]); held[k] = input.keys.has(k); } }, 90);
+    input.setActive(true);
+    d.append(board, msg, el("div", { class: "row", style: "justify-content:space-between;margin-top:8px" }, el("button", { class: "primary", onclick: reset }, "משחק חדש"), input.pad));
+    reset();
+  };
+
+  // Breakout
+  D.breakout = d => {
+    const { el, head, visible } = MG;
+    head(d, "מעבדה · שובר לבנים", "פונג עם לבנים", "הזז את המחבת עם העכבר או האצבע. הכדור מקפיץ, שובר לבנים, וההתנגשות משנה את הכיוון. פיזיקה פשוטה, כיף גדול.");
+    const W = 360, H = 260;
+    const cv = el("canvas", { width: String(W), height: String(H), "aria-label": "שובר לבנים", style: "max-width:100%;touch-action:none" });
+    const ctx = cv.getContext("2d");
+    let ball, paddle, bricks, score, lives, running = false;
+    const reset = () => { ball = { x: W / 2, y: H - 40, vx: 130, vy: -170, r: 6 }; paddle = W / 2; score = 0; lives = 3; bricks = []; for (let y = 0; y < 4; y++) for (let x = 0; x < 8; x++) bricks.push({ x: 8 + x * 44, y: 24 + y * 20, w: 40, h: 14, c: `hsl(${y * 40 + 10},70%,60%)` }); };
+    cv.addEventListener("pointermove", e => { const r = cv.getBoundingClientRect(); paddle = Math.max(30, Math.min(W - 30, (e.clientX - r.left) / r.width * W)); });
+    let last = 0;
+    const loop = now => {
+      requestAnimationFrame(loop);
+      const dt = Math.min(.03, (now - last) / 1000 || 0); last = now;
+      if (!visible(d)) return;
+      if (running) {
+        ball.x += ball.vx * dt; ball.y += ball.vy * dt;
+        if (ball.x < ball.r || ball.x > W - ball.r) ball.vx *= -1;
+        if (ball.y < ball.r) ball.vy *= -1;
+        if (ball.y > H - 20 && ball.y < H - 12 && Math.abs(ball.x - paddle) < 34 && ball.vy > 0) { ball.vy *= -1; ball.vx += (ball.x - paddle) * 3; }
+        if (ball.y > H) { lives--; ball.x = W / 2; ball.y = H - 40; ball.vx = 130; ball.vy = -170; if (lives <= 0) { running = false; reset(); } }
+        bricks = bricks.filter(b => { if (ball.x > b.x && ball.x < b.x + b.w && ball.y > b.y && ball.y < b.y + b.h) { ball.vy *= -1; score += 10; return false; } return true; });
+        if (!bricks.length) running = false;
+      }
+      ctx.fillStyle = "#05080c"; ctx.fillRect(0, 0, W, H);
+      bricks.forEach(b => { ctx.fillStyle = b.c; ctx.fillRect(b.x, b.y, b.w, b.h); });
+      ctx.fillStyle = "#ffb454"; ctx.fillRect(paddle - 32, H - 16, 64, 8);
+      ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, 7); ctx.fillStyle = "#fff"; ctx.fill();
+      ctx.font = "13px monospace"; ctx.fillText("ניקוד " + score + "  חיים " + lives, 8, 16);
+      if (!running) { ctx.fillStyle = "rgba(0,0,0,.5)"; ctx.fillRect(0, 0, W, H); ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.fillText(bricks.length ? "לחץ ״שחק״" : "ניצחת! 🎉", W / 2, H / 2); ctx.textAlign = "left"; }
+    };
+    reset();
+    d.append(cv, el("div", { class: "row", style: "margin-top:8px" }, el("button", { class: "primary", onclick: () => { if (!bricks.length) reset(); running = true; } }, "▶ שחק")));
+    requestAnimationFrame(loop);
+  };
+
+  // Pong vs AI
+  D.pong = d => {
+    const { el, head, visible } = MG;
+    head(d, "מעבדה · פונג", "המשחק הראשון, מול AI", "הזז את המחבת שלך (משמאל) עם העכבר. המחשב (מימין) עוקב אחרי הכדור, אבל לא מושלם, אז אפשר לנצח. זה המשחק המסחרי הראשון בהיסטוריה (1972).");
+    const W = 380, H = 240;
+    const cv = el("canvas", { width: String(W), height: String(H), "aria-label": "פונג", style: "max-width:100%;touch-action:none" });
+    const ctx = cv.getContext("2d");
+    let ball, p1 = H / 2, p2 = H / 2, s1 = 0, s2 = 0;
+    const reset = b => { ball = { x: W / 2, y: H / 2, vx: b ? 180 : -180, vy: (Math.random() - .5) * 160, r: 6 }; };
+    cv.addEventListener("pointermove", e => { const r = cv.getBoundingClientRect(); p1 = (e.clientY - r.top) / r.height * H; });
+    let last = 0;
+    const loop = now => {
+      requestAnimationFrame(loop);
+      const dt = Math.min(.03, (now - last) / 1000 || 0); last = now;
+      if (!visible(d)) return;
+      ball.x += ball.vx * dt; ball.y += ball.vy * dt;
+      if (ball.y < ball.r || ball.y > H - ball.r) ball.vy *= -1;
+      p2 += Math.max(-160, Math.min(160, (ball.y - p2))) * dt * 3.2;
+      if (ball.x < 20 && Math.abs(ball.y - p1) < 32 && ball.vx < 0) { ball.vx *= -1.05; ball.vy += (ball.y - p1) * 2; }
+      if (ball.x > W - 20 && Math.abs(ball.y - p2) < 32 && ball.vx > 0) { ball.vx *= -1.05; ball.vy += (ball.y - p2) * 2; }
+      if (ball.x < 0) { s2++; reset(true); } if (ball.x > W) { s1++; reset(false); }
+      ctx.fillStyle = "#05080c"; ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = "#2b3a50"; ctx.setLineDash([6, 6]); ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = "#ffb454"; ctx.fillRect(8, p1 - 30, 8, 60); ctx.fillStyle = "#7fb0ff"; ctx.fillRect(W - 16, p2 - 30, 8, 60);
+      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, 7); ctx.fill();
+      ctx.font = "bold 24px monospace"; ctx.textAlign = "center"; ctx.fillText(s1, W / 2 - 30, 30); ctx.fillText(s2, W / 2 + 30, 30); ctx.textAlign = "left";
+    };
+    reset(true);
+    d.append(cv, el("div", { class: "note", style: "margin-top:6px" }, "אתה כתום (שמאל), המחשב כחול (ימין)."));
+    requestAnimationFrame(loop);
+  };
+
+  // Connect Four vs AI
+  D.connect4 = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · ארבע בשורה", "מול AI שחושב קדימה", "הפל דיסק לעמודה. חבר ארבעה ברצף (אופקי, אנכי או אלכסוני) לפני המחשב. ה-AI בודק כמה מהלכים קדימה (Minimax).");
+    const C = 7, R = 6;
+    let bd, over;
+    const board = el("div", { style: `display:grid;grid-template-columns:repeat(${C},40px);gap:4px;justify-content:center;background:#1c3a6e;padding:8px;border-radius:10px` });
+    const msg = el("div", { style: "text-align:center;font-weight:700;min-height:24px" });
+    const reset = () => { bd = Array.from({ length: R }, () => Array(C).fill(0)); over = false; draw(); };
+    const drop = (b, col, pl) => { for (let y = R - 1; y >= 0; y--) if (!b[y][col]) { b[y][col] = pl; return y; } return -1; };
+    const win = b => { for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) { const p = b[y][x]; if (!p) continue; for (const [dx, dy] of [[1, 0], [0, 1], [1, 1], [1, -1]]) { let n = 1; for (let k = 1; k < 4; k++) { const nx = x + dx * k, ny = y + dy * k; if (nx >= 0 && ny >= 0 && nx < C && ny < R && b[ny][nx] === p) n++; else break; } if (n >= 4) return p; } } return 0; };
+    const score = b => { const w = win(b); return w === 2 ? 1000 : w === 1 ? -1000 : 0; };
+    const minimax = (b, depth, me, alpha, beta) => {
+      const s = score(b); if (Math.abs(s) === 1000 || depth === 0 || b[0].every(c => c)) return s - (me ? depth : -depth);
+      let best = me ? -1e9 : 1e9;
+      for (let c = 0; c < C; c++) { if (b[0][c]) continue; const nb = b.map(r => r.slice()); drop(nb, c, me ? 2 : 1); const v = minimax(nb, depth - 1, !me, alpha, beta); if (me) { best = Math.max(best, v); alpha = Math.max(alpha, v); } else { best = Math.min(best, v); beta = Math.min(beta, v); } if (beta <= alpha) break; } return best;
+    };
+    const aiMove = () => { let bestC = 0, bestV = -1e9; for (let c = 0; c < C; c++) { if (bd[0][c]) continue; const nb = bd.map(r => r.slice()); drop(nb, c, 2); const v = minimax(nb, 4, false, -1e9, 1e9); if (v > bestV) { bestV = v; bestC = c; } } drop(bd, bestC, 2); };
+    const play = col => { if (over || bd[0][col]) return; drop(bd, col, 1); if (win(bd)) { over = true; draw(); return; } if (bd[0].every(c => c)) { over = true; draw(); return; } aiMove(); if (win(bd)) over = true; draw(); };
+    const draw = () => {
+      board.innerHTML = "";
+      for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) { const v = bd[y][x]; board.append(el("div", { style: `width:40px;height:40px;border-radius:50%;cursor:pointer;background:${v === 1 ? "#ffb454" : v === 2 ? "#ff5a5a" : "#0e1726"}`, onclick: () => play(x) })); }
+      const w = win(bd); msg.textContent = w === 1 ? "🎉 ניצחת!" : w === 2 ? "המחשב ניצח" : bd[0].every(c => c) ? "תיקו" : "תורך (כתום)";
+    };
+    d.append(board, msg, el("div", { class: "row", style: "justify-content:center;margin-top:8px" }, el("button", { class: "primary", onclick: reset }, "משחק חדש")));
+    reset();
+  };
+
+  // Memory match
+  D.memory = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · משחק זיכרון", "מצא את הזוגות", "הפוך שני קלפים. אם הם זהים, הם נשארים. מצא את כל הזוגות בכמה שפחות מהלכים. ניהול מצב פשוט ונחמד.");
+    const emojis = ["🎮", "🚗", "🍕", "👾", "🎧", "🌟", "🔥", "⚡"];
+    let cards, flipped, matched, moves, lock;
+    const grid = el("div", { style: "display:grid;grid-template-columns:repeat(4,60px);gap:6px;justify-content:center" });
+    const msg = el("div", { style: "text-align:center;min-height:24px" });
+    const reset = () => { cards = [...emojis, ...emojis].sort(() => Math.random() - .5); flipped = []; matched = []; moves = 0; lock = false; draw(); };
+    const flip = i => {
+      if (lock || flipped.includes(i) || matched.includes(i)) return;
+      flipped.push(i); draw();
+      if (flipped.length === 2) {
+        moves++; lock = true;
+        setTimeout(() => { if (cards[flipped[0]] === cards[flipped[1]]) matched.push(...flipped); flipped = []; lock = false; draw(); }, 700);
+      }
+    };
+    const draw = () => {
+      grid.innerHTML = "";
+      cards.forEach((c, i) => { const show = flipped.includes(i) || matched.includes(i); grid.append(el("button", { style: `width:60px;height:60px;font-size:30px;border-radius:8px;cursor:pointer;border:1px solid #2b3a50;background:${matched.includes(i) ? "#15301f" : show ? "var(--screen-2)" : "var(--screen-ink)"}`, onclick: () => flip(i) }, show ? c : "")); });
+      msg.textContent = matched.length === 16 ? `🎉 ניצחת ב-${moves} מהלכים!` : `מהלכים: ${moves}`;
+    };
+    d.append(grid, msg, el("div", { class: "row", style: "justify-content:center;margin-top:8px" }, el("button", { class: "primary", onclick: reset }, "משחק חדש")));
+    reset();
+  };
+
+  // Flappy
+  D.flappy = d => {
+    const { el, head, visible } = MG;
+    head(d, "מעבדה · פלאפי", "לחיצה = קפיצה", "לחץ על המסך (או רווח) כדי לעוף. עבור בין הצינורות. כוח משיכה קבוע מושך למטה, כל לחיצה נותנת דחיפה למעלה. משחק פשוט שהפך לתופעה.");
+    const W = 300, H = 300;
+    const cv = el("canvas", { width: String(W), height: String(H), "aria-label": "פלאפי", style: "max-width:100%;cursor:pointer" });
+    const ctx = cv.getContext("2d");
+    let y, vy, pipes, score, over, running = false;
+    const reset = () => { y = H / 2; vy = 0; pipes = [{ x: W, gap: 120 + Math.random() * 80 }]; score = 0; over = false; };
+    const flap = () => { if (over) { reset(); running = true; } else vy = -240; };
+    cv.addEventListener("pointerdown", flap);
+    key(d, { " ": flap });
+    let last = 0;
+    const loop = now => {
+      requestAnimationFrame(loop);
+      const dt = Math.min(.03, (now - last) / 1000 || 0); last = now;
+      if (!visible(d)) return;
+      if (running && !over) {
+        vy += 700 * dt; y += vy * dt;
+        pipes.forEach(p => p.x -= 120 * dt);
+        if (pipes[pipes.length - 1].x < W - 160) pipes.push({ x: W, gap: 90 + Math.random() * 100 });
+        pipes = pipes.filter(p => p.x > -50);
+        pipes.forEach(p => { if (!p.passed && p.x < 60) { p.passed = true; score++; } if (p.x < 80 && p.x > 20 && (y < p.gap - 45 || y > p.gap + 45)) over = true; });
+        if (y > H - 10 || y < 0) over = true;
+      }
+      ctx.fillStyle = "#1b2d4f"; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#5fd08f"; pipes.forEach(p => { ctx.fillRect(p.x, 0, 40, p.gap - 45); ctx.fillRect(p.x, p.gap + 45, 40, H); });
+      ctx.fillStyle = "#ffd84a"; ctx.beginPath(); ctx.arc(50, y, 12, 0, 7); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.font = "bold 24px monospace"; ctx.textAlign = "center"; ctx.fillText(score, W / 2, 36);
+      if (!running || over) { ctx.fillStyle = "rgba(0,0,0,.5)"; ctx.fillRect(0, 0, W, H); ctx.fillStyle = "#fff"; ctx.font = "16px sans-serif"; ctx.fillText(over ? "לחץ לשחק שוב" : "לחץ כדי להתחיל", W / 2, H / 2); } ctx.textAlign = "left";
+    };
+    reset();
+    d.append(cv, el("div", { class: "note", style: "margin-top:6px" }, "לחץ על המסך או על רווח."));
+    requestAnimationFrame(loop);
+  };
+
+  // Lights Out
+  D.lightsout = d => {
+    const { el, head } = MG;
+    head(d, "מעבדה · Lights Out", "כבה את כל האורות", "לחיצה על תא הופכת אותו ואת השכנים שלו. כבה את כל האורות. חידה שמאחוריה מסתתרת אלגברה (ואפשר לפתור אותה במטריצות!).");
+    const N = 5;
+    let g;
+    const grid = el("div", { style: `display:grid;grid-template-columns:repeat(${N},48px);gap:4px;justify-content:center` });
+    const msg = el("div", { style: "text-align:center;min-height:24px;font-weight:700" });
+    const toggle = (x, y) => { [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const nx = x + dx, ny = y + dy; if (nx >= 0 && ny >= 0 && nx < N && ny < N) g[ny][nx] ^= 1; }); };
+    const reset = () => { g = Array.from({ length: N }, () => Array(N).fill(0)); for (let i = 0; i < 8; i++) toggle(Math.floor(Math.random() * N), Math.floor(Math.random() * N)); draw(); };
+    const draw = () => {
+      grid.innerHTML = "";
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) grid.append(el("button", { style: `width:48px;height:48px;border-radius:8px;cursor:pointer;border:1px solid #2b3a50;background:${g[y][x] ? "#ffd84a" : "#1a2330"};box-shadow:${g[y][x] ? "0 0 12px #ffd84a" : "none"}`, onclick: () => { toggle(x, y); draw(); } }));
+      msg.textContent = g.flat().some(v => v) ? "אורות דולקים: " + g.flat().filter(v => v).length : "🎉 כל האורות כבויים!";
+    };
+    d.append(grid, msg, el("div", { class: "row", style: "justify-content:center;margin-top:8px" }, el("button", { class: "primary", onclick: reset }, "חידה חדשה")));
+    reset();
+  };
+
+  // Simon
+  D.simon = d => {
+    const { el, head, sleep } = MG;
+    head(d, "מעבדה · סיימון", "חזור על הרצף", "המשחק מראה רצף צבעים, ואתה חוזר עליו. בכל סבב הרצף מתארך. עד לאן הזיכרון שלך מגיע?");
+    const colors = [["#ff5a5a", 0], ["#5fd08f", 1], ["#6aa2ff", 2], ["#ffd84a", 3]];
+    let seq, idx, playing, best = 0;
+    const pads = el("div", { style: "display:grid;grid-template-columns:repeat(2,80px);gap:8px;justify-content:center" });
+    const msg = el("div", { style: "text-align:center;min-height:24px;font-weight:700" });
+    const btns = [];
+    const flash = async i => { btns[i].style.opacity = "1"; btns[i].style.boxShadow = "0 0 20px " + colors[i][0]; await sleep(350); btns[i].style.opacity = ".45"; btns[i].style.boxShadow = "none"; await sleep(150); };
+    const show = async () => { playing = false; msg.textContent = "צפה..."; for (const i of seq) await flash(i); playing = true; idx = 0; msg.textContent = "תורך! (רצף באורך " + seq.length + ")"; };
+    const start = () => { seq = [Math.floor(Math.random() * 4)]; show(); };
+    const press = async i => { if (!playing) return; await flash(i); if (i === seq[idx]) { idx++; if (idx === seq.length) { best = Math.max(best, seq.length); seq.push(Math.floor(Math.random() * 4)); msg.textContent = "יפה! ממשיכים..."; setTimeout(show, 600); } } else { playing = false; msg.textContent = `טעות! הגעת לרצף ${seq.length - 1}. שיא: ${best}`; } };
+    colors.forEach(([c, i]) => { const b = el("button", { style: `width:80px;height:80px;border-radius:12px;background:${c};opacity:.45;border:none;cursor:pointer`, "aria-label": "צבע " + i, onclick: () => press(i) }); btns[i] = b; pads.append(b); });
+    d.append(pads, msg, el("div", { class: "row", style: "justify-content:center;margin-top:8px" }, el("button", { class: "primary", onclick: start }, "התחל")));
+  };
+
+  // Starfield
+  D.starfield = d => {
+    const { el, head, visible } = MG;
+    head(d, "מעבדה · שדה כוכבים", "אשליית עומק מפרספקטיבה", "כוכבים ״טסים״ לעברך. כל כוכב הוא נקודה תלת-ממדית שמוטלת על המסך עם חלוקה ב-z, בדיוק כמו בפרק התלת-ממד. ככל שכוכב קרוב, הוא מהיר וגדול יותר.");
+    const W = 360, H = 240;
+    const cv = el("canvas", { width: String(W), height: String(H), "aria-label": "כוכבים", style: "max-width:100%" });
+    const ctx = cv.getContext("2d");
+    const speed = el("input", { type: "range", min: "1", max: "12", value: "4", id: "sf-s", "aria-label": "מהירות" });
+    const stars = Array.from({ length: 320 }, () => ({ x: Math.random() * 2 - 1, y: Math.random() * 2 - 1, z: Math.random() }));
+    const loop = () => {
+      requestAnimationFrame(loop);
+      if (!visible(d)) return;
+      ctx.fillStyle = "rgba(5,8,12,.35)"; ctx.fillRect(0, 0, W, H);
+      stars.forEach(s => {
+        s.z -= +speed.value / 1000; if (s.z <= 0.01) { s.z = 1; s.x = Math.random() * 2 - 1; s.y = Math.random() * 2 - 1; }
+        const sx = W / 2 + s.x / s.z * W / 2, sy = H / 2 + s.y / s.z * H / 2, r = (1 - s.z) * 2.5;
+        ctx.fillStyle = "#fff"; ctx.globalAlpha = 1 - s.z; ctx.beginPath(); ctx.arc(sx, sy, r, 0, 7); ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+    };
+    d.append(cv, el("label", { style: "margin-top:8px" }, "מהירות (מהירות אור)", speed));
+    requestAnimationFrame(loop);
+  };
+
+  // Matrix rain
+  D.matrix = d => {
+    const { el, head, visible } = MG;
+    head(d, "מעבדה · ״גשם״ של קוד", "האפקט מהסרט Matrix", "עמודות של תווים שנופלים. אפקט קלאסי שנבנה בכמה שורות: לכל עמודה יש ״טיפה״ שיורדת, ומאחוריה שובל דוהה.");
+    const W = 360, H = 240, FS = 14, cols = Math.floor(W / FS);
+    const cv = el("canvas", { width: String(W), height: String(H), "aria-label": "מטריקס", style: "max-width:100%" });
+    const ctx = cv.getContext("2d");
+    const drops = Array(cols).fill(0);
+    const chars = "アイウエオカ01ﾊﾐﾋｰｳ日本語ABCDEF<>{}/*-+";
+    let t = 0;
+    const loop = () => {
+      requestAnimationFrame(loop);
+      if (!visible(d)) return;
+      t++; if (t % 2) return;
+      ctx.fillStyle = "rgba(5,8,12,.08)"; ctx.fillRect(0, 0, W, H);
+      ctx.font = FS + "px monospace";
+      drops.forEach((y, i) => { const ch = chars[Math.floor(Math.random() * chars.length)]; ctx.fillStyle = "#c8ffd0"; ctx.fillText(ch, i * FS, y * FS); ctx.fillStyle = "#2ecc71"; ctx.fillText(ch, i * FS, (y - 1) * FS); if (y * FS > H && Math.random() > 0.975) drops[i] = 0; drops[i]++; });
+    };
+    d.append(cv, el("div", { class: "note", style: "margin-top:6px" }, "כל עמודה עצמאית. ה״ראש״ הבהיר, השובל ירוק כהה, והרקע דוהה לאט."));
+    requestAnimationFrame(loop);
+  };
+
+  // Mode 7 pseudo-3D road
+  D.mode7 = d => {
+    const { el, head, visible, makeInput } = MG;
+    head(d, "מעבדה · כביש בפרספקטיבה", "התלת-ממד של מרוצים ישנים (Mode 7)", "◀ ▶ לנהוג. אין כאן תלת-ממד אמיתי: כל שורת פיקסלים על המסך מייצגת מרחק, ונמתחת לפי פרספקטיבה. ככה נראו מרוצים על סופר-נינטנדו.");
+    const W = 340, H = 200;
+    const cv = el("canvas", { width: String(W), height: String(H), "aria-label": "כביש", style: "max-width:100%" });
+    const ctx = cv.getContext("2d");
+    const input = makeInput(d); input.setActive(true);
+    let pos = 0, curve = 0, targetCurve = 0, last = 0, seg = 0;
+    const loop = now => {
+      requestAnimationFrame(loop);
+      const dt = Math.min(.05, (now - last) / 1000 || 0); last = now;
+      if (!visible(d)) return;
+      pos += 90 * dt; seg += dt;
+      if (seg > 2) { seg = 0; targetCurve = (Math.random() - .5) * 3; }
+      curve += (targetCurve - curve) * dt;
+      const steer = ((input.keys.has("r") ? 1 : 0) - (input.keys.has("l") ? 1 : 0));
+      const img = ctx.createImageData(W, H);
+      for (let y = 0; y < H; y++) {
+        if (y < H / 2) { // sky
+          for (let x = 0; x < W; x++) { const k = (y * W + x) * 4; img.data[k] = 30 + y; img.data[k + 1] = 60 + y; img.data[k + 2] = 110 + y; img.data[k + 3] = 255; }
+          continue;
+        }
+        const p = (y - H / 2) / (H / 2);
+        const z = 1 / p, world = pos + z * 40;
+        const shade = (Math.floor(world / 20) % 2) ? 1 : 0.85;
+        const roadCenter = W / 2 + Math.sin(world / 60) * curve * 40 * p - steer * 40 * p;
+        const roadW = 40 + p * 220;
+        for (let x = 0; x < W; x++) {
+          const k = (y * W + x) * 4;
+          let r, g, bl;
+          if (Math.abs(x - roadCenter) < roadW / 2) { const stripe = Math.abs(x - roadCenter) < 4 && (Math.floor(world / 10) % 2); r = stripe ? 240 : 60 * shade; g = stripe ? 240 : 60 * shade; bl = stripe ? 240 : 65 * shade; }
+          else { r = 30 * shade; g = 110 * shade; bl = 40 * shade; }
+          img.data[k] = r; img.data[k + 1] = g; img.data[k + 2] = bl; img.data[k + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      ctx.fillStyle = "#ff5a5a"; ctx.fillRect(W / 2 - 16, H - 30, 32, 18);
+    };
+    d.append(cv, el("div", { class: "row", style: "margin-top:8px;justify-content:flex-end" }, input.pad));
+    requestAnimationFrame(loop);
+  };
+
+  // Analog clock
+  D.clock = d => {
+    const { el, head, visible } = MG;
+    head(d, "מעבדה · שעון אנלוגי", "sin ו-cos בפעולה", "כל מחוג הוא sin/cos של הזווית המתאימה לזמן. תזכורת יפה לפרק המתמטיקה: כל דבר שמסתובב בנוי מ-sin ו-cos.");
+    const S = 200;
+    const cv = el("canvas", { width: String(S), height: String(S), "aria-label": "שעון" });
+    const ctx = cv.getContext("2d");
+    const loop = () => {
+      requestAnimationFrame(loop);
+      if (!visible(d)) return;
+      ctx.fillStyle = "#05080c"; ctx.fillRect(0, 0, S, S);
+      const cx = S / 2, cy = S / 2, R = 85;
+      ctx.strokeStyle = "#2b3a50"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.stroke();
+      for (let i = 0; i < 12; i++) { const a = i / 12 * 7 - Math.PI / 2; ctx.fillStyle = "#7d8fa6"; ctx.beginPath(); ctx.arc(cx + Math.cos(a) * (R - 10), cy + Math.sin(a) * (R - 10), 2, 0, 7); ctx.fill(); }
+      const now = new Date(), ms = now.getMilliseconds() / 1000;
+      const hand = (frac, len, w, col) => { const a = frac * Math.PI * 2 - Math.PI / 2; ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * len, cy + Math.sin(a) * len); ctx.stroke(); };
+      hand((now.getHours() % 12 + now.getMinutes() / 60) / 12, 45, 5, "#d9e6f2");
+      hand((now.getMinutes() + now.getSeconds() / 60) / 60, 65, 3, "#7fb0ff");
+      hand((now.getSeconds() + ms) / 60, 72, 1.5, "#ff5a5a");
+      ctx.fillStyle = "#ffb454"; ctx.beginPath(); ctx.arc(cx, cy, 4, 0, 7); ctx.fill();
+    };
+    d.append(cv);
+    requestAnimationFrame(loop);
+  };
+
+  // Fireworks
+  D.fireworks = d => {
+    const { el, head, visible } = MG;
+    head(d, "מעבדה · זיקוקים", "לחץ לירות", "לחץ בכל מקום כדי לשגר זיקוק. כל פיצוץ הוא עשרות חלקיקים עם מהירות, כוח משיכה וצבע דוהה. תרגיל נחמד במערכת חלקיקים.");
+    const W = 360, H = 260;
+    const cv = el("canvas", { width: String(W), height: String(H), "aria-label": "זיקוקים", style: "max-width:100%;cursor:pointer" });
+    const ctx = cv.getContext("2d");
+    let parts = [], rockets = [];
+    const launch = (tx, ty) => rockets.push({ x: tx, y: H, ty, vy: -Math.sqrt((H - ty) * 2 * 300) / 10 });
+    cv.addEventListener("pointerdown", e => { const r = cv.getBoundingClientRect(); launch((e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H); });
+    const burst = (x, y) => { const hue = Math.random() * 360; for (let i = 0; i < 60; i++) { const a = Math.random() * 7, s = Math.random() * 120 + 20; parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 1, c: `hsl(${hue},90%,${50 + Math.random() * 30}%)` }); } };
+    let last = 0, t = 0;
+    const loop = now => {
+      requestAnimationFrame(loop);
+      const dt = Math.min(.04, (now - last) / 1000 || 0); last = now; t += dt;
+      if (!visible(d)) return;
+      if (t > 1.1) { t = 0; launch(Math.random() * W, Math.random() * H / 2 + 30); }
+      ctx.fillStyle = "rgba(5,8,12,.25)"; ctx.fillRect(0, 0, W, H);
+      rockets = rockets.filter(r => { r.vy += 300 * dt; r.y += r.vy * dt; ctx.fillStyle = "#ffd84a"; ctx.fillRect(r.x, r.y, 2, 4); if (r.y <= r.ty || r.vy >= 0) { burst(r.x, r.y); return false; } return true; });
+      parts = parts.filter(p => { p.life -= dt * 0.9; p.vy += 90 * dt; p.x += p.vx * dt; p.y += p.vy * dt; if (p.life <= 0) return false; ctx.globalAlpha = p.life; ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, 3, 3); return true; });
+      ctx.globalAlpha = 1;
+    };
+    d.append(cv, el("div", { class: "note", style: "margin-top:6px" }, "לחץ על המסך לשגר זיקוק משלך."));
     requestAnimationFrame(loop);
   };
 })();
