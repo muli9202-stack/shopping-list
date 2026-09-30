@@ -131,6 +131,8 @@ export function SettingsScreen() {
         כותבים נכון · גרסה 1.0
         <br />
         גופן כתב יד: Ktav Yad CLM מפרויקט Culmus (רישיון GPL)
+        <br />
+        הקול: Phonikud TTS (רישיון לשימוש לא מסחרי) – לכן האפליקציה חינמית וללא פרסומות
       </p>
 
       {editing && <ChildForm childId={editing} onClose={() => setEditing(null)} />}

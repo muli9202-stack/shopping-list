@@ -8,3 +8,6 @@ android/app/google-services.json
 *.keystore
 functions/lib
 functions/node_modules
+voice/cache
+voice/models
+voice/asr

@@ -2,12 +2,13 @@ import { Capacitor } from '@capacitor/core';
 import { TextToSpeech } from '@capacitor-community/text-to-speech';
 import { httpsCallable } from 'firebase/functions';
 import { auth, fns } from './firebase';
+import { planSpeech, playClip, stopClip, voicePackReady } from './voicePack';
 
 /**
  * Voice guidance.
- * 1. Natural neural Hebrew voice from the server (Cloud Function "tts"), cached on the device,
- *    so each phrase is downloaded once and then plays instantly, even offline.
- * 2. Fallback: the phone's own Hebrew text-to-speech.
+ * 1. The recorded natural voice shipped with the app (voicePack.ts) – every fixed phrase, offline.
+ * 2. For text that was never recorded: the server voice (Cloud Function "tts") if set up,
+ * 3. otherwise the device's best Hebrew voice.
  */
 
 let enabled = true;
@@ -151,6 +152,7 @@ async function loadNativeVoice(): Promise<number | null> {
 
 /** Is there any Hebrew voice (cloud or device)? Games switch to "see the word" questions when not. */
 export async function hebrewVoiceAvailable(): Promise<boolean> {
+  if (await voicePackReady()) return true;
   if (fns && auth?.currentUser && !cloudBroken) return true;
   if (Capacitor.isNativePlatform()) {
     try {
@@ -199,13 +201,29 @@ export async function speak(text: string, opts: { rate?: number; force?: boolean
   const my = token;
   const rate = opts.rate ?? 0.95;
   try {
-    const mp3 = opts.local ? null : await cloudAudio(text, rate);
+    // 1. the recorded natural voice (everything fixed in the app); slow version for slow speech
+    const plan = await planSpeech(text, rate < 0.8);
     if (my !== token) return;
-    if (mp3) return await playMp3(mp3, my);
-    await deviceSpeak(text, rate, my);
+    if (plan && plan.some((p) => 'clip' in p)) {
+      for (const part of plan) {
+        if (my !== token) return;
+        if ('clip' in part) await playClip(part.clip);
+        else await otherVoice(part.text, rate, my, !!opts.local);
+      }
+      return;
+    }
+    await otherVoice(text, rate, my, !!opts.local);
   } catch {
     // speech is a nice-to-have; never break the game because of it
   }
+}
+
+/** Text that was never recorded (e.g. AI feedback): the cloud voice when set up, else the device voice. */
+async function otherVoice(text: string, rate: number, my: number, local: boolean) {
+  const mp3 = local ? null : await cloudAudio(text, rate);
+  if (my !== token) return;
+  if (mp3) return await playMp3(mp3, my);
+  await deviceSpeak(text, rate, my);
 }
 
 /** Download phrases in the background so they play instantly later (e.g. the next questions). */
@@ -216,6 +234,7 @@ export function prefetch(texts: string[], rate = 0.95) {
 
 export function stop() {
   token++;
+  stopClip();
   if (current) {
     current.pause();
     current = null;

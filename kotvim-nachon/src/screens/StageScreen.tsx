@@ -10,7 +10,6 @@ import { worldInfo } from './LearnScreen';
 import { Mascot } from '../ui/Mascot';
 import { confetti, sfx } from '../ui/effects';
 import { speak } from '../services/tts';
-import { maybeShowBreakAd } from '../services/ads';
 import type { GameId, SkillId } from '../types';
 
 function starsFor(correct: number, total: number) {
@@ -38,7 +37,7 @@ export function StageScreen() {
     setResult({ stars, bonus });
     sfx('win');
     confetti(160);
-    speak(`${pick(PRAISE)} קיבלת ${stars} כוכבים ו-${bonus} נקודות בונוס!`);
+    speak(`${pick(PRAISE)} קיבלת כוכבים ונקודות בונוס!`);
   };
 
   const onGameDone = (correct: number, total: number) => complete(starsFor(correct, total));
@@ -73,10 +72,7 @@ export function StageScreen() {
             {snapshot.w.done + 1 >= 5 && <p>🏆 סיימת את כל העולם! עולם חדש מחכה לך.</p>}
             <button
               className="btn green big"
-              onClick={async () => {
-                back();
-                await maybeShowBreakAd();
-              }}
+              onClick={back}
             >
               ממשיכים ⬅️
             </button>
@@ -137,10 +133,7 @@ export function PracticeScreen({ skill, game, level }: { skill: SkillId; game: G
               </button>
               <button
                 className="btn white"
-                onClick={async () => {
-                  back();
-                  await maybeShowBreakAd();
-                }}
+                onClick={back}
               >
                 סיימתי
               </button>

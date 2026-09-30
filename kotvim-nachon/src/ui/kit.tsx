@@ -3,6 +3,7 @@ import { speak } from '../services/tts';
 import { useNav } from '../nav';
 import { speakGuide } from './guide';
 import { useActiveChild } from '../store';
+export { PRAISE, ENCOURAGE } from '../data/phrases';
 
 /** Speak `text` once when the screen/component mounts (voice guidance). */
 export function useSpeakOnMount(text: string | null | undefined, deps: unknown[] = []) {
@@ -121,8 +122,6 @@ export function Stars({ n, of = 3 }: { n: number; of?: number }) {
   );
 }
 
-export const PRAISE = ['כל הכבוד!', 'מדהים!', 'אלוף!', 'יופי!', 'וואו, מצוין!', 'נהדר!', 'איזה כוכב!', 'בול!'];
-export const ENCOURAGE = ['כמעט! ננסה שוב', 'לא נורא, ממשיכים!', 'טעות זה חלק מהלמידה', 'עוד רגע תצליח!'];
 export function pick<T>(list: T[]): T {
   return list[Math.floor(Math.random() * list.length)];
 }

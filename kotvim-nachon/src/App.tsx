@@ -6,7 +6,6 @@ import { watchUser } from './services/auth';
 import { startSync, stopSync } from './services/sync';
 import { hebrewVoiceAvailable, setVoiceEnabled, stop } from './services/tts';
 import { setVisualOnly } from './engine/questions';
-import { initAds } from './services/ads';
 import { firebaseEnabled } from './services/firebase';
 import { DeleteAccountScreen } from './screens/DeleteAccountScreen';
 import { LoginScreen } from './screens/LoginScreen';
@@ -36,7 +35,6 @@ export default function App() {
     const wantsDelete = window.location.hash === '#delete-account';
     if (!firebaseEnabled && useStore.getState().mode !== 'none') useNav.getState().reset({ name: 'family' });
     if (wantsDelete) useNav.getState().go({ name: 'deleteAccount' });
-    initAds();
     hebrewVoiceAvailable().then((ok) => setVisualOnly(!ok));
   }, []);
 

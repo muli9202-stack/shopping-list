@@ -25,7 +25,7 @@ export function TrainGame({ skills, grade, rounds, level = 2, report, finish }: 
     report(q.skill, good, q.word, q.kind === 'missing' ? q.display.replace('_', o) : o);
     if (good) {
       sfx('win');
-      speak(`${pick(PRAISE)} צ׳וּ צ׳וּ!`);
+      speak(`${pick(PRAISE)} טוּ טוּ!`);
     } else {
       sfx('bad');
       speak(`${pick(ENCOURAGE)}. כותבים ${q.say}`);

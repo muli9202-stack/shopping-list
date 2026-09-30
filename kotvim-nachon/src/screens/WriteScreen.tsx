@@ -276,12 +276,20 @@ function uniqSkills(tokens: Token[]): SkillId[] {
   return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([s]) => s);
 }
 
+/** Feedback phrases are fixed sentences so they can be spoken with the recorded natural voice. */
+export const FEEDBACK = {
+  perfect: 'וואו! אין אף טעות. אתה כותב מושלם!',
+  almost: 'כמעט מושלם! רק כמה טעויות קטנות.',
+  good: 'עבודה יפה! תיקנו יחד כמה מילים.',
+  tip: (title: string) => `כדאי לשים לב ל${title}, יש לי טריק בשבילך!`,
+};
+
 function localFeedback(tokens: Token[]): string {
   const wrong = tokens.filter((t) => !t.ok).length;
-  if (!wrong) return 'וואו! אין אף טעות. אתה כותב מושלם! 🏆';
+  if (!wrong) return FEEDBACK.perfect;
   const top = uniqSkills(tokens)[0];
-  const tip = top ? ` כדאי לשים לב ל${SKILL_BY_ID[top].title} – יש לי טריק בשבילך!` : '';
-  return wrong <= 2 ? `כמעט מושלם! רק ${wrong} טעויות קטנות.${tip}` : `עבודה יפה! תיקנו יחד ${wrong} מילים.${tip}`;
+  const tip = top ? ` ${FEEDBACK.tip(SKILL_BY_ID[top].title)}` : '';
+  return (wrong <= 2 ? FEEDBACK.almost : FEEDBACK.good) + tip;
 }
 
 /**
@@ -345,7 +353,8 @@ function ResultView({ outcome, child, onAgain }: { outcome: Outcome; child: Chil
       confetti(outcome.total > 80 ? 200 : 100);
       sfx('win');
       flyPoints(outcome.total);
-      speak(`${pick(PRAISE)} ${outcome.feedback}`, { local: true });
+      // feedback written by the AI about the child's own story stays on the device
+      speak(`${pick(PRAISE)} ${outcome.feedback}`, { local: outcome.engine === 'ai' });
     }, 300);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -405,7 +414,7 @@ function ResultView({ outcome, child, onAgain }: { outcome: Outcome; child: Chil
       <div className="card row" style={{ alignItems: 'flex-start' }}>
         <Mascot size={70} cheer />
         <div className="grow">{outcome.feedback}</div>
-        {voiceOn && <button className="icon-btn" onClick={() => speak(outcome.feedback, { force: true, local: true })}>🔊</button>}
+        {voiceOn && <button className="icon-btn" onClick={() => speak(outcome.feedback, { force: true, local: outcome.engine === 'ai' })}>🔊</button>}
       </div>
 
       <div className="card">
