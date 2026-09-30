@@ -6,15 +6,17 @@ import { ChildForm, GRADES } from './FamilyScreen';
 import { setVoiceEnabled, speak } from '../services/tts';
 import { signOut } from '../services/auth';
 import { deleteChildRemote, stopSync } from '../services/sync';
+import { ConfirmModal } from '../ui/ConfirmModal';
 
 export function SettingsScreen() {
-  const { settings, setSettings, children, removeChild, mode, uid, email, resetAll } = useStore();
+  const { settings, setSettings, children, removeChild, mode, uid, email, resetAll, setMode } = useStore();
   const reset = useNav((s) => s.reset);
   const go = useNav((s) => s.go);
   const [editing, setEditing] = useState<string | null>(null);
   const [pinEdit, setPinEdit] = useState(false);
   const [newPin, setNewPin] = useState('');
   const [msg, setMsg] = useState('');
+  const [toDelete, setToDelete] = useState<string | null>(null);
 
   return (
     <div className="screen" style={{ background: '#f8f9fa' }}>
@@ -86,12 +88,8 @@ export function SettingsScreen() {
             <button
               className="btn ghost"
               style={{ padding: 8 }}
-              onClick={() => {
-                if (confirm(`למחוק את ${c.name} וכל ההתקדמות שלו/ה?`)) {
-                  removeChild(c.id);
-                  if (mode === 'cloud' && uid) deleteChildRemote(uid, c.id);
-                }
-              }}
+              aria-label={`מחיקת ${c.name}`}
+              onClick={() => setToDelete(c.id)}
             >
               🗑️
             </button>
@@ -113,13 +111,19 @@ export function SettingsScreen() {
               await signOut();
               resetAll();
               reset({ name: 'login' });
+              setMode('none');
             }}
           >
-            {mode === 'cloud' ? 'התנתקות' : 'מעבר לכניסה עם חשבון'}
+            {mode === 'cloud' ? 'התנתקות' : 'יציאה'}
           </button>
           <button className="btn ghost" onClick={() => go({ name: 'privacy' })}>
             מדיניות פרטיות
           </button>
+          {mode === 'cloud' && (
+            <button className="btn ghost" style={{ color: 'var(--red)' }} onClick={() => go({ name: 'deleteAccount' })}>
+              מחיקת החשבון
+            </button>
+          )}
         </div>
       </div>
 
@@ -130,6 +134,21 @@ export function SettingsScreen() {
       </p>
 
       {editing && <ChildForm childId={editing} onClose={() => setEditing(null)} />}
+      {toDelete && (
+        <ConfirmModal
+          title={`למחוק את ${children.find((c) => c.id === toDelete)?.name ?? ''}?`}
+          confirmLabel="מחיקה"
+          danger
+          onCancel={() => setToDelete(null)}
+          onConfirm={() => {
+            removeChild(toDelete);
+            if (mode === 'cloud' && uid) deleteChildRemote(uid, toDelete);
+            setToDelete(null);
+          }}
+        >
+          <p>כל ההתקדמות, הנקודות והחדר של הילד יימחקו.</p>
+        </ConfirmModal>
+      )}
     </div>
   );
 }

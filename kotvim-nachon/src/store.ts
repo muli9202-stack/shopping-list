@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Child, FamilySettings } from './types';
 import { newChild } from './engine/progress';
+import { mergeChild, sameChild } from './engine/merge';
 
 export type Mode = 'none' | 'local' | 'cloud';
 
@@ -18,7 +19,7 @@ interface State {
   removeChild: (id: string) => void;
   setActive: (id: string | null) => void;
   setSettings: (p: Partial<FamilySettings>) => void;
-  mergeRemote: (settings: FamilySettings | null, children: Child[]) => void;
+  mergeRemote: (settings: FamilySettings | null, children: Child[], deleted?: string[]) => void;
   resetAll: () => void;
 }
 
@@ -47,14 +48,27 @@ export const useStore = create<State>()(
         }),
       setActive: (id) => set({ activeChildId: id }),
       setSettings: (p) => set({ settings: { ...get().settings, ...p, updatedAt: Date.now() } }),
-      mergeRemote: (settings, remote) => {
-        const byId = new Map(get().children.map((c) => [c.id, c]));
+      mergeRemote: (settings, remote, deleted = []) => {
+        const gone = new Set(deleted);
+        const byId = new Map(get().children.filter((c) => !gone.has(c.id)).map((c) => [c.id, c]));
         for (const r of remote) {
+          if (gone.has(r.id)) continue;
           const l = byId.get(r.id);
-          if (!l || r.updatedAt > l.updatedAt) byId.set(r.id, r);
+          if (!l) {
+            byId.set(r.id, r);
+            continue;
+          }
+          const merged = mergeChild(l, r);
+          // local progress the cloud does not have yet → mark as changed so it is uploaded
+          if (!sameChild(merged, r)) merged.updatedAt = Math.max(Date.now(), merged.updatedAt + 1);
+          byId.set(r.id, merged);
         }
         const s = settings && settings.updatedAt > get().settings.updatedAt ? settings : get().settings;
-        set({ children: Array.from(byId.values()).sort((a, b) => a.createdAt - b.createdAt), settings: s });
+        set({
+          children: Array.from(byId.values()).sort((a, b) => a.createdAt - b.createdAt),
+          settings: s,
+          activeChildId: gone.has(get().activeChildId ?? '') ? null : get().activeChildId,
+        });
       },
       resetAll: () => set({ mode: 'none', uid: null, email: null, settings: defaultSettings, children: [], activeChildId: null }),
     }),

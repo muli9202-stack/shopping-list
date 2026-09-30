@@ -17,13 +17,15 @@ export async function startSync(uid: string): Promise<void> {
   if (!db) return;
   const fam = doc(db, 'families', uid);
   const kids = collection(fam, 'children');
+  // a child deleted on one device leaves a marker here, so other devices remove it too
+  const deleted = collection(fam, 'deleted');
   try {
-    const [famSnap, kidsSnap] = await Promise.all([getDoc(fam), getDocs(kids)]);
+    const [famSnap, kidsSnap, delSnap] = await Promise.all([getDoc(fam), getDocs(kids), getDocs(deleted)]);
     const remote = kidsSnap.docs.map((d) => d.data() as Child);
     remote.forEach((c) => synced.set(c.id, c.updatedAt));
     const settings = famSnap.exists() ? ((famSnap.data().settings as FamilySettings) ?? null) : null;
     if (settings) settingsSynced = settings.updatedAt;
-    useStore.getState().mergeRemote(settings, remote);
+    useStore.getState().mergeRemote(settings, remote, delSnap.docs.map((d) => d.id));
   } catch (e) {
     console.warn('initial sync failed (offline?)', e);
   }
@@ -32,6 +34,12 @@ export async function startSync(uid: string): Promise<void> {
       const remote = snap.docs.filter((d) => !d.metadata.hasPendingWrites).map((d) => d.data() as Child);
       remote.forEach((c) => synced.set(c.id, Math.max(synced.get(c.id) ?? 0, c.updatedAt)));
       if (remote.length) useStore.getState().mergeRemote(null, remote);
+    }),
+  );
+  stopFns.push(
+    onSnapshot(deleted, (snap) => {
+      const ids = snap.docs.map((d) => d.id);
+      if (ids.length) useStore.getState().mergeRemote(null, [], ids);
     }),
   );
   stopFns.push(useStore.subscribe(() => schedulePush(uid)));
@@ -65,6 +73,7 @@ async function push(uid: string) {
 export async function deleteChildRemote(uid: string, childId: string) {
   if (!db) return;
   synced.delete(childId);
+  await setDoc(doc(db, 'families', uid, 'deleted', childId), { t: Date.now() }).catch((e) => console.warn(e));
   await deleteDoc(doc(db, 'families', uid, 'children', childId)).catch((e) => console.warn(e));
 }
 

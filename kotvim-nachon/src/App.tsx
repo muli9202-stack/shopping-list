@@ -6,6 +6,8 @@ import { watchUser } from './services/auth';
 import { startSync, stopSync } from './services/sync';
 import { setVoiceEnabled, stop } from './services/tts';
 import { initAds } from './services/ads';
+import { firebaseEnabled } from './services/firebase';
+import { DeleteAccountScreen } from './screens/DeleteAccountScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { FamilyScreen } from './screens/FamilyScreen';
 import { ParentGateScreen } from './screens/ParentGateScreen';
@@ -27,24 +29,29 @@ export default function App() {
 
   useEffect(() => setVoiceEnabled(voiceOn), [voiceOn]);
 
-  // start on the family page if the parent already chose a mode earlier
+  // demo builds without Firebase keep data on the device; real builds require the parent's login
   useEffect(() => {
-    if (useStore.getState().mode !== 'none') useNav.getState().reset({ name: 'family' });
+    const wantsDelete = window.location.hash === '#delete-account';
+    if (!firebaseEnabled && useStore.getState().mode !== 'none') useNav.getState().reset({ name: 'family' });
+    if (wantsDelete) useNav.getState().go({ name: 'deleteAccount' });
     initAds();
   }, []);
 
-  // cloud account: sign in → sync; sign out → back to login
+  // parent account: sign in → sync and open the family page; sign out → back to login
   useEffect(
     () =>
       watchUser((u) => {
         const st = useStore.getState();
+        const nav = useNav.getState();
         if (u) {
+          // another parent signed in on this device: never mix families
           if (st.uid && st.uid !== u.uid) st.resetAll();
           useStore.getState().setMode('cloud', u.uid, u.email);
           startSync(u.uid);
-          if (useNav.getState().stack[0].name === 'login') useNav.getState().reset({ name: 'family' });
-        } else if (st.mode === 'cloud') {
+          if (nav.stack[0].name === 'login' && nav.stack[nav.stack.length - 1].name !== 'deleteAccount') nav.reset({ name: 'family' });
+        } else if (firebaseEnabled) {
           stopSync();
+          if (nav.stack[nav.stack.length - 1].name !== 'deleteAccount') nav.reset({ name: 'login' });
         }
       }),
     [],
@@ -95,5 +102,7 @@ export default function App() {
       return <WriteScreen />;
     case 'room':
       return <RoomScreen />;
+    case 'deleteAccount':
+      return <DeleteAccountScreen />;
   }
 }

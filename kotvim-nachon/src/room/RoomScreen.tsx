@@ -7,6 +7,7 @@ import { CATS, COLOR_PRICE, FLOOR_COLORS, ITEMS, ITEM_BY_ID, WALL_COLORS, type I
 import { confetti, sfx } from '../ui/effects';
 import { speak } from '../services/tts';
 import type { PlacedItem, RoomState } from '../types';
+import { spendPoints } from '../engine/progress';
 
 const HALF = 2.8; // room is 5.6 x 5.6
 
@@ -247,10 +248,8 @@ export function RoomScreen() {
     const uid = `${id}-${Date.now().toString(36)}`;
     const placed: PlacedItem = { uid, itemId: id, x: (Math.random() - 0.5) * 2, z: (Math.random() - 0.5) * 2, rot: 0 };
     updateActive((c) => ({
-      ...c,
-      points: c.points - def.price,
+      ...spendPoints(c, def.price),
       room: { ...c.room, owned: [...c.room.owned, id], placed: [...c.room.placed, placed] },
-      updatedAt: Date.now(),
     }));
     sfx('coin');
     confetti(70);
@@ -267,7 +266,7 @@ export function RoomScreen() {
       setMsg('חסרות נקודות לצבע חדש');
       return;
     }
-    updateActive((c) => ({ ...c, points: c.points - COLOR_PRICE, room: { ...c.room, [kind]: color }, updatedAt: Date.now() }));
+    updateActive((c) => ({ ...spendPoints(c, COLOR_PRICE), room: { ...c.room, [kind]: color } }));
     sfx('coin');
   };
 

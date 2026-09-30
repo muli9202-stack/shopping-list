@@ -1,5 +1,6 @@
 import type { Child, GameId, MistakeRecord, SkillId, SkillProgress, World } from '../types';
 import { SKILLS } from '../data/skills.ts';
+import { changePoints } from './merge.ts';
 
 export function dayKey(t = Date.now()): string {
   const d = new Date(t);
@@ -70,7 +71,11 @@ export function addMistake(child: Child, m: Omit<MistakeRecord, 't'>): Child {
 }
 
 export function addPoints(child: Child, pts: number): Child {
-  return { ...child, points: child.points + pts, totalEarned: child.totalEarned + Math.max(0, pts), updatedAt: Date.now() };
+  return changePoints(child, pts);
+}
+
+export function spendPoints(child: Child, pts: number): Child {
+  return changePoints(child, -pts);
 }
 
 /** Called when the child starts an activity. Updates the streak and returns a daily surprise bonus (once a day). */

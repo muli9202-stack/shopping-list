@@ -16,7 +16,8 @@ export type Route =
   | { name: 'tricks' }
   | { name: 'practice'; skill: SkillId; game: GameId }
   | { name: 'write' }
-  | { name: 'room' };
+  | { name: 'room' }
+  | { name: 'deleteAccount' };
 
 interface NavState {
   stack: Route[];

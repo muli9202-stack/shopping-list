@@ -84,7 +84,10 @@ export interface Child {
   avatar: string;
   createdAt: number;
   updatedAt: number;
+  /** derived from `wallet` (see engine/merge.ts) */
   points: number;
+  /** per-device earned/spent counters, so points from several devices add up */
+  wallet?: Record<string, { e: number; s: number }>;
   totalEarned: number;
   streak: number;
   lastActiveDay: string;
