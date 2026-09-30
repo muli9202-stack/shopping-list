@@ -10,7 +10,7 @@ import { worldInfo } from './LearnScreen';
 import { Mascot } from '../ui/Mascot';
 import { confetti, sfx } from '../ui/effects';
 import { speak } from '../services/tts';
-import type { GameId, SkillId } from '../types';
+import type { GameId, SkillId, Level } from '../types';
 
 function starsFor(correct: number, total: number) {
   const r = total ? correct / total : 1;
@@ -84,7 +84,7 @@ export function StageScreen() {
 }
 
 /** Free practice from the game box – points per answer, no stage progress. */
-export function PracticeScreen({ skill, game, level }: { skill: SkillId; game: GameId; level: 1 | 2 | 3 }) {
+export function PracticeScreen({ skill, game, level }: { skill: SkillId; game: GameId; level: Level }) {
   const back = useNav((s) => s.back);
   const [done, setDone] = useState<null | { stars: number }>(null);
   const [round, setRound] = useState(0);
@@ -96,7 +96,7 @@ export function PracticeScreen({ skill, game, level }: { skill: SkillId; game: G
           key={round}
           game={game}
           skills={[skill]}
-          rounds={8}
+          rounds={level === 4 ? 12 : 8}
           level={level}
           onFinish={(c, t) => {
             const stars = starsFor(c, t);
@@ -106,7 +106,7 @@ export function PracticeScreen({ skill, game, level }: { skill: SkillId; game: G
               ...addPoints(ch, 10 + stars * 10 * level),
               gameStars: { ...(ch.gameStars ?? {}), [key]: Math.max(ch.gameStars?.[key] ?? 0, stars) },
             }));
-            if (stars >= 2 && level < 3) speak('יש! נפתח שלב חדש!');
+            if (stars >= 2 && level < 4) speak('יש! נפתח שלב חדש!');
             setDone({ stars });
             sfx('win');
             confetti(100);

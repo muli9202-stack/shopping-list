@@ -13,6 +13,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { WORDS, IM_SENTENCES } from '../src/data/words.ts';
+import { DETECTIVE_SENTENCES } from '../src/data/detective.ts';
 import { DICTATIONS, STORY_IDEAS, COMMON_WORDS, SHORT_DICTATIONS } from '../src/data/stories.ts';
 import { SKILLS, FINAL_TO_REGULAR, REGULAR_TO_FINAL } from '../src/data/skills.ts';
 import { TRICKS } from '../src/tricks/tricks.ts';
@@ -95,6 +96,7 @@ for (const [skill, list] of Object.entries(WORDS)) for (const e of list) add(e.w
 for (const s of IM_SENTENCES) for (const t of tokens(s.s.replace('___', s.a))) add(t, 'im_im sentence');
 for (const d of DICTATIONS) for (const s of d.sentences) for (const t of tokens(s)) add(t, `dictation ${d.id}`);
 for (const d of SHORT_DICTATIONS) for (const s of d.sentences) for (const t of tokens(s)) add(t, `short dictation ${d.id}`);
+for (const d of DETECTIVE_SENTENCES) for (const t of tokens(d.s)) add(t, `detective: ${d.s}`);
 for (const list of Object.values(STORY_IDEAS)) for (const i of list) for (const t of tokens(i.text)) add(t, 'story idea');
 for (const t of COMMON_WORDS.split(/\s+/).filter(Boolean)) add(t, 'common words');
 for (const tr of Object.values(TRICKS))

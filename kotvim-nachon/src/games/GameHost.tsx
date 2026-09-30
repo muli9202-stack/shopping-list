@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { speak } from '../services/tts';
-import type { GameId, SkillId } from '../types';
+import type { GameId, SkillId, Level } from '../types';
 import type { GameProps } from './common';
 import { CardsGame } from './CardsGame';
 import { BalloonsGame } from './BalloonsGame';
@@ -16,6 +16,7 @@ import { PathGame } from './PathGame';
 import { FishingGame } from './FishingGame';
 import { WhackGame } from './WhackGame';
 import { TrainGame } from './TrainGame';
+import { DetectiveGame } from './DetectiveGame';
 import { updateActive, useStore } from '../store';
 import { addPoints, recordAnswer } from '../engine/progress';
 import { classifyWord } from '../engine/analyze';
@@ -42,6 +43,7 @@ export const GAME_INFO: Record<GameId, { title: string; emoji: string; color: st
   fishing: { title: 'דיג המילים', emoji: '🎣', color: '#1864ab' },
   whack: { title: 'הקש בשפן', emoji: '🐰', color: '#e8590c' },
   train: { title: 'רכבת המילים', emoji: '🚂', color: '#c2255c' },
+  detective: { title: 'בלש הטעויות', emoji: '🔍', color: '#495057' },
 };
 
 const COMPONENTS: Record<GameId, (p: GameProps) => React.ReactNode> = {
@@ -59,6 +61,7 @@ const COMPONENTS: Record<GameId, (p: GameProps) => React.ReactNode> = {
   fishing: FishingGame,
   whack: WhackGame,
   train: TrainGame,
+  detective: DetectiveGame,
 };
 
 export const POINTS_PER_CORRECT = 10;
@@ -79,7 +82,7 @@ export function GameHost({
   game: GameId;
   skills: SkillId[];
   rounds?: number;
-  level?: 1 | 2 | 3;
+  level?: Level;
   source?: 'game' | 'learn' | 'diagnostic';
   onFinish: (correct: number, total: number) => void;
   title?: string;

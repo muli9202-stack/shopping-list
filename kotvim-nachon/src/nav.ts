@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { GameId, SkillId } from './types';
+import type { GameId, SkillId, Level } from './types';
 
 export type Route =
   | { name: 'login' }
@@ -14,7 +14,7 @@ export type Route =
   | { name: 'stage' }
   | { name: 'trick'; skill: SkillId; back?: boolean }
   | { name: 'tricks' }
-  | { name: 'practice'; skill: SkillId; game: GameId; level?: 1 | 2 | 3 }
+  | { name: 'practice'; skill: SkillId; game: GameId; level?: Level }
   | { name: 'games' }
   | { name: 'review' }
   | { name: 'write' }

@@ -161,6 +161,41 @@ const GENERAL = [
   'מילים שטעיתם בהן חוזרות אליכם אחרי יום, אחרי שלושה ימים ואחרי שבוע – כך הן נשארות בזיכרון.',
 ];
 
+/**
+ * Word families: words built on the same root keep the root letters. Knowing one member tells you
+ * how to write the others – a strategy children can use on words they never practised.
+ */
+const FAMILIES: { root: string; letters: string; words: string[] }[] = [
+  { root: 'כ-ת-ב', letters: 'כ ו-ת', words: ['כתב', 'מכתב', 'לכתוב', 'כתבתי'] },
+  { root: 'ח-ש-ב', letters: 'ח', words: ['מחשב', 'חשבון', 'מחשבה', 'מחשבון'] },
+  { root: 'ש-מ-ח', letters: 'ש שמאלית ו-ח', words: ['שמח', 'שמחה', 'בשמחה'] },
+  { root: 'ש-ח-ק', letters: 'ש שמאלית, ח ו-ק', words: ['משחק', 'שיחק'] },
+  { root: 'ס-פ-ר', letters: 'ס', words: ['ספר', 'סיפור', 'סיפרה'] },
+  { root: 'ד-ב-ר', letters: 'ב', words: ['דיבר', 'דיברנו'] },
+  { root: 'ט-ב-ע', letters: 'ט ו-ע', words: ['טבעת', 'טבעי', 'מטבע', 'טבע'] },
+  { root: 'א-מ-ץ', letters: 'א', words: ['אמיץ', 'מאמץ'] },
+  { root: 'ח-ב-ר', letters: 'ח ו-ב', words: ['חבר', 'לחבר', 'מחברת'] },
+  { root: 'ע-ב-ד', letters: 'ע ו-ב', words: ['עבודה', 'עובדה'] },
+  { root: 'ק-ר-א', letters: 'ק ו-א', words: ['קרא', 'קריאה'] },
+  { root: 'י-צ-א', letters: 'צ ו-א', words: ['יצא', 'תוצאה', 'יצאתי'] },
+  { root: 'ש-א-ל', letters: 'א', words: ['שאלה', 'שאלתי'] },
+  { root: 'ע-ג-ל', letters: 'ע', words: ['עגול', 'עגלה'] },
+];
+
+function familyTips(): Tip[] {
+  const out: Tip[] = [];
+  for (const f of FAMILIES) {
+    if (f.words.length < 2) continue;
+    for (const w of f.words) {
+      const others = f.words.filter((x) => x !== w);
+      const text = `${w} שייכת למשפחה של ${others.join(', ')}. למילים מאותה משפחה יש אותן אותיות שורש, ${f.root}, ולכן בכולן כותבים ${f.letters}.`;
+      for (const [skill, list] of Object.entries(WORDS) as [SkillId, WordEntry[]][])
+        if (list.some((e) => e.w === w)) out.push({ id: `${skill}:${w}:family`, skill, word: w, text });
+    }
+  }
+  return out;
+}
+
 let cache: Tip[] | null = null;
 
 export function allTips(): Tip[] {
@@ -180,6 +215,7 @@ export function allTips(): Tip[] {
     const why = s.a === 'עם' ? IM_WHY['עם'] : IM_WHY[/(שאלתי|יודע|ידעתי|בדקתי|שאלה|מושג)/.test(s.s) ? 'אם:whether' : 'אם:if'];
     out.push({ id: `im_im:${full}`, skill: 'im_im', word: s.a, text: `${full}. ${why}` });
   }
+  out.push(...familyTips());
   GENERAL.forEach((t, i) => out.push({ id: `general:${i}`, skill: 'general', text: t }));
   // one tip per id (a word can appear in several topics)
   const seen = new Set<string>();
@@ -191,7 +227,7 @@ export function allTips(): Tip[] {
 export function nextTip(seen: string[], skill: SkillId, word?: string): Tip | null {
   const s = new Set(seen);
   const tips = allTips().filter((t) => !s.has(t.id));
-  const order = ['rule', 'contrast', 'group'];
+  const order = ['rule', 'family', 'contrast', 'group'];
   if (word) {
     const forWord = tips.filter((t) => t.skill === skill && t.word === word).sort((a, b) => order.indexOf(a.id.split(':').pop()!) - order.indexOf(b.id.split(':').pop()!));
     if (forWord.length) return forWord[0];

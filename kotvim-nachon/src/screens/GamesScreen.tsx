@@ -6,11 +6,11 @@ import { useGuide } from '../ui/guide';
 import { SKILL_BY_ID } from '../data/skills';
 import { eligibleSkills, gamesForSkill, isWeak, weakestSkills } from '../engine/progress';
 import { GAME_INFO } from '../games/GameHost';
-import type { Child, GameId, SkillId } from '../types';
+import type { Child, GameId, SkillId, Level } from '../types';
 import { sfx } from '../ui/effects';
 import { speak } from '../services/tts';
 
-export const LEVEL_NAMES = ['', 'קל', 'בינוני', 'אלופים'];
+export const LEVEL_NAMES = ['', 'קל', 'בינוני', 'אלופים', 'מומחים'];
 
 export function gameKey(game: GameId, skill: SkillId, level: number) {
   return `${game}:${skill}:${level}`;
@@ -99,7 +99,7 @@ export function GamesScreen() {
                 </b>
               </div>
               <div className="row" style={{ marginTop: 10, gap: 8 }}>
-                {[1, 2, 3].map((lv) => {
+                {[1, 2, 3, 4].map((lv) => {
                   const open = levelOpen(child, g, skill, lv);
                   return (
                     <button
@@ -109,7 +109,7 @@ export function GamesScreen() {
                       style={{ background: open ? info.color : '#dee2e6', color: open ? '#fff' : '#868e96', padding: '10px 6px', fontSize: 16, flexDirection: 'column', gap: 2 }}
                       onClick={() => {
                         sfx('pop');
-                        go({ name: 'practice', skill, game: g, level: lv as 1 | 2 | 3 });
+                        go({ name: 'practice', skill, game: g, level: lv as Level });
                       }}
                     >
                       <span>{open ? LEVEL_NAMES[lv] : `🔒 ${LEVEL_NAMES[lv]}`}</span>

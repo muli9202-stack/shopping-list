@@ -15,6 +15,7 @@ import { PRAISE, ENCOURAGE } from '../src/data/phrases.ts';
 import { SKILLS } from '../src/data/skills.ts';
 import { TRICKS } from '../src/tricks/tricks.ts';
 import { allTips } from '../src/data/tips.ts';
+import { DETECTIVE_SENTENCES } from '../src/data/detective.ts';
 import { voiceKey, voiceSegments } from '../src/services/voiceKey.ts';
 
 interface Item {
@@ -50,6 +51,7 @@ for (const s of IM_SENTENCES) add(s.s.replace('___', s.a), { slow: true });
 for (const d of [...DICTATIONS, ...SHORT_DICTATIONS]) d.sentences.forEach((s, i) => add(s, { slow: true, alias: [d.spoken?.[i]] }));
 for (const list of Object.values(STORY_IDEAS)) for (const i of list) add(i.text);
 add('הרעיון לסיפור:');
+for (const d of DETECTIVE_SENTENCES) add(d.s, { slow: true });
 
 // guides and tricks
 for (const g of Object.values(GUIDES)) {

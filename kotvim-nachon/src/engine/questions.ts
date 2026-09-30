@@ -151,3 +151,50 @@ export function wordsFor(skill: SkillId, grade: number, count: number): WordEntr
   const seen = visualOnly ? pool.filter((w) => w.e) : pool;
   return cycle(seen.length >= 4 ? seen : pool, count);
 }
+
+export interface DetectiveItem {
+  skill: SkillId;
+  /** the sentence split into words; `bad` is the index of the misspelled one */
+  words: string[];
+  bad: number;
+  right: string;
+  wrong: string;
+  /** the correct spelling plus two wrong ones, for the "fix it" step */
+  options: string[];
+  sentence: string;
+}
+
+/**
+ * "Mistake detective": a whole sentence with one word misspelled (a real mistake children make,
+ * never another real word). The child finds the word, then chooses how it is really written.
+ */
+export function detectiveItems(skills: SkillId[], grade: number, count: number, sentences: { s: string; g: number }[]): DetectiveItem[] {
+  const bySkill = new Map<string, { skill: SkillId; entry: WordEntry }>();
+  for (const skill of skills)
+    for (const entry of WORDS[skill] ?? []) if (hasDistractor(skill, entry.w) && !bySkill.has(entry.w)) bySkill.set(entry.w, { skill, entry });
+  const fit = sentences.filter((x) => x.g <= grade + 1);
+  const out: DetectiveItem[] = [];
+  const focusFirst = (a: DetectiveItem[]) => a.sort((x, y) => Number(!!focus[y.skill]?.has(y.right)) - Number(!!focus[x.skill]?.has(x.right)));
+  for (const x of shuffle(fit)) {
+    const words = x.s.split(' ');
+    const targets = shuffle(words.map((w, i) => ({ i, core: w.replace(/[.,!?:]/g, '') })).filter((t) => bySkill.has(t.core)));
+    if (!targets.length) continue;
+    const t = targets[0];
+    const { skill, entry } = bySkill.get(t.core)!;
+    const wr = wrongFor(entry, skill)!;
+    const wrong = wr.wrong[0];
+    const punct = words[t.i].slice(t.core.length);
+    const shown = words.slice();
+    shown[t.i] = wrong + punct;
+    out.push({ skill, words: shown, bad: t.i, right: entry.w, wrong, options: shuffle([entry.w, ...wr.wrong.slice(0, 2)]), sentence: x.s });
+  }
+  // אם / עם: the sentences of that topic, with the wrong one of the two
+  if (skills.includes('im_im'))
+    for (const x of shuffle(IM_SENTENCES.filter((y) => y.g <= grade + 1))) {
+      const wrong = x.a === 'אם' ? 'עם' : 'אם';
+      const words = x.s.replace('___', wrong).split(' ');
+      const bad = words.findIndex((w) => w === wrong || w.startsWith(wrong + ','));
+      if (bad >= 0) out.push({ skill: 'im_im', words, bad, right: x.a, wrong, options: shuffle([x.a, wrong]), sentence: x.s.replace('___', x.a) });
+    }
+  return focusFirst(shuffle(out)).slice(0, count);
+}

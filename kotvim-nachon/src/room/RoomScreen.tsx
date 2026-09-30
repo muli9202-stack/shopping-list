@@ -34,18 +34,18 @@ export function RoomScreen() {
     el.appendChild(renderer.domElement);
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(52, 1, 0.1, 100);
-    camera.position.set(8, 6.2, 9);
+    camera.position.set(9.6, 7.4, 10.8);
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.target.set(0, 0.6, 0);
     controls.enablePan = false;
-    controls.minDistance = 3.5;
-    controls.maxDistance = 15;
+    controls.minDistance = 4;
+    controls.maxDistance = 22;
     controls.maxPolarAngle = Math.PI / 2.2;
     controls.minAzimuthAngle = -0.1;
     controls.maxAzimuthAngle = Math.PI / 2 + 0.1;
     controls.enableDamping = true;
 
-    const { floorMat, wallMat } = buildRoom(scene, renderer);
+    const { floorMat, wallMat, dispose: disposeRoom } = buildRoom(scene, renderer);
 
     const selRing = new THREE.Mesh(new THREE.RingGeometry(0.75, 0.85, 40), new THREE.MeshBasicMaterial({ color: '#8338ec', side: THREE.DoubleSide }));
     selRing.rotation.x = -Math.PI / 2;
@@ -193,6 +193,7 @@ export function RoomScreen() {
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
       controls.dispose();
+      disposeRoom();
       renderer.dispose();
       renderer.domElement.remove();
       api.current = null;
@@ -216,7 +217,7 @@ export function RoomScreen() {
       return;
     }
     const uid = `${id}-${Date.now().toString(36)}`;
-    const placed: PlacedItem = { uid, itemId: id, x: (Math.random() - 0.5) * 2, z: (Math.random() - 0.5) * 2, rot: 0 };
+    const placed: PlacedItem = { uid, itemId: id, x: (Math.random() - 0.5) * 5, z: (Math.random() - 0.5) * 5, rot: 0 };
     updateActive((c) => ({
       ...spendPoints(c, def.price),
       room: { ...c.room, owned: [...c.room.owned, id], placed: [...c.room.placed, placed] },

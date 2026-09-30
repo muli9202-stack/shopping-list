@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { SpeakBtn } from '../ui/kit';
-import type { GameId, Question, SkillId } from '../types';
+import type { GameId, Question, SkillId, Level } from '../types';
 import { HelpBtn, Progress } from '../ui/kit';
 import { speak } from '../services/tts';
 import { GUIDES, isFirstTime, speakGuide } from '../ui/guide';
@@ -21,8 +21,8 @@ export interface GameProps {
   skills: SkillId[];
   grade: number;
   rounds: number;
-  /** difficulty 1-3: more options, faster movement, more rounds */
-  level?: 1 | 2 | 3;
+  /** difficulty 1-4: more options, faster movement, harder words */
+  level?: Level;
   /** report every answer – feeds the mistake map */
   report: (skill: SkillId, correct: boolean, expected: string, typed: string) => void;
   finish: (correct: number, total: number) => void;
@@ -291,7 +291,7 @@ export function fitFont(text: string, base: number, min = 20): number {
 }
 
 /** Options for a question at a difficulty level: level 1 keeps it to two choices. */
-export function optionsFor(q: Question, level: 1 | 2 | 3 = 2): string[] {
+export function optionsFor(q: Question, level: Level = 2): string[] {
   if (level === 1 && q.options.length > 2) {
     const wrong = q.options.find((o) => o !== q.answer)!;
     return Math.random() < 0.5 ? [q.answer, wrong] : [wrong, q.answer];
