@@ -3,7 +3,9 @@ import { updateActive, useActiveChild, useStore } from '../store';
 import { useNav } from '../nav';
 import { TopBar, useSpeakOnMount, PRAISE, pick } from '../ui/kit';
 import { Mascot, MascotSays } from '../ui/Mascot';
-import { DICTATIONS, STORY_IDEAS, bandFor, type Dictation } from '../data/stories';
+import { DICTATIONS, SHORT_DICTATIONS, STORY_IDEAS, bandFor, type Dictation } from '../data/stories';
+import { WriteBox } from '../games/common';
+import { isKnownWord } from '../engine/spellcheck';
 import { checkStory } from '../services/ai';
 import { speak, stop } from '../services/tts';
 import { alignTexts, norm, tokenize } from '../engine/analyze';
@@ -18,6 +20,8 @@ interface Token {
   typed: string | null;
   right: string | null;
   ok: boolean;
+  /** the word's correctness is certain (dictation, AI check or a known word) */
+  sure?: boolean;
   skill?: SkillId | 'other';
   pair?: string;
 }
@@ -105,17 +109,21 @@ function StoryMode({ child, onDone }: { child: Child; onDone: (o: Outcome) => vo
     return () => clearTimeout(t);
   }, [idea]);
   const words = tokenize(text).length;
+  // grades 1-2 write one or two sentences, not a whole story
+  const young = child.grade <= 2;
 
   const check = async () => {
     setBusy(true);
     stop();
     speak('ינשופי בודק את הסיפור שלך...');
     const res = await checkStory(text, child.grade);
-    const tokens: Token[] = res.words.map((w) => ({ typed: w.typed, right: w.corrected, ok: w.typed === w.corrected, skill: w.skill, pair: w.pair }));
+    // a word counts as "written correctly" for learning credit only when we are sure: checked by AI or a known word
+    const tokens: Token[] = res.words.map((w) => ({ typed: w.typed, right: w.corrected, ok: w.typed === w.corrected, skill: w.skill, pair: w.pair, sure: res.engine === 'ai' || isKnownWord(w.corrected) }));
     const good = tokens.filter((t) => t.ok).length;
     const unique = new Set(tokens.map((t) => t.right)).size;
     const points = [{ words: good, bonus: good * 5, label: `${good} מילים נכונות` }];
-    if (tokens.length >= 15) points.push({ words: 0, bonus: tokens.length >= 40 ? 40 : 20, label: tokens.length >= 40 ? 'סיפור ארוך במיוחד!' : 'סיפור ארוך' });
+    if (!young && tokens.length >= 15) points.push({ words: 0, bonus: tokens.length >= 40 ? 40 : 20, label: tokens.length >= 40 ? 'סיפור ארוך במיוחד!' : 'סיפור ארוך' });
+    if (young && tokens.length >= 6) points.push({ words: 0, bonus: 15, label: 'כתבת יותר ממשפט!' });
     if (tokens.length >= 10 && unique / tokens.length > 0.75) points.push({ words: 0, bonus: 15, label: 'אוצר מילים עשיר' });
     if (res.creativity) points.push({ words: 0, bonus: res.creativity * 10, label: `יצירתיות ${'✨'.repeat(res.creativity)}` });
     const weakSkills = uniqSkills(tokens);
@@ -150,25 +158,15 @@ function StoryMode({ child, onDone }: { child: Child; onDone: (o: Outcome) => vo
       <button className="btn ghost" onClick={() => setIdx(idx + 1)}>
         🎲 רעיון אחר
       </button>
-      <textarea
-        className="write-area"
-        dir="rtl"
-        placeholder="כתבו כאן את הסיפור..."
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        autoCorrect="off"
-        autoCapitalize="off"
-        spellCheck={false}
-        lang="he"
-      />
+      <WriteBox value={text} onChange={setText} placeholder={young ? 'כתבו כאן משפט אחד או שניים...' : 'כתבו כאן את הסיפור...'} />
       <div className="row">
         <span className="muted grow">{words} מילים {words >= 15 ? '🌟' : words >= 5 ? '👍' : ''}</span>
-        <button className="btn green big" disabled={words < 3} onClick={check}>
+        <button className="btn green big" disabled={words < (young ? 2 : 3)} onClick={check}>
           בדיקה ✨
         </button>
       </div>
       <p className="small muted" style={{ margin: 0 }}>
-        💡 טיפ: סיפור ארוך ועשיר במילים חדשות = יותר נקודות!
+        {young ? '💡 טיפ: כל מילה שכתבתם נכון = נקודות!' : '💡 טיפ: סיפור ארוך ועשיר במילים חדשות = יותר נקודות!'}
       </p>
     </div>
   );
@@ -178,7 +176,8 @@ function DictationMode({ child, onDone }: { child: Child; onDone: (o: Outcome) =
   const band = bandFor(child.grade);
   const done = useMemo(() => new Set(child.writings.filter((w) => w.mode === 'dictation').map((w) => w.text.split('|')[0])), [child.writings]);
   const [d] = useState<Dictation>(() => {
-    const list = DICTATIONS.filter((x) => x.band === band);
+    // grades 1-2 get short dictations (three short sentences)
+    const list = band === 1 ? SHORT_DICTATIONS : DICTATIONS.filter((x) => x.band === band);
     return list.find((x) => !done.has(x.id)) ?? list[Math.floor(Math.random() * list.length)];
   });
   const [i, setI] = useState(-1);
@@ -186,7 +185,8 @@ function DictationMode({ child, onDone }: { child: Child; onDone: (o: Outcome) =
   const [cur, setCur] = useState('');
   const rate = child.grade <= 2 ? 0.6 : child.grade <= 4 ? 0.7 : 0.8;
 
-  const sayCurrent = (idx: number, slower = false) => speak(d.sentences[idx], { force: true, rate: slower ? rate - 0.15 : rate });
+  // speak the vocalized version when we have one, so every word is pronounced correctly
+  const sayCurrent = (idx: number, slower = false) => speak(d.spoken?.[idx] ?? d.sentences[idx], { force: true, rate: slower ? rate - 0.15 : rate });
 
   useEffect(() => {
     if (i >= 0) {
@@ -221,7 +221,7 @@ function DictationMode({ child, onDone }: { child: Child; onDone: (o: Outcome) =
     stop();
     const tokens: Token[] = [];
     d.sentences.forEach((s, k) => {
-      for (const a of alignTexts(s, all[k] ?? '')) tokens.push({ typed: a.typed, right: a.expected, ok: a.ok, skill: a.issues[0]?.skill, pair: a.issues[0]?.pair });
+      for (const a of alignTexts(s, all[k] ?? '')) tokens.push({ typed: a.typed, right: a.expected, ok: a.ok, skill: a.issues[0]?.skill, pair: a.issues[0]?.pair, sure: true });
     });
     const good = tokens.filter((t) => t.ok).length;
     const points = [
@@ -259,20 +259,7 @@ function DictationMode({ child, onDone }: { child: Child; onDone: (o: Outcome) =
           <div key={k} className="grow" style={{ height: 10, borderRadius: 6, background: k < i ? 'var(--green)' : k === i ? 'var(--yellow)' : '#dee2e6' }} />
         ))}
       </div>
-      <textarea
-        key={i}
-        className="write-area"
-        style={{ minHeight: 120 }}
-        dir="rtl"
-        placeholder="כתבו את המשפט ששמעתם..."
-        value={cur}
-        onChange={(e) => setCur(e.target.value)}
-        autoCorrect="off"
-        autoCapitalize="off"
-        spellCheck={false}
-        autoFocus
-        lang="he"
-      />
+      <WriteBox key={i} value={cur} onChange={setCur} placeholder="כתבו את המשפט ששמעתם..." minHeight={90} />
       <button className="btn green big" disabled={!cur.trim()} onClick={next}>
         {i + 1 < d.sentences.length ? 'למשפט הבא ⬅️' : 'סיימתי! בדיקה ✨'}
       </button>
@@ -294,12 +281,20 @@ function localFeedback(tokens: Token[]): string {
   return wrong <= 2 ? `כמעט מושלם! רק ${wrong} טעויות קטנות.${tip}` : `עבודה יפה! תיקנו יחד ${wrong} מילים.${tip}`;
 }
 
-/** Guess which skill a correctly written word exercised (for mastery credit on dictations). */
-function skillOfWord(w: string): SkillId | null {
+/**
+ * Which skill a correctly written word exercised (for learning credit). A word can exercise several;
+ * the one the child is weakest at gets the credit.
+ */
+function skillOfWord(w: string, c: Child): SkillId | null {
   const n = norm(w);
   if (n === 'עם' || n === 'אם') return 'im_im';
-  for (const s of SKILLS) for (const g of s.groups) if (g.some((ch) => ch && n.includes(ch))) return s.id;
-  return null;
+  const cands: SkillId[] = [];
+  if (/[ךםןףץ]$/.test(n)) cands.push('finals');
+  if (n.length > 2 && /[הא]$/.test(n)) cands.push('he_alef_end');
+  for (const s of SKILLS) if (s.id !== 'finals' && s.id !== 'full_spelling' && s.groups.some((g) => g.filter((ch) => ch && n.includes(ch)).length > 0)) cands.push(s.id);
+  const eligible = cands.filter((id) => SKILLS.find((s) => s.id === id)!.minGrade <= c.grade);
+  if (!eligible.length) return null;
+  return eligible.sort((a, b) => (c.skills[a]?.mastery ?? 0.5) - (c.skills[b]?.mastery ?? 0.5))[0];
 }
 
 function ResultView({ outcome, child, onAgain }: { outcome: Outcome; child: Child; onAgain: () => void }) {
@@ -318,11 +313,11 @@ function ResultView({ outcome, child, onAgain }: { outcome: Outcome; child: Chil
         if (sk) n = recordAnswer(n, sk, false);
         n = addMistake(n, { expected: t.right ?? '', typed: t.typed ?? '', skill: t.skill ?? 'other', pair: t.pair, source: outcome.mode === 'story' ? 'write' : 'dictation' });
       }
-      if (outcome.mode === 'dictation')
-        for (const t of outcome.tokens.filter((x) => x.ok)) {
-          const sk = skillOfWord(t.right ?? '');
-          if (sk) n = recordAnswer(n, sk, true);
-        }
+      // correctly written words also count as successful practice (not only mistakes)
+      for (const t of outcome.tokens.filter((x) => x.ok && x.sure)) {
+        const sk = skillOfWord(t.right ?? '', n);
+        if (sk) n = recordAnswer(n, sk, true);
+      }
       const words = outcome.tokens.filter((t) => t.typed).length;
       n = addPoints(n, outcome.total);
       const id = (outcome as Outcome & { dictationId?: string }).dictationId;

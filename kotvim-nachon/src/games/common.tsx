@@ -85,7 +85,7 @@ const KB_ROWS = [
 ];
 
 /** Big on-screen Hebrew keyboard with handwriting-style keys. */
-export function HebrewKeyboard({ onKey, onBack, onSpace, onEnter }: { onKey: (k: string) => void; onBack: () => void; onSpace?: () => void; onEnter?: () => void }) {
+export function HebrewKeyboard({ onKey, onBack, onSpace, onEnter, punctuation }: { onKey: (k: string) => void; onBack: () => void; onSpace?: () => void; onEnter?: () => void; punctuation?: boolean }) {
   const [pressed, setPressed] = useState<string | null>(null);
   const key = (k: string) => {
     setPressed(k);
@@ -119,6 +119,12 @@ export function HebrewKeyboard({ onKey, onBack, onSpace, onEnter }: { onKey: (k:
         </div>
       ))}
       <div style={{ display: 'flex', gap: 6 }}>
+        {punctuation &&
+          ['.', ',', '!', '?'].map((p) => (
+            <button key={p} className="btn white" style={{ padding: '10px 12px', minWidth: 40 }} onClick={() => key(p)}>
+              {p}
+            </button>
+          ))}
         {onEnter && (
           <button className="btn green" style={{ padding: '10px 18px' }} onClick={onEnter}>
             ✔️
@@ -144,4 +150,26 @@ export async function fontReady() {
   } catch {
     // fall back to whatever is available
   }
+}
+
+/**
+ * Writing area with the app's own keyboard. The phone keyboard is not used for writing tests:
+ * its suggestions and auto-correct would fix the child's spelling and hide real mistakes.
+ */
+export function WriteBox({ value, onChange, onEnter, placeholder, minHeight = 110 }: { value: string; onChange: (v: string) => void; onEnter?: () => void; placeholder: string; minHeight?: number }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div className="write-area" style={{ minHeight, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }} aria-label={placeholder}>
+        {value ? value : <span style={{ color: '#adb5bd', fontFamily: 'var(--ui)', fontSize: 20 }}>{placeholder}</span>}
+        <span className="caret">|</span>
+      </div>
+      <HebrewKeyboard
+        punctuation
+        onKey={(k) => onChange((value + k).slice(0, 1200))}
+        onBack={() => onChange(value.slice(0, -1))}
+        onSpace={() => onChange(value.endsWith(' ') || !value ? value : value + ' ')}
+        onEnter={onEnter}
+      />
+    </div>
+  );
 }

@@ -1,7 +1,10 @@
 import type { Question, SkillId } from '../types';
-import { SKILL_BY_ID } from '../data/skills.ts';
 import { IM_SENTENCES, WORDS, type WordEntry } from '../data/words.ts';
-import { diffIndex, misspell, norm } from './analyze.ts';
+import { diffIndex, norm } from './analyze.ts';
+// wrong spellings checked with hspell (scripts/validate-content.ts): never a real Hebrew word
+import DISTRACTORS from '../data/generated/distractors.json' with { type: 'json' };
+
+const DIS = DISTRACTORS as Record<string, Record<string, string[]>>;
 
 export function shuffle<T>(arr: T[]): T[] {
   const a = arr.slice();
@@ -24,20 +27,17 @@ export function poolFor(skill: SkillId, grade: number): WordEntry[] {
 }
 
 function wrongFor(entry: WordEntry, skill: SkillId): { wrong: string[]; index: number } | null {
-  if (entry.x.length) {
-    const idx = diffIndex(entry.w, entry.x[0]);
-    return { wrong: entry.x, index: idx };
-  }
-  const m = misspell(entry.w, skill, SKILL_BY_ID[skill].groups);
-  if (!m) return null;
-  const wrong = [m.wrong];
-  // for 3-way groups add another distractor (כ/ח/ק)
-  if (skill === 'kaf_het_kuf') {
-    const ch = entry.w[m.index];
-    const third = ['כ', 'ח', 'ק'].find((c) => c !== ch && c !== m.wrong[m.index]);
-    if (third && m.index < entry.w.length - 1) wrong.push(entry.w.slice(0, m.index) + third + entry.w.slice(m.index + 1));
-  }
-  return { wrong, index: m.index };
+  const list = shuffle(DIS[skill]?.[entry.w] ?? []);
+  if (!list.length) return null;
+  // prefer distractors that differ in the same position, so "missing letter" questions work
+  const index = diffIndex(entry.w, list[0]);
+  const same = index >= 0 ? list.filter((x) => diffIndex(entry.w, x) === index) : [];
+  return same.length ? { wrong: [...same, ...list.filter((x) => !same.includes(x))], index } : { wrong: list, index: -1 };
+}
+
+/** True if the word has at least one safe wrong spelling (usable in choose / missing-letter games). */
+export function hasDistractor(skill: SkillId, word: string): boolean {
+  return (DIS[skill]?.[word]?.length ?? 0) > 0;
 }
 
 export function makeQuestion(skill: SkillId, entry: WordEntry, kind: 'choose' | 'missing'): Question | null {
@@ -46,7 +46,7 @@ export function makeQuestion(skill: SkillId, entry: WordEntry, kind: 'choose' | 
   const base = { skill, word: entry.w, nikud: entry.n, emoji: entry.e, say: entry.n ?? entry.w };
   if (kind === 'missing' && wr.index >= 0 && wr.wrong.every((x) => x.length === entry.w.length)) {
     const correct = entry.w[wr.index];
-    const letters = Array.from(new Set([correct, ...wr.wrong.map((x) => x[wr.index])]));
+    const letters = Array.from(new Set([correct, ...wr.wrong.filter((x) => diffIndex(entry.w, x) === wr.index).map((x) => x[wr.index])]));
     if (letters.length < 2) return makeQuestion(skill, entry, 'choose');
     return {
       ...base,
@@ -76,12 +76,26 @@ function imQuestions(grade: number): Question[] {
 export function buildQuestions(skill: SkillId, grade: number, count: number, prefer: 'choose' | 'missing' = 'choose'): Question[] {
   if (skill === 'im_im') return cycle(imQuestions(grade), count);
   const qs: Question[] = [];
-  for (const entry of poolFor(skill, grade)) {
+  const pool = poolFor(skill, grade).filter((e) => hasDistractor(skill, e.w));
+  for (const entry of balanceEndings(skill, pool)) {
     const q = makeQuestion(skill, entry, prefer) ?? makeQuestion(skill, entry, 'choose');
     if (q) qs.push(q);
     if (qs.length >= count) break;
   }
   return cycle(qs, count);
+}
+
+/** For ה/א at the end, alternate ה-words and א-words so the answer is not always ה. */
+function balanceEndings(skill: SkillId, pool: WordEntry[]): WordEntry[] {
+  if (skill !== 'he_alef_end') return pool;
+  const he = pool.filter((e) => e.w.endsWith('ה'));
+  const alef = pool.filter((e) => e.w.endsWith('א'));
+  const out: WordEntry[] = [];
+  for (let i = 0; i < Math.max(he.length, alef.length); i++) {
+    if (he[i]) out.push(he[i]);
+    if (alef[i]) out.push(alef[i]);
+  }
+  return out;
 }
 
 function cycle<T>(list: T[], count: number): T[] {

@@ -846,3 +846,16 @@ h1 {
     padding-right: max(16px, calc(50% - 330px));
   }
 }
+
+.caret {
+  color: var(--orange);
+  font-family: var(--ui);
+  animation: caret 1s steps(1) infinite;
+  margin-right: 2px;
+}
+
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}

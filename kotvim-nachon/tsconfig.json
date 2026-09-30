@@ -10,7 +10,8 @@
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "types": ["vite/client", "node"],
-    "noUnusedLocals": true
+    "noUnusedLocals": true,
+    "resolveJsonModule": true
   },
   "include": ["src"]
 }

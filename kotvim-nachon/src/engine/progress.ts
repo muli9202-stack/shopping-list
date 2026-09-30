@@ -48,7 +48,9 @@ export function recordAnswer(
   const sp: SkillProgress = { ...(child.skills[skill] ?? emptySkill()) };
   sp.attempts += 1;
   if (correct) sp.correct += 1;
-  sp.mastery = Math.max(0, Math.min(1, sp.mastery * 0.85 + (correct ? 0.15 : 0)));
+  // learn quickly from the first answers, then settle into a moving average of recent answers
+  const alpha = Math.max(0.12, 0.45 / (1 + (sp.attempts - 1) / 3));
+  sp.mastery = Math.max(0, Math.min(1, sp.mastery * (1 - alpha) + (correct ? alpha : 0)));
   const today = dayKey();
   const days = sp.days.slice();
   const last = days[days.length - 1];
