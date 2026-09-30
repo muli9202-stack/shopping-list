@@ -78,6 +78,16 @@ function mergeMax(a: Record<string, number>, b: Record<string, number>): Record<
   return out;
 }
 
+function mergeReview(a: NonNullable<Child['review']>, b: NonNullable<Child['review']>): NonNullable<Child['review']> {
+  const out = { ...a };
+  for (const [k, v] of Object.entries(b)) {
+    const o = out[k];
+    // the lower box wins: a recent mistake on either device means the word needs more practice
+    if (!o || v.box < o.box || (v.box === o.box && v.due < o.due)) out[k] = v;
+  }
+  return out;
+}
+
 function countMap(list: string[]): Map<string, number> {
   const m = new Map<string, number>();
   list.forEach((x) => m.set(x, (m.get(x) ?? 0) + 1));
@@ -122,6 +132,9 @@ export function mergeChild(a: Child, b: Child): Child {
     writings: union<WritingRecord>(a.writings, b.writings, (w) => String(w.t), (w) => w.t, 60),
     seenTricks: [...new Set([...a.seenTricks, ...b.seenTricks])].sort(),
     gameStars: mergeMax(a.gameStars ?? {}, b.gameStars ?? {}),
+    seenTips: [...new Set([...(a.seenTips ?? []), ...(b.seenTips ?? [])])].sort(),
+    review: mergeReview(a.review ?? {}, b.review ?? {}),
+    learnedWords: Math.max(a.learnedWords ?? 0, b.learnedWords ?? 0),
     diagnosed: a.diagnosed || b.diagnosed,
     worlds,
     streak: lastDay.streak,

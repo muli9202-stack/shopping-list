@@ -11,6 +11,10 @@ let guideDone: Promise<void> = Promise.resolve();
 export function afterGuide(): Promise<void> {
   return guideDone;
 }
+/** Make the next question wait until something else (e.g. a tip) has been said. */
+export function waitBeforeNextQuestion(p: Promise<void>) {
+  guideDone = p;
+}
 
 export interface GameProps {
   /** skills practised in this game (one for a regular world, several for review) */

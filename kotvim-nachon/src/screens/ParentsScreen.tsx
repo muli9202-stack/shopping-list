@@ -67,6 +67,8 @@ function ChildReport({ child }: { child: Child }) {
         <Tile label="תרגולים" value={String(totalAttempts)} />
         <Tile label="ימים ברצף" value={`${child.streak} 🔥`} />
         <Tile label="כיתה" value={GRADES[child.grade - 1]} />
+        <Tile label="מילים בחזרה" value={String(Object.keys(child.review ?? {}).length)} />
+        <Tile label="מילים שנלמדו" value={String(child.learnedWords ?? 0)} />
       </div>
 
       <div className="card">

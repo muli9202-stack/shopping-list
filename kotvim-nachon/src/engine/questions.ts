@@ -27,8 +27,25 @@ export function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+/** The child's due review words come first in every game (spaced repetition). */
+let focus: Partial<Record<SkillId, Set<string>>> = {};
+export function setFocusWords(words: { skill: SkillId; word: string }[]) {
+  focus = {};
+  for (const w of words) (focus[w.skill] ??= new Set()).add(w.word);
+}
+
+function withFocus(skill: SkillId, list: WordEntry[]): WordEntry[] {
+  const f = focus[skill];
+  if (!f?.size) return list;
+  return [...list.filter((e) => f.has(e.w)), ...list.filter((e) => !f.has(e.w))];
+}
+
 /** Words suited to the child's grade: never above grade+1, and for older kids prefer harder words. */
 export function poolFor(skill: SkillId, grade: number): WordEntry[] {
+  return withFocus(skill, poolForGrade(skill, grade));
+}
+
+function poolForGrade(skill: SkillId, grade: number): WordEntry[] {
   const all = WORDS[skill] ?? [];
   const fit = all.filter((w) => w.g <= grade + 1);
   if (grade >= 3) {

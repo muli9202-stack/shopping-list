@@ -16,6 +16,7 @@ import { WORDS, IM_SENTENCES } from '../src/data/words.ts';
 import { DICTATIONS, STORY_IDEAS, COMMON_WORDS, SHORT_DICTATIONS } from '../src/data/stories.ts';
 import { SKILLS, FINAL_TO_REGULAR, REGULAR_TO_FINAL } from '../src/data/skills.ts';
 import { TRICKS } from '../src/tricks/tricks.ts';
+import { allTips } from '../src/data/tips.ts';
 import type { SkillId } from '../src/types.ts';
 
 const CHECK = process.argv.includes('--check');
@@ -103,9 +104,13 @@ for (const tr of Object.values(TRICKS))
     for (const t of tokens(st.say)) if (t.length > 2) add(t, `trick ${tr.skill}`);
   }
 
+// the deliberate wrong form after "ולא" in a tip is not checked
+for (const t of allTips()) for (const w of tokens(t.text.replace(/ולא [\u05D0-\u05EA]+/g, ''))) if (w.length > 2) add(w, `tip ${t.id}`);
+
 const errors: string[] = [];
 const invalidCorrect = hspellInvalid([...correct.keys()]);
-for (const w of invalidCorrect) if (!ALLOW.has(w)) errors.push(`לא תקין לפי hspell: "${w}" (${correct.get(w)})`);
+for (const w of invalidCorrect)
+  if (!ALLOW.has(w) && !('ובהלכמש'.includes(w[0]) && ALLOW.has(w.slice(1)))) errors.push(`לא תקין לפי hspell: "${w}" (${correct.get(w)})`);
 
 // ---------- 2. nikud matches the word ----------
 const skeleton = (s: string) => heb(s).replace(/[וי]/g, '').replace(/[ךםןףץ]/g, (c) => FINAL_TO_REGULAR[c]);

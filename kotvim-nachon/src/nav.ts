@@ -16,6 +16,7 @@ export type Route =
   | { name: 'tricks' }
   | { name: 'practice'; skill: SkillId; game: GameId; level?: 1 | 2 | 3 }
   | { name: 'games' }
+  | { name: 'review' }
   | { name: 'write' }
   | { name: 'room' }
   | { name: 'deleteAccount' };

@@ -22,6 +22,10 @@ import { classifyWord } from '../engine/analyze';
 import { flyPoints } from '../ui/effects';
 import { TrickPlayer } from '../tricks/TrickPlayer';
 import { TRICKS } from '../tricks/tricks';
+import { nextTip, type Tip } from '../data/tips';
+import { dueWords, reviewAnswer } from '../engine/review';
+import { setFocusWords } from '../engine/questions';
+import { waitBeforeNextQuestion } from './common';
 
 export const GAME_INFO: Record<GameId, { title: string; emoji: string; color: string }> = {
   cards: { title: 'קלפי קסם', emoji: '🃏', color: '#8338ec' },
@@ -82,7 +86,13 @@ export function GameHost({
 }) {
   const liveGrade = useStore((s) => s.children.find((c) => c.id === s.activeChildId)?.grade ?? 1);
   // freeze inputs for the whole game so store updates (points) never regenerate the questions
-  const [frozen] = useState(() => ({ skills, grade: liveGrade }));
+  const [frozen] = useState(() => {
+    // the child's own mistake words that are due for review come first in the questions
+    const child = useStore.getState().children.find((c) => c.id === useStore.getState().activeChildId);
+    setFocusWords(child ? dueWords(child) : []);
+    return { skills, grade: liveGrade };
+  });
+  const [tip, setTip] = useState<Tip | null>(null);
   const wrongs = useRef<Record<string, number>>({});
   const shown = useRef<Set<string>>(new Set());
   const [trick, setTrick] = useState<SkillId | null>(null);
@@ -102,6 +112,7 @@ export function GameHost({
       const issue = correct ? undefined : classifyWord(expected, typed)[0];
       updateActive((c) => {
         let next = recordAnswer(c, skill, correct, correct ? undefined : { expected, typed, pair: issue?.pair, skill: issue?.skill ?? skill, source });
+        next = reviewAnswer(next, skill, expected, correct);
         if (correct && source !== 'diagnostic') next = addPoints(next, POINTS_PER_CORRECT);
         return next;
       });
@@ -110,9 +121,27 @@ export function GameHost({
         lostRef.current += 1;
         setLost(lostRef.current);
         wrongs.current[skill] = (wrongs.current[skill] ?? 0) + 1;
-        if (wrongs.current[skill] === 2 && !shown.current.has(skill) && TRICKS[skill]) {
+        const child = useStore.getState().children.find((c) => c.id === useStore.getState().activeChildId);
+        if (wrongs.current[skill] === 2 && !shown.current.has(skill) && TRICKS[skill] && !child?.seenTricks.includes(skill)) {
+          // the animated trick for this topic, the first time the child struggles with it
           shown.current.add(skill);
           setTimeout(() => setTrick(skill), 2500);
+        } else if (child) {
+          // otherwise a new tip about exactly this word – never one the child has heard before
+          const t = nextTip(child.seenTips ?? [], skill, expected);
+          if (t) {
+            updateActive((c) => ({ ...c, seenTips: [...(c.seenTips ?? []), t.id], updatedAt: Date.now() }));
+            const said = new Promise<void>((resolve) =>
+              setTimeout(() => {
+                setTip(t);
+                speak(t.text, { force: true }).then(() => {
+                  setTimeout(() => setTip((cur) => (cur?.id === t.id ? null : cur)), 700);
+                  resolve();
+                });
+              }, 1900),
+            );
+            waitBeforeNextQuestion(said);
+          }
         }
       }
     },
@@ -134,6 +163,12 @@ export function GameHost({
               {k < hearts - lost ? '❤️' : '🤍'}
             </span>
           ))}
+        </div>
+      )}
+      {tip && (
+        <div className="tip-card" role="status" onClick={() => setTip(null)}>
+          <span style={{ fontSize: 34 }}>💡</span>
+          <span className="grow">{tip.text}</span>
         </div>
       )}
       <div key={attempt}>{game === 'listen' && title ? <ListenGame {...props} title={title} /> : <Comp {...props} />}</div>

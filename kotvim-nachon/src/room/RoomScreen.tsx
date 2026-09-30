@@ -8,9 +8,9 @@ import { CATS, COLOR_PRICE, FLOOR_COLORS, ITEMS, ITEM_BY_ID, WALL_COLORS, type I
 import { confetti, sfx } from '../ui/effects';
 import { speak } from '../services/tts';
 import type { PlacedItem, RoomState } from '../types';
+import { HALF, buildRoom } from './roomScene';
 import { spendPoints } from '../engine/progress';
 
-const HALF = 2.8; // room is 5.6 x 5.6
 
 /** The child's own 3D room: rotate the view, buy things with points, place and move them. */
 export function RoomScreen() {
@@ -33,49 +33,19 @@ export function RoomScreen() {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     el.appendChild(renderer.domElement);
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color('#fff4e6');
-    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
-    camera.position.set(5.5, 5.2, 6.5);
+    const camera = new THREE.PerspectiveCamera(52, 1, 0.1, 100);
+    camera.position.set(8, 6.2, 9);
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.target.set(0, 0.6, 0);
     controls.enablePan = false;
-    controls.minDistance = 4;
-    controls.maxDistance = 11;
+    controls.minDistance = 3.5;
+    controls.maxDistance = 15;
     controls.maxPolarAngle = Math.PI / 2.2;
     controls.minAzimuthAngle = -0.1;
     controls.maxAzimuthAngle = Math.PI / 2 + 0.1;
     controls.enableDamping = true;
 
-    scene.add(new THREE.HemisphereLight(0xffffff, 0xffe0c0, 1.3));
-    const sun = new THREE.DirectionalLight(0xffffff, 1.8);
-    sun.position.set(4, 7, 5);
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(1024, 1024);
-    Object.assign(sun.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4 });
-    scene.add(sun);
-
-    const floorMat = new THREE.MeshStandardMaterial({ color: '#e6c9a8', roughness: 0.8 });
-    const floor = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2, 0.1, HALF * 2), floorMat);
-    floor.position.y = -0.05;
-    floor.receiveShadow = true;
-    scene.add(floor);
-    const wallMat = new THREE.MeshStandardMaterial({ color: '#ffe8cc', roughness: 0.9 });
-    const back = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2, 3, 0.1), wallMat);
-    back.position.set(0, 1.5, -HALF - 0.05);
-    back.receiveShadow = true;
-    const left = new THREE.Mesh(new THREE.BoxGeometry(0.1, 3, HALF * 2), wallMat);
-    left.position.set(-HALF - 0.05, 1.5, 0);
-    left.receiveShadow = true;
-    scene.add(back, left);
-    // window with sky + a shelf with the child's name star
-    const win = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1), new THREE.MeshBasicMaterial({ color: '#a5d8ff' }));
-    win.position.set(0.8, 1.8, -HALF + 0.01);
-    const frame = new THREE.Mesh(new THREE.BoxGeometry(1.55, 1.15, 0.05), new THREE.MeshStandardMaterial({ color: '#ffffff' }));
-    frame.position.set(0.8, 1.8, -HALF);
-    scene.add(frame, win);
-    const sunInWindow = new THREE.Mesh(new THREE.CircleGeometry(0.15, 24), new THREE.MeshBasicMaterial({ color: '#ffd43b' }));
-    sunInWindow.position.set(1.2, 2.05, -HALF + 0.02);
-    scene.add(sunInWindow);
+    const { floorMat, wallMat } = buildRoom(scene, renderer);
 
     const selRing = new THREE.Mesh(new THREE.RingGeometry(0.75, 0.85, 40), new THREE.MeshBasicMaterial({ color: '#8338ec', side: THREE.DoubleSide }));
     selRing.rotation.x = -Math.PI / 2;
@@ -211,7 +181,6 @@ export function RoomScreen() {
         selRing.position.z = s.position.z;
         selRing.scale.setScalar(1 + Math.sin(t * 5) * 0.05);
       }
-      sunInWindow.position.y = 2.05 + Math.sin(t * 0.3) * 0.08;
       renderer.render(scene, camera);
       raf = requestAnimationFrame(loop);
     };

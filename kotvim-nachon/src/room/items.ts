@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 
 export type ItemCat = 'furniture' | 'animals' | 'toys' | 'decor';
 
@@ -13,8 +14,10 @@ export interface ShopItem {
 
 const mat = (color: number | string, rough = 0.6) => new THREE.MeshStandardMaterial({ color, roughness: rough });
 
+/** Furniture parts have softly rounded edges, like real furniture. */
 function box(w: number, h: number, d: number, color: number | string, x = 0, y = 0, z = 0) {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(color));
+  const r = Math.min(0.05, Math.min(w, h, d) / 3);
+  const m = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 3, r), mat(color));
   m.position.set(x, y, z);
   m.castShadow = true;
   m.receiveShadow = true;

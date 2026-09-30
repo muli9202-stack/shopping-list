@@ -30,8 +30,10 @@ MODELS = VOICE / "models"
 CACHE = VOICE / "cache"
 OUT = ROOT / "public" / "voice"
 PACK_BYTES = 6_000_000
-ENGINE = "phonikud-piper-v1"  # bump to re-record everything
+ENGINE = "phonikud-piper-v2"  # bump to re-record everything
 SPEED = {"n": 1.12, "s": 1.6}  # length_scale: normal / slow (dictation)
+# a single word alone is read a little slower, so short words stay clear
+WORD_SPEED = {"n": 1.3, "s": 1.75}
 
 # How letter names are pronounced when a text talks about single letters ("ט או ת")
 LETTER_IPA = {
@@ -39,6 +41,11 @@ LETTER_IPA = {
     "ח": "χˈet", "ט": "tˈet", "י": "jˈud", "כ": "kˈaf", "ך": "kˈaf sofˈit", "ל": "lˈamed", "מ": "mˈem",
     "ם": "mˈem sofˈit", "נ": "nˈun", "ן": "nˈun sofˈit", "ס": "sˈameχ", "ע": "ˈajin", "פ": "pˈe",
     "ף": "pˈe sofˈit", "צ": "tsˈadi", "ץ": "tsˈadi sofˈit", "ק": "kˈuf", "ר": "ʁˈeʃ", "ש": "ʃˈin", "ת": "tˈav",
+}
+# Pronunciations the models get wrong (found with scripts/voice-check.py), in Phonikud IPA
+PHONEME_FIX = {
+    "כובע": "kˈovaʔ",
+    "רחוב": "ʁeχˈov",
 }
 PREFIX_IPA = {"ו": "ve", "ה": "ha", "ב": "be", "ל": "le", "מ": "me", "ש": "ʃe", "כ": "ke"}
 NIKUD = re.compile(r"[֑-ׇ]")
@@ -94,6 +101,8 @@ def text_phonemes(text: str) -> str:
 
 def item_phonemes(item) -> str:
     text = item["text"]
+    if text in PHONEME_FIX:
+        return PHONEME_FIX[text]
     if item.get("nikud"):
         # single word: the model reads the full spelling (good stress); our nikud fixes the vowels if they differ
         auto = phonemize(nik.add_diacritics(text))
@@ -107,21 +116,27 @@ def item_phonemes(item) -> str:
 
 
 def trim(samples: np.ndarray, sr: int) -> np.ndarray:
-    thr = 0.01
+    # gentle: soft first sounds (b, k, t) must not be cut off
+    thr = 0.004
     idx = np.where(np.abs(samples) > thr)[0]
     if len(idx) == 0:
         return samples
-    a = max(0, idx[0] - int(0.03 * sr))
-    b = min(len(samples), idx[-1] + int(0.08 * sr))
-    return samples[a:b]
+    a = max(0, idx[0] - int(0.1 * sr))
+    b = min(len(samples), idx[-1] + int(0.12 * sr))
+    pad = np.zeros(int(0.05 * sr), dtype=samples.dtype)
+    return np.concatenate([pad, samples[a:b], pad])
 
 
-def record(ph: str, speed: str) -> bytes:
-    key = hashlib.sha256(f"{ENGINE}|{speed}|{ph}".encode()).hexdigest()[:24]
+def record(ph: str, speed: str, word: bool = False) -> bytes:
+    key = hashlib.sha256(f"{ENGINE}|{speed}|{word}|{ph}".encode()).hexdigest()[:24]
     f = CACHE / f"{key}.mp3"
     if f.exists():
         return f.read_bytes()
-    samples, sr = piper.create(ph, is_phonemes=True, length_scale=SPEED[speed], noise_scale=0.6, noise_w=0.9)
+    scale = (WORD_SPEED if word else SPEED)[speed]
+    # a word alone ends like a sentence (falling tone) so it sounds complete
+    if word and not ph.rstrip().endswith((".", "!", "?")):
+        ph = ph + "."
+    samples, sr = piper.create(ph, is_phonemes=True, length_scale=scale, noise_scale=0.55, noise_w=0.8)
     samples = np.clip(samples * 2.0, -1, 1)
     samples = trim(samples, sr)
     buf = io.BytesIO()
@@ -144,7 +159,7 @@ def main():
         phon_log[item["text"]] = ph
         entry = []
         for speed in ["n", "s"] if item.get("slow") else ["n"]:
-            data = record(ph, speed)
+            data = record(ph, speed, word=bool(item.get("nikud")) or " " not in item["text"].strip())
             if len(packs[-1]) + len(data) > PACK_BYTES:
                 packs.append(bytearray())
             entry.append([len(packs) - 1, len(packs[-1]), len(data)])

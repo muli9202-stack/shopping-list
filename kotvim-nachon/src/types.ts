@@ -105,6 +105,11 @@ export interface Child {
   room: RoomState;
   writings: WritingRecord[];
   seenTricks: SkillId[];
+  /** tips the child has already heard – a tip is never repeated */
+  seenTips?: string[];
+  /** spaced-repetition boxes of the child's own mistake words (engine/review.ts) */
+  review?: Record<string, { skill: SkillId; word: string; box: number; due: string }>;
+  learnedWords?: number;
   /** best stars per catalog game, key = `${game}:${skill}:${level}` */
   gameStars?: Record<string, number>;
   aiSummary?: { t: number; text: string };

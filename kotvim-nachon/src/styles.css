@@ -880,3 +880,22 @@ h1 {
     transform: translate(-50%, -18px) scale(1.1);
   }
 }
+
+.tip-card {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 40;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: #fff9db;
+  border: 3px solid #fcc419;
+  border-radius: 22px;
+  padding: 12px 14px;
+  font-size: 18px;
+  line-height: 1.5;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  animation: popIn 0.35s cubic-bezier(0.2, 1.6, 0.4, 1);
+}

@@ -86,3 +86,29 @@ test('without a Hebrew voice every question can be solved by looking', () => {
   }
   setVisualOnly(false);
 });
+
+import { reviewAnswer, dueWords } from './review.ts';
+import { allTips, nextTip } from '../data/tips.ts';
+
+test('a mistake word comes back and leaves after being answered right over time', () => {
+  let c = newChild('נ', 2, 'x');
+  c = reviewAnswer(c, 'alef_ayin', 'עוגה', false);
+  assert.equal(dueWords(c).length, 1);
+  c = reviewAnswer(c, 'alef_ayin', 'עוגה', true);
+  assert.equal(dueWords(c).length, 0); // next review tomorrow
+  for (let k = 0; k < 5; k++) c = reviewAnswer(c, 'alef_ayin', 'עוגה', true);
+  assert.equal(Object.keys(c.review ?? {}).length, 0);
+  assert.equal(c.learnedWords, 1);
+});
+
+test('more than 1000 unique tips, never repeated', () => {
+  const tips = allTips();
+  assert.ok(tips.length >= 1000, `only ${tips.length}`);
+  assert.equal(new Set(tips.map((t) => t.id)).size, tips.length);
+  const seen: string[] = [];
+  for (let k = 0; k < 40; k++) {
+    const t = nextTip(seen, 'alef_ayin', 'עוגה');
+    assert.ok(t && !seen.includes(t.id));
+    seen.push(t!.id);
+  }
+});

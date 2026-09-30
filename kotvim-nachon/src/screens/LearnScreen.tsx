@@ -8,6 +8,7 @@ import { SKILL_BY_ID } from '../data/skills';
 import { STAGES_PER_WORLD, ensureWorld, stageAt } from '../engine/progress';
 import { GAME_INFO } from '../games/GameHost';
 import { catalogSize } from './GamesScreen';
+import { dueWords } from '../engine/review';
 import type { World } from '../types';
 import { sfx } from '../ui/effects';
 
@@ -51,6 +52,15 @@ export function LearnScreen() {
   return (
     <div className="screen" style={{ background: 'linear-gradient(#e7f5ff, #fff9db)' }}>
       <TopBar title="🗺️ מפת הלמידה" guide="learn" />
+      {dueWords(child).length > 0 && (
+        <button className="big-square" style={{ background: 'linear-gradient(135deg,#0ca678,#20c997)', minHeight: 96, marginBottom: 12 }} onClick={() => go({ name: 'review' })}>
+          <span className="emoji" style={{ fontSize: 50 }}>🔁</span>
+          <span className="grow">
+            חזרה חכמה
+            <span className="sub">{dueWords(child).length} מילים שלך מחכות לחזרה היום</span>
+          </span>
+        </button>
+      )}
       <button className="big-square" style={{ background: 'linear-gradient(135deg,#8338ec,#ff5d8f)', minHeight: 110, marginBottom: 6 }} onClick={() => go({ name: 'games' })}>
         <span className="emoji" style={{ fontSize: 56 }}>🎲</span>
         <span className="grow">

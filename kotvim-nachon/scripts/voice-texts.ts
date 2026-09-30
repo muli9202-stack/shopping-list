@@ -14,6 +14,7 @@ import { GUIDES } from '../src/data/guides.ts';
 import { PRAISE, ENCOURAGE } from '../src/data/phrases.ts';
 import { SKILLS } from '../src/data/skills.ts';
 import { TRICKS } from '../src/tricks/tricks.ts';
+import { allTips } from '../src/data/tips.ts';
 import { voiceKey, voiceSegments } from '../src/services/voiceKey.ts';
 
 interface Item {
@@ -56,6 +57,9 @@ for (const g of Object.values(GUIDES)) {
   addWithSegments(g.short);
 }
 for (const t of Object.values(TRICKS)) for (const st of t.steps) addWithSegments(st.say);
+
+// the tips library
+for (const t of allTips()) add(t.text);
 
 // reactions and the fixed fragments games combine with a word
 for (const p of [...PRAISE, ...ENCOURAGE]) addWithSegments(p);
