@@ -35,3 +35,15 @@ service cloud.firestore {
 ```
 
 בדיקה מקומית מול האמולטור: `http://localhost:4173/?firestoreEmulator=127.0.0.1:8085`.
+
+## מדריך ״מאסטר קוד״
+
+מדריך אינטראקטיבי בעברית ללימוד תכנות, אפליקציות, משחקים ו-AI, עם מעבדות חיות ומילון מונחים.
+נפתח בכתובת `/guide.html` של האתר (הקובץ `public/guide.html`).
+
+המקור נמצא בתיקייה `guide/` (פרקים ב-`guide/chapters`, מילון ב-`guide/glossary-*.js`, מעבדות ב-`guide/app.js`).
+אחרי שינוי, בונים מחדש:
+
+```bash
+node guide/build.mjs
+```

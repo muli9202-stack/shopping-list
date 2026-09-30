@@ -1,0 +1,91 @@
+<section class="chapter" id="tools" data-title="ארגז הכלים של מתכנת" data-part="שלב 3 · בנייה">
+  <div class="chapter-head">
+    <div class="eyebrow">פרק 8 · עורך קוד, טרמינל, Git ו-GitHub</div>
+    <h1>ארגז הכלים של מתכנת</h1>
+    <p>נגר צריך פטיש ומסור. מתכנת צריך עורך קוד, טרמינל ו-Git. כל הכלים בפרק הזה חינמיים.</p>
+  </div>
+
+  <h2>1. עורך קוד: VS Code</h2>
+  <p>אפשר לכתוב קוד גם בפנקס רשימות, אבל זה כמו לצייר עם מקל. <strong>VS Code</strong> (<em>Visual Studio Code</em>, של מיקרוסופט, חינמי) הוא עורך הקוד הפופולרי ביותר בעולם. הוא:</p>
+  <ul>
+    <li>צובע את הקוד בצבעים לפי התפקיד (<span class="t">Syntax Highlighting</span>, <strong>הדגשת תחביר</strong>), כך שקל לקרוא.</li>
+    <li>משלים לך מילים תוך כדי הקלדה (<span class="t">Autocomplete</span>, <strong>השלמה אוטומטית</strong>).</li>
+    <li>מסמן שגיאות בקו אדום עוד לפני שהרצת.</li>
+    <li>מאפשר להוסיף <span class="t">Extension</span> (<strong>תוסף</strong>) לכל דבר: שפות, עיצובים, ועוזרי AI.</li>
+  </ul>
+  <p>תוספים מומלצים למתחיל: <strong>Live Server</strong> (פותח את האתר בדפדפן ומרענן אוטומטית בכל שמירה), <strong>Prettier</strong> (מסדר את הקוד יפה), ו-<strong>Hebrew Language Pack</strong> אם אתה רוצה תפריטים בעברית. עורכים נוספים: <strong>Cursor</strong> ו-<strong>Windsurf</strong> (עורכים מבוססי VS Code עם AI מובנה), ו-<strong>JetBrains</strong> (תוכנות מקצועיות כמו WebStorm, PyCharm ו-Rider).</p>
+  <p>אם אתה צריך לעבוד רק מהדפדפן, יש עורכים אונליין: <strong>CodePen</strong> (מושלם לניסויי HTML/CSS/JS), <strong>Replit</strong> ו-<strong>StackBlitz</strong>.</p>
+  <div class="box tip"><b>קיצורי מקלדת שכל מתכנת יודע</b>
+    <ul>
+      <li><kbd>Ctrl</kbd>+<kbd>S</kbd> שמירה (תעשה את זה כל הזמן!)</li>
+      <li><kbd>Ctrl</kbd>+<kbd>Z</kbd> ביטול / <kbd>Ctrl</kbd>+<kbd>Y</kbd> חזרה</li>
+      <li><kbd>Ctrl</kbd>+<kbd>C</kbd> העתק / <kbd>Ctrl</kbd>+<kbd>V</kbd> הדבק / <kbd>Ctrl</kbd>+<kbd>X</kbd> גזור</li>
+      <li><kbd>Ctrl</kbd>+<kbd>F</kbd> חיפוש בקובץ</li>
+      <li><kbd>Ctrl</kbd>+<kbd>/</kbd> להפוך שורה להערה (ב-VS Code)</li>
+      <li>במק מחליפים <kbd>Ctrl</kbd> ב-<kbd>Cmd</kbd>.</li>
+    </ul>
+  </div>
+
+  <h2>2. הטרמינל: לדבר עם המחשב בטקסט</h2>
+  <p>ב<span class="t">Terminal</span> (<strong>טרמינל</strong>, נקרא גם שורת פקודה, <span class="t">Command Line</span> או <span class="t">CLI</span>) אתה כותב פקודות בטקסט במקום ללחוץ עם העכבר. זה נראה מפחיד כמו בסרטים של האקרים, אבל זה פשוט מאוד:</p>
+  <pre><code>cd projects        <span class="c"># Change Directory: היכנס לתיקייה projects</span>
+ls                 <span class="c"># List: הצג מה יש בתיקייה (בווינדוס: dir)</span>
+mkdir my-game      <span class="c"># Make Directory: צור תיקייה חדשה</span>
+cd ..              <span class="c"># חזור תיקייה אחת למעלה</span>
+node app.js        <span class="c"># הרץ קובץ JavaScript עם Node</span>
+npm install three  <span class="c"># התקן את ספריית Three.js לפרויקט</span></code></pre>
+  <p>למה צריך את זה? כי הרבה כלים של מתכנתים (Git, npm, Node, Python) עובדים בעיקר מהטרמינל. ב-VS Code יש טרמינל מובנה: <kbd>Ctrl</kbd>+<kbd>`</kbd>.</p>
+
+  <h2>3. Git: מכונת זמן לקוד שלך</h2>
+  <p>דמיין שאתה עובד על משחק שבוע שלם, ואז משנה משהו והכול נשבר. אתה לא זוכר מה שינית. אסון. בשביל זה יש <span class="t">Git</span> (גיט): תוכנה ששומרת <strong>היסטוריה של כל שינוי</strong> בקוד. כמו ״נקודות שמירה״ במשחק.</p>
+  <div class="table-wrap"><table>
+    <tr><th>מונח</th><th>מה זה</th><th>במשחק זה...</th></tr>
+    <tr><td><span class="t">Repository</span> (ריפו)</td><td>תיקיית הפרויקט עם כל ההיסטוריה שלה</td><td>קובץ השמירה של כל המשחק</td></tr>
+    <tr><td><span class="t">Commit</span> (קומיט)</td><td>״תמונת מצב״ של הקוד עם הודעה שמסבירה מה שינית</td><td>נקודת שמירה</td></tr>
+    <tr><td><span class="t">Branch</span> (ענף)</td><td>גרסה מקבילה של הקוד, לנסות משהו חדש בלי לשבור את המקורי</td><td>לשמור בסלוט אחר ולנסות דרך מסוכנת</td></tr>
+    <tr><td><span class="t">Merge</span> (מיזוג)</td><td>לאחד ענף בחזרה לקוד הראשי</td><td>הדרך המסוכנת הצליחה, ממשיכים ממנה</td></tr>
+    <tr><td><span class="t">Push</span> / <span class="t">Pull</span></td><td>לשלוח את השינויים לשרת / למשוך שינויים מהשרת</td><td>סנכרון עם הענן</td></tr>
+  </table></div>
+  <pre><code>git init                         <span class="c"># הפוך את התיקייה לריפו</span>
+git add .                        <span class="c"># סמן את כל השינויים לשמירה</span>
+git commit -m "הוספתי קפיצה"     <span class="c"># שמור נקודת שמירה עם הודעה</span>
+git log                          <span class="c"># הצג את היסטוריית השמירות</span>
+git push                         <span class="c"># שלח ל-GitHub</span></code></pre>
+
+  <h2>4. GitHub: הרשת החברתית של הקוד</h2>
+  <p><span class="t">GitHub</span> (גיט-האב) הוא אתר שבו שומרים ריפו של Git בענן. יש בו מעל 100 מיליון מפתחים. שם:</p>
+  <ul>
+    <li>הקוד שלך מגובה, גם אם המחשב יתקלקל.</li>
+    <li>אפשר לעבוד עם חברים על אותו פרויקט. כשמישהו רוצה להוסיף שינוי, הוא פותח <span class="t">Pull Request</span> (<strong>בקשת מיזוג</strong>), ואחרים בודקים את הקוד לפני שהוא נכנס. הבדיקה הזאת נקראת <span class="t">Code Review</span>.</li>
+    <li>יש מיליוני פרויקטים של <span class="t">Open Source</span> (<strong>קוד פתוח</strong>): קוד שכל אחד יכול לקרוא, ללמוד ממנו ולשפר. Linux, VS Code, Godot ו-Three.js הם כולם קוד פתוח.</li>
+    <li>הפרופיל שלך הוא כמו תיק עבודות. כשתחפש עבודה בעתיד, מעסיקים יסתכלו עליו.</li>
+  </ul>
+  <p>יש גם <strong>GitHub Desktop</strong>, תוכנה עם כפתורים, למי שלא רוצה להתחיל עם הטרמינל.</p>
+
+  <h2>5. כלי המפתחים של הדפדפן</h2>
+  <p>לחץ <kbd>F12</kbd> בכל אתר, ותקבל את <span class="t">DevTools</span> (<strong>כלי מפתחים</strong>). אפשר:</p>
+  <ul>
+    <li>לראות את ה-HTML וה-CSS של כל אתר, ולשנות אותם בזמן אמת (רק אצלך, בלי לפגוע באתר).</li>
+    <li>לראות שגיאות ב-Console.</li>
+    <li>לראות כל בקשה שהאתר שולח לשרת (לשונית Network).</li>
+    <li>לעצור את הקוד באמצע ריצה ולבדוק ערכים של משתנים. זה נקרא <span class="t">Breakpoint</span> (<strong>נקודת עצירה</strong>), ו-VS Code יודע לעשות את זה גם כן. זה כלי הדיבאגינג הכי חזק שיש.</li>
+  </ul>
+
+  <h2>6. איפה מוצאים תשובות</h2>
+  <ul>
+    <li><strong>MDN Web Docs</strong> (developer.mozilla.org): התיעוד הכי טוב ל-HTML, CSS ו-JavaScript. יש חלקים שתורגמו לעברית, ועם AI אפשר לתרגם את השאר. <span class="t">Documentation</span> (<strong>תיעוד</strong>) זה ״הוראות השימוש״ של כל שפה וכלי.</li>
+    <li><strong>Stack Overflow</strong>: אתר שאלות ותשובות של מתכנתים. כמעט כל שגיאה שתקבל, מישהו כבר שאל עליה שם.</li>
+    <li><strong>עוזרי AI</strong>: Claude, ChatGPT, Gemini. תדביק שגיאה ותבקש הסבר בעברית.</li>
+    <li><strong>יוטיוב</strong>: יש המון מדריכים, גם בעברית, על כל נושא.</li>
+    <li><strong>קמפוס IL</strong> (campus.gov.il): קורסים חינמיים בעברית, כולל תכנות ו-Python.</li>
+  </ul>
+
+  <div class="box idea"><b>שיטת ״הברווז״</b><p>מתכנתים מקצועיים באמת עושים את זה: כשאתה תקוע על באג, הסבר את הקוד שלך, שורה אחרי שורה, בקול רם, לברווז גומי (או לכל חפץ). בערך בחצי מהמקרים, תוך כדי ההסבר, תבין לבד איפה הטעות. זה נקרא <span class="t">Rubber Duck Debugging</span>.</p></div>
+
+  <div class="quiz"><script type="application/json">[
+    {"q":"מה זה Commit ב-Git?","o":["מחיקת קוד","נקודת שמירה של הקוד עם הודעה","סוג של באג","שם של עורך קוד"],"a":1},
+    {"q":"למה משמש Branch?","o":["לנסות שינוי בגרסה מקבילה בלי לשבור את הקוד הראשי","לחבר את המחשב לאינטרנט","לצייר גרפיקה","להתקין משחקים"],"a":0},
+    {"q":"מה עושה הפקודה cd בטרמינל?","o":["מוחקת קובץ","נכנסת לתיקייה","מדפיסה דף","צורבת דיסק"],"a":1},
+    {"q":"מה זה Open Source?","o":["קוד שכל אחד יכול לקרוא, ללמוד ולשפר","קוד סודי","משחק חינמי","וירוס"],"a":0}
+  ]</script></div>
+</section>

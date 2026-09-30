@@ -1,0 +1,137 @@
+<section class="chapter" id="web" data-title="בניית אתרים" data-part="שלב 3 · בנייה">
+  <div class="chapter-head">
+    <div class="eyebrow">פרק 6 · HTML, CSS, JavaScript ואיך מעלים אתר לאוויר</div>
+    <h1>בניית אתרים</h1>
+    <p>כל אתר בעולם, מגוגל ועד יוטיוב, בנוי משלוש שפות בלבד. אחרי הפרק הזה תוכל לבנות אתר משלך ולשלוח את הקישור לחברים.</p>
+  </div>
+
+  <h2>שלושת השכבות של כל אתר</h2>
+  <p>הדרך הכי קלה להבין אתר היא לחשוב על <strong>בית</strong>:</p>
+  <div class="table-wrap"><table>
+    <tr><th>שפה</th><th>בבית זה...</th><th>מה היא עושה</th></tr>
+    <tr><td><span class="t">HTML</span></td><td>השלד: קירות, חדרים, דלתות</td><td>המבנה והתוכן: כותרות, פסקאות, תמונות, כפתורים, קישורים.</td></tr>
+    <tr><td><span class="t">CSS</span></td><td>הצבע, הרהיטים והעיצוב</td><td>איך הכול נראה: צבעים, גופנים, גדלים, מיקום, אנימציות.</td></tr>
+    <tr><td><span class="t">JavaScript</span></td><td>החשמל: אורות, מעלית, פעמון</td><td>ההתנהגות: מה קורה כשלוחצים, משחקים, טפסים, עדכונים בזמן אמת.</td></tr>
+  </table></div>
+
+  <h2>HTML: המבנה</h2>
+  <p>HTML זה ראשי תיבות של <em>HyperText Markup Language</em>, ״שפת סימון לטקסט עם קישורים״. זו לא בדיוק שפת תכנות (אין בה תנאים ולולאות), אלא שפת <strong>סימון</strong>: אתה ״עוטף״ תוכן ב<span class="t">Tag</span> (<strong>תגית</strong>) שאומרת מה הוא.</p>
+  <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="he" dir="rtl"&gt;          <span class="c">&lt;!-- dir="rtl" = מימין לשמאל, לעברית --&gt;</span>
+  &lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;          <span class="c">&lt;!-- כדי שעברית תוצג נכון --&gt;</span>
+    &lt;title&gt;האתר שלי&lt;/title&gt;         <span class="c">&lt;!-- מה שכתוב בלשונית --&gt;</span>
+    &lt;link rel="stylesheet" href="style.css"&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;שלום, אני נועם&lt;/h1&gt;         <span class="c">&lt;!-- כותרת ראשית --&gt;</span>
+    &lt;p&gt;אני לומד לבנות משחקים.&lt;/p&gt;   <span class="c">&lt;!-- פסקה --&gt;</span>
+    &lt;img src="me.jpg" alt="תמונה שלי"&gt;
+    &lt;a href="https://example.com"&gt;קישור&lt;/a&gt;
+    &lt;button id="btn"&gt;לחץ עליי&lt;/button&gt;
+    &lt;script src="app.js"&gt;&lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+  <p>שים לב לחוקיות: רוב התגיות באות בזוגות, תגית פתיחה <code>&lt;p&gt;</code> ותגית סגירה <code>&lt;/p&gt;</code> (עם לוכסן). מה שבאמצע הוא התוכן. לתגיות יש <span class="t">Attribute</span> (<strong>תכונה</strong>), כמו <code>src</code> (מקור התמונה) או <code>href</code> (לאן הקישור מוביל).</p>
+
+  <h3>התגיות הכי חשובות</h3>
+  <div class="table-wrap"><table>
+    <tr><th>תגית</th><th>משמעות</th></tr>
+    <tr><td class="en">&lt;h1&gt; ... &lt;h6&gt;</td><td>כותרות, מ-1 (הכי גדולה) עד 6</td></tr>
+    <tr><td class="en">&lt;p&gt;</td><td>פסקה (paragraph)</td></tr>
+    <tr><td class="en">&lt;a href=""&gt;</td><td>קישור (anchor, ״עוגן״)</td></tr>
+    <tr><td class="en">&lt;img src="" alt=""&gt;</td><td>תמונה. <code>alt</code> זה תיאור לעיוורים ולמקרה שהתמונה לא נטענת</td></tr>
+    <tr><td class="en">&lt;ul&gt; &lt;ol&gt; &lt;li&gt;</td><td>רשימה עם נקודות, רשימה ממוספרת, פריט ברשימה</td></tr>
+    <tr><td class="en">&lt;div&gt;</td><td>״קופסה״ כללית לקיבוץ דברים</td></tr>
+    <tr><td class="en">&lt;button&gt;</td><td>כפתור</td></tr>
+    <tr><td class="en">&lt;input&gt;</td><td>שדה להקלדה</td></tr>
+    <tr><td class="en">&lt;canvas&gt;</td><td>״קנבס״, משטח ציור. כאן מציירים משחקים!</td></tr>
+  </table></div>
+
+  <h2>CSS: העיצוב</h2>
+  <p>CSS זה <em>Cascading Style Sheets</em>, ״גיליונות סגנון מדורגים״. ב-CSS אתה בוחר <strong>מה</strong> לעצב (<span class="t">Selector</span>, <strong>בורר</strong>), ו<strong>איך</strong> (תכונה וערך):</p>
+  <pre><code>h1 {                          <span class="c">/* כל הכותרות הראשיות */</span>
+  color: darkblue;            <span class="c">/* צבע טקסט */</span>
+  font-size: 40px;            <span class="c">/* גודל: 40 פיקסלים */</span>
+}
+.card {                       <span class="c">/* כל מי שיש לו class="card" */</span>
+  background: #ffe29f;        <span class="c">/* צבע רקע בקוד הקסדצימלי */</span>
+  padding: 20px;              <span class="c">/* ריווח פנימי */</span>
+  margin: 10px;               <span class="c">/* ריווח חיצוני */</span>
+  border-radius: 16px;        <span class="c">/* פינות מעוגלות */</span>
+}
+#btn:hover {                  <span class="c">/* האלמנט עם id="btn", כשהעכבר מעליו */</span>
+  transform: scale(1.1);      <span class="c">/* הגדל ב-10% */</span>
+}</code></pre>
+  <p>כל אלמנט בדף הוא בעצם קופסה. ל-CSS יש מושג בשם <strong>מודל הקופסה</strong> (<span class="t">Box Model</span>): התוכן באמצע, מסביבו ריווח פנימי (<code>padding</code>), מסביבו מסגרת (<code>border</code>), ומסביב לכל זה ריווח חיצוני (<code>margin</code>). לסידור קופסאות אחת ליד השנייה משתמשים בכלים בשם <span class="t">Flexbox</span> ו-<span class="t">Grid</span>.</p>
+  <p>נסה עכשיו! שנה את הקוד במעבדה וראה את התוצאה מיד:</p>
+
+  <div class="demo" data-demo="htmleditor"></div>
+
+  <div class="box idea"><b>רעיונות לניסוי במעבדה</b>
+    <ul>
+      <li>שנה את <code>#1e4fd0</code> בכפתור לצבע אחר, למשל <code>crimson</code> או <code>#00aa66</code>.</li>
+      <li>הוסף עוד <code>&lt;li&gt;</code> לרשימה.</li>
+      <li>שנה את <code>border-radius</code> ל-<code>0</code> ואחר כך ל-<code>50px</code>.</li>
+      <li>הוסף <code>&lt;h2&gt;</code> עם כותרת משנה.</li>
+    </ul>
+  </div>
+
+  <h2>אתר שעובד גם בטלפון</h2>
+  <p>יותר ממחצית הגלישה בעולם היא מטלפונים. אתר שנראה טוב גם במסך גדול וגם במסך קטן נקרא <span class="t">Responsive</span> (<strong>רספונסיבי, מגיב</strong>). ב-CSS עושים את זה עם <span class="t">Media Query</span> (<strong>שאילתת מדיה</strong>):</p>
+  <pre><code>@media (max-width: 600px) {   <span class="c">/* רק במסכים צרים מ-600 פיקסלים */</span>
+  h1 { font-size: 26px; }
+  .menu { display: none; }
+}</code></pre>
+
+  <h2>JavaScript: להפיח חיים</h2>
+  <p>כבר למדת JavaScript. באתר, JavaScript מתחבר ל-HTML דרך ה-<span class="t">DOM</span>. הנה אתר קטן ושלם: כפתור שמגריל מספר כמו קובייה.</p>
+  <pre><code>&lt;button id="roll"&gt;הטל קובייה&lt;/button&gt;
+&lt;p id="result"&gt;&lt;/p&gt;
+
+&lt;script&gt;
+  const btn = document.getElementById("roll");
+  const out = document.getElementById("result");
+  btn.addEventListener("click", () =&gt; {
+    const n = Math.floor(Math.random() * 6) + 1;
+    out.textContent = "יצא: " + n;
+  });
+&lt;/script&gt;</code></pre>
+  <p>שמור את זה בקובץ בשם <code>index.html</code> במחשב, לחץ עליו פעמיים, והוא ייפתח בדפדפן. <strong>בנית אתר.</strong></p>
+
+  <h2>Frontend ו-Backend</h2>
+  <p>לאתרים גדולים יש שני צדדים:</p>
+  <ul>
+    <li><span class="t">Frontend</span> (<strong>צד לקוח, ״חזית״</strong>): כל מה שרץ בדפדפן שלך ומה שאתה רואה. HTML, CSS, JavaScript.</li>
+    <li><span class="t">Backend</span> (<strong>צד שרת, ״מאחורי הקלעים״</strong>): מה שרץ על השרת. שומר משתמשים וסיסמאות, מעבד תשלומים, שולף מידע מ<span class="t">Database</span> (<strong>מסד נתונים</strong>). כתוב ב-JavaScript (עם <span class="t">Node.js</span>), Python, Java, Go ועוד.</li>
+    <li>מי שיודע את שני הצדדים נקרא <span class="t">Full Stack</span> developer (<strong>מפתח ״כל השכבות״</strong>).</li>
+  </ul>
+  <p>הצדדים מדברים ביניהם דרך <span class="t">API</span>: ״תפריט״ של בקשות שהשרת יודע לענות עליהן. למשל, אפליקציית מזג אוויר שולחת ל-API בקשה ״מה מזג האוויר בחיפה?״ ומקבלת תשובה בפורמט בשם <span class="t">JSON</span>, שנראה בדיוק כמו אובייקט של JavaScript:</p>
+  <pre><code>{ "city": "חיפה", "temp": 27, "sky": "בהיר" }</code></pre>
+
+  <h2>ספריות ו-Frameworks</h2>
+  <p>אף אחד לא בונה הכול מאפס. מתכנתים משתמשים בקוד שאחרים כתבו ושיתפו:</p>
+  <ul>
+    <li><span class="t">Library</span> (<strong>ספרייה</strong>): אוסף קוד מוכן שאתה קורא לו כשצריך. למשל <strong>Three.js</strong> לגרפיקה תלת-ממדית (בה בנינו את העיר בפרק המשחקים).</li>
+    <li><span class="t">Framework</span> (<strong>מסגרת עבודה</strong>): ״שלד״ שלם שאתה בונה בתוכו לפי החוקים שלו.</li>
+  </ul>
+  <p>הפופולריים ביותר לאתרים היום: <strong>React</strong> (ריאקט, של מטא, הכי נפוץ), <strong>Next.js</strong> (מבוסס React, לאתרים שלמים), <strong>Vue</strong> (ויו), <strong>Svelte</strong> (סוולט) ו-<strong>Angular</strong> (אנגולר, של גוגל). לעיצוב מהיר משתמשים הרבה ב-<strong>Tailwind CSS</strong>. את כולם מתקינים עם כלי בשם <span class="t">npm</span>, שהוא ״חנות האפליקציות״ של קוד JavaScript, עם מיליוני חבילות.</p>
+  <div class="box tip"><b>אל תמהר ל-React</b><p>הרבה מתחילים קופצים ישר ל-React ומתבלבלים, כי הם לא מבינים מה קורה מתחת. בנה קודם 3-5 אתרים קטנים ב-HTML, CSS ו-JavaScript רגילים (״Vanilla JS״). כשתרגיש שאתה חוזר על אותו קוד שוב ושוב, זה הזמן ל-React. אז תבין למה הוא קיים.</p></div>
+
+  <h2>איך מעלים אתר לאינטרנט</h2>
+  <p>אתר שיושב רק במחשב שלך רואה רק אתה. כדי שכל העולם יראה, צריך <span class="t">Hosting</span> (<strong>אחסון</strong>): לשים את הקבצים על שרת שמחובר לאינטרנט 24/7. ההעלאה עצמה נקראת <span class="t">Deploy</span> (<strong>פריסה</strong>). היום יש דרכים חינמיות לגמרי לאתרים פשוטים:</p>
+  <ul>
+    <li><strong>GitHub Pages</strong>: מעלים את הקוד ל-GitHub, ומקבלים כתובת כמו <code>yourname.github.io</code>. (המדריך הזה, אגב, מתפרסם בדיוק ככה.)</li>
+    <li><strong>Netlify</strong> ו-<strong>Vercel</strong>: גוררים תיקייה, ותוך דקה האתר באוויר.</li>
+    <li><strong>Cloudflare Pages</strong>: דומה, מהיר מאוד.</li>
+  </ul>
+  <p>אם תרצה כתובת משלך, כמו <code>noam.dev</code>, קונים <span class="t">Domain</span> בכמה עשרות שקלים לשנה. (שים לב: לקנות משהו באינטרנט צריך הורה.)</p>
+
+  <div class="quiz"><script type="application/json">[
+    {"q":"איזו שפה אחראית על המבנה והתוכן של דף?","o":["CSS","HTML","SQL","Python"],"a":1},
+    {"q":"איך נקרא אתר שנראה טוב גם בטלפון וגם במחשב?","o":["רספונסיבי","דינמי","מוצפן","סטטי"],"a":0},
+    {"q":"מה זה Backend?","o":["הצבעים של האתר","החלק שרץ על השרת ושומר מידע","סוג של כפתור","הגב של המחשב"],"a":1},
+    {"q":"מה זה Deploy?","o":["למחוק אתר","להעלות אתר/אפליקציה לאוויר כדי שכולם יוכלו להשתמש","לכתוב CSS","לחפש באג"],"a":1},
+    {"q":"באיזה פורמט שרתים שולחים בדרך כלל מידע לאפליקציות?","o":["JSON","MP3","JPG","EXE"],"a":0}
+  ]</script></div>
+</section>

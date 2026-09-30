@@ -1,0 +1,97 @@
+<section class="chapter" id="games" data-title="איך משחקים עובדים" data-part="שלב 4 · משחקים">
+  <div class="chapter-head">
+    <div class="eyebrow">פרק 9 · לולאת משחק, פיזיקה, התנגשויות ומנועי משחק</div>
+    <h1>איך משחקים עובדים</h1>
+    <p>כל משחק, מטטריס ועד GTA, הוא בעצם אותה תוכנית קטנה שרצה שוב ושוב, 60 פעמים בשנייה.</p>
+  </div>
+
+  <h2>הלב של כל משחק: לולאת המשחק</h2>
+  <p>סרט הוא רצף של תמונות מוכנות מראש. משחק שונה: הוא <strong>מחשב כל תמונה ברגע האחרון</strong>, לפי מה שאתה עושה. כדי לעשות את זה, כל משחק מריץ את <span class="t">Game Loop</span> (<strong>לולאת המשחק</strong>):</p>
+  <div class="flow"><span>1. קלט: מה השחקן לחץ?</span><i>←</i><span>2. עדכון: הזז דברים, בדוק התנגשויות, חוקי המשחק</span><i>←</i><span>3. ציור: צייר את כל המסך</span><i>←</i><span>חזור להתחלה</span></div>
+  <pre><code><span class="k">function</span> <span class="f">gameLoop</span>() {
+  <span class="f">readInput</span>();      <span class="c">// מה לחוץ במקלדת/בשלט?</span>
+  <span class="f">update</span>();         <span class="c">// הזז שחקן, אויבים, כדורים. בדוק התנגשויות.</span>
+  <span class="f">render</span>();         <span class="c">// צייר הכול מחדש</span>
+  <span class="f">requestAnimationFrame</span>(gameLoop);   <span class="c">// ובפריים הבא, שוב!</span>
+}</code></pre>
+  <p>כל סיבוב של הלולאה נקרא <span class="t">Frame</span> (<strong>פריים, תמונה</strong>). כמה פריימים המשחק מספיק לחשב בשנייה נקרא <span class="t">FPS</span> (Frames Per Second, <strong>תמונות לשנייה</strong>). 30 FPS מרגיש בסדר, 60 FPS מרגיש חלק, ו-120 ומעלה זה למשחקי תחרות. כשאומרים שמשחק ״מגמגם״ או ״לאגי״, הכוונה שה-FPS ירד כי המחשב לא מספיק לחשב הכול בזמן.</p>
+  <div class="box idea"><b>תקציב זמן</b><p>ב-60 FPS, יש למשחק <strong>16.6 אלפיות שנייה</strong> לכל פריים. בזמן הזה הוא צריך לקרוא קלט, להזיז מאות מכוניות והולכי רגל, לחשב פיזיקה, להחליט מה כל דמות עושה, לנגן צלילים ולצייר מיליוני משולשים. זו הסיבה שמתכנתי משחקים אובססיביים למהירות.</p></div>
+
+  <h2>זמן בין פריימים (Delta Time)</h2>
+  <p>בעיה: אם תזיז את השחקן 5 פיקסלים בכל פריים, אז במחשב שרץ ב-120 FPS הוא ינוע פי 2 יותר מהר מאשר במחשב שרץ ב-60 FPS. לא הוגן! הפתרון: מודדים כמה זמן עבר מהפריים הקודם, <span class="t">Delta Time</span> (<strong>הפרש זמן</strong>), ומכפילים בו:</p>
+  <pre><code>player.x += player.speed * deltaTime;   <span class="c">// מהירות בפיקסלים לשנייה, לא לפריים</span></code></pre>
+
+  <h2>פיזיקה בסיסית</h2>
+  <p>לא צריך להיות גאון במתמטיקה. רוב הפיזיקה במשחקים בנויה על שלושה מושגים:</p>
+  <ul>
+    <li><strong>מיקום</strong> (<span class="t">Position</span>): איפה הדבר נמצא. <code>x</code> ו-<code>y</code> (ובתלת-ממד גם <code>z</code>).</li>
+    <li><strong>מהירות</strong> (<span class="t">Velocity</span>): כמה המיקום משתנה בכל שנייה, ולאיזה כיוון.</li>
+    <li><strong>תאוצה</strong> (<span class="t">Acceleration</span>): כמה המהירות משתנה. כוח המשיכה (<span class="t">Gravity</span>) הוא תאוצה קבועה כלפי מטה.</li>
+  </ul>
+  <pre><code><span class="c">// קפיצה במשחק פלטפורמה, בכל פריים:</span>
+player.vy += GRAVITY * dt;          <span class="c">// כוח המשיכה מגביר את המהירות למטה</span>
+player.y  += player.vy * dt;        <span class="c">// המהירות משנה את המיקום</span>
+<span class="k">if</span> (player.y &gt; groundY) {         <span class="c">// נחת על הרצפה</span>
+  player.y = groundY;
+  player.vy = 0;
+}
+<span class="k">if</span> (jumpPressed &amp;&amp; onGround) player.vy = -JUMP_POWER;   <span class="c">// קפיצה = מהירות כלפי מעלה</span></code></pre>
+  <p>זה הכול! ארבע שורות וקיבלת קפיצה שמרגישה אמיתית. במשחקים גדולים משתמשים ב<span class="t">Physics Engine</span> (<strong>מנוע פיזיקה</strong>) מוכן, שמטפל גם בסיבובים, חיכוך, קפיצות של חפצים והתרסקויות.</p>
+
+  <h2>התנגשויות</h2>
+  <p>איך המשחק יודע שהכדור פגע באויב? הוא בודק <span class="t">Collision</span> (<strong>התנגשות</strong>). אבל לבדוק כל פיקסל של דמות זה איטי מדי. לכן לכל דבר יש צורה פשוטה ובלתי נראית מסביבו, <span class="t">Hitbox</span> (<strong>תיבת פגיעה</strong>): מלבן, עיגול או קופסה. בודקים רק אם הצורות הפשוטות נוגעות:</p>
+  <pre><code><span class="c">// שני עיגולים נוגעים אם המרחק בין המרכזים קטן מסכום הרדיוסים</span>
+<span class="k">function</span> <span class="f">hit</span>(a, b) {
+  <span class="k">const</span> dist = Math.<span class="f">hypot</span>(a.x - b.x, a.y - b.y);   <span class="c">// פיתגורס!</span>
+  <span class="k">return</span> dist &lt; a.r + b.r;
+}</code></pre>
+  <p>עכשיו שחק במשחק הבא. הוא בנוי בדיוק מהדברים שלמדת: לולאת משחק, Delta Time, מהירות, התנגשות עיגולים, ו״בינה מלאכותית״ פשוטה של שוטר שנע לכיוון שלך. הדלק את <strong>מצב מפתח</strong> כדי לראות את ה-Hitbox ואת הווקטורים.</p>
+
+  <div class="demo" data-demo="game2d"></div>
+
+  <h2>גרפיקה דו-ממדית</h2>
+  <p>במשחקים דו-ממדיים (כמו מריו, סלסט, Hollow Knight), כל דמות היא <span class="t">Sprite</span> (<strong>ספרייט</strong>): תמונה קטנה. אנימציה נוצרת מכמה ספרייטים שמתחלפים מהר, כמו דפדפת. כל התמונות של הדמות מסודרות בקובץ אחד בשם <span class="t">Sprite Sheet</span>. עולמות בנויים לרוב מאריחים בגודל קבוע, <span class="t">Tilemap</span> (<strong>מפת אריחים</strong>), כמו לגו. כלים מומלצים לציור פיקסל-ארט: <strong>Aseprite</strong>, <strong>Piskel</strong> (חינמי, בדפדפן).</p>
+
+  <h2>צליל</h2>
+  <p>אל תזלזל בצליל! אפקטים קוליים (<span class="t">SFX</span>) ומוזיקה הם חצי מההרגשה של משחק. יריה בלי ״בום״ מרגישה חלשה. אתרים כמו <strong>freesound.org</strong> נותנים צלילים חינמיים, <strong>jsfxr</strong> מייצר אפקטים רטרו בלחיצה, ויש היום כלי AI שיוצרים מוזיקה (בפרק כלי ה-AI).</p>
+
+  <h2>מנועי משחק</h2>
+  <p>לבנות משחק מאפס (כמו שעשינו במעבדה) זה מצוין ללמידה. אבל למשחקים אמיתיים משתמשים ב<span class="t">Game Engine</span> (<strong>מנוע משחק</strong>): תוכנה שכבר כוללת גרפיקה, פיזיקה, צליל, אנימציה, קלט ועורך ויזואלי לבניית שלבים. אתה מתמקד במה שהופך את המשחק שלך למיוחד.</p>
+  <div class="table-wrap"><table>
+    <tr><th>מנוע</th><th>שפה</th><th>הכי מתאים ל...</th><th>משחקים מפורסמים</th><th>מחיר</th></tr>
+    <tr><td><strong>Unreal Engine</strong></td><td>C++ וגם Blueprints (תכנות ויזואלי בקוביות)</td><td>גרפיקה מציאותית ברמה הכי גבוהה, עולמות פתוחים</td><td>Fortnite, Black Myth: Wukong, Hogwarts Legacy</td><td>חינם, ואחוזים רק אחרי מיליון דולר הכנסות</td></tr>
+    <tr><td><strong>Unity</strong></td><td>C#</td><td>משחקי טלפון, אינדי, תלת-ממד ודו-ממד, VR</td><td>Hollow Knight, Among Us, Pokémon GO, Genshin Impact</td><td>חינמי למתחילים</td></tr>
+    <tr><td><strong>Godot</strong></td><td>GDScript (דומה ל-Python), גם C#</td><td>למידה, אינדי, דו-ממד מעולה, תלת-ממד הולך ומשתפר</td><td>Brotato, Buckshot Roulette</td><td>חינם לגמרי, קוד פתוח</td></tr>
+    <tr><td><strong>Roblox Studio</strong></td><td>Luau</td><td>משחקים מרובי משתתפים בתוך רובלוקס, עם קהל מוכן</td><td>Adopt Me!, Blox Fruits</td><td>חינם, אפשר להרוויח ״רובקס״</td></tr>
+    <tr><td><strong>GameMaker</strong></td><td>GML</td><td>משחקי דו-ממד</td><td>Undertale, Hotline Miami</td><td>חינמי לשימוש לא מסחרי</td></tr>
+    <tr><td><strong>Scratch</strong></td><td>בלוקים ויזואליים</td><td>צעדים ראשונים ממש</td><td>מיליוני משחקים של ילדים</td><td>חינם, בדפדפן</td></tr>
+    <tr><td><strong>Three.js / Phaser</strong></td><td>JavaScript</td><td>משחקים שרצים בדפדפן</td><td>המעבדות במדריך הזה</td><td>חינם, קוד פתוח</td></tr>
+  </table></div>
+  <div class="box tip"><b>איזה מנוע לבחור?</b>
+    <ul>
+      <li>רוצה משהו קל ומהיר, ומחשב לא חזק? <strong>Godot</strong>.</li>
+      <li>רוצה את האפשרויות הכי רחבות, והכי הרבה מדריכים ביוטיוב? <strong>Unity</strong>.</li>
+      <li>החלום שלך זה גרפיקה ברמת GTA ויש לך מחשב חזק? <strong>Unreal</strong>, אבל תתחיל עם Blueprints ולא עם C++.</li>
+      <li>רוצה ששחקנים אמיתיים ישחקו מהיום הראשון? <strong>Roblox Studio</strong>.</li>
+    </ul>
+    <p>האמת? המנוע הראשון שלך פחות חשוב ממה שנדמה. העקרונות זהים בכולם, והמעבר ביניהם קל.</p>
+  </div>
+
+  <h2>עיצוב משחקים: מה עושה משחק לכיף</h2>
+  <p>תכנות זה רק חצי. <span class="t">Game Design</span> (<strong>עיצוב משחקים</strong>) זו האומנות להחליט מה השחקן עושה ולמה זה כיף:</p>
+  <ul>
+    <li><strong>לולאת ליבה</strong> (<span class="t">Core Loop</span>): הפעולה שחוזרת שוב ושוב. ב-GTA: לקבל משימה ← לנסוע ← לבצע ← לקבל כסף ← לקנות דברים ← משימה גדולה יותר.</li>
+    <li><strong>תחושה</strong> (<em>Game Feel</em>, או <em>Juice</em>): רעידת מסך, חלקיקים, צלילים, האטה קטנה כשפוגעים. פרטים קטנים שהופכים פעולה ל״מספקת״.</li>
+    <li><strong>קושי הדרגתי:</strong> קל בהתחלה, קשה יותר בהדרגה. לא מתסכל, לא משעמם.</li>
+    <li><strong>משוב:</strong> השחקן תמיד צריך להבין מה קרה ולמה.</li>
+  </ul>
+  <div class="box warn"><b>הטעות מספר 1 של מתחילים</b><p>להתחיל ישר עם ״משחק ענק עם עולם פתוח ומולטיפלייר״. זה לא יסתיים לעולם. מפתחי משחקים מקצועיים מתחילים עם משחקים <strong>זעירים</strong>: פונג, פלאפי בירד, סנייק. תסיים 5 משחקים קטנים, ותדע יותר מאשר מי שהתחיל משחק ענק אחד ונטש.</p></div>
+
+  <div class="quiz"><script type="application/json">[
+    {"q":"מהם שלושת השלבים של לולאת המשחק?","o":["שמירה, טעינה, יציאה","קלט, עדכון, ציור","הורדה, התקנה, הפעלה","HTML, CSS, JS"],"a":1},
+    {"q":"למה משתמשים ב-Delta Time?","o":["כדי שהמשחק ירוץ באותה מהירות בכל מחשב","כדי לחסוך בזיכרון","כדי לצייר צבעים","כדי לשמור את המשחק"],"a":0},
+    {"q":"מה זה Hitbox?","o":["קופסת שלל","צורה פשוטה ובלתי נראית לבדיקת התנגשויות","סוג של מקלדת","מסך הפתיחה"],"a":1},
+    {"q":"איזה מנוע משחק הוא חינמי לגמרי וקוד פתוח?","o":["Unreal","Unity","Godot","GameMaker"],"a":2},
+    {"q":"כמה זמן יש לכל פריים ב-60 FPS?","o":["1 שנייה","בערך 16.6 אלפיות שנייה","60 שניות","חצי שנייה"],"a":1}
+  ]</script></div>
+</section>

@@ -1,0 +1,204 @@
+<section class="chapter" id="javascript" data-title="JavaScript מאפס" data-part="שלב 2 · תכנות">
+  <div class="chapter-head">
+    <div class="eyebrow">פרק 5 · השפה הראשונה שלך</div>
+    <h1>JavaScript מאפס</h1>
+    <p>בפרק הזה תכתוב את הקוד הראשון שלך. כל דוגמה אפשר להריץ במעבדה למטה. קרא, הרץ, שנה, ושבור. ככה לומדים.</p>
+  </div>
+
+  <h2>איפה כותבים JavaScript?</h2>
+  <p>הדרך הכי מהירה: <strong>המעבדה שבפרק הזה</strong>. יש בה חלון לכתיבת קוד וכפתור ״הרץ״. במחשב יש עוד דרך: בכל דפדפן לוחצים <kbd>F12</kbd> (או מקש ימני ← ״בדיקה״), בוחרים בלשונית <span class="t">Console</span> (<strong>קונסולה</strong>), ושם אפשר להקליד קוד ולהריץ אותו מיד.</p>
+  <p>כשתבנה פרויקטים אמיתיים, תכתוב קוד ב<span class="t">Code Editor</span> (<strong>עורך קוד</strong>) כמו <strong>VS Code</strong>. נדבר עליו בפרק הכלים.</p>
+
+  <div class="demo" data-demo="playground"></div>
+
+  <h2>1. הדפסה: console.log</h2>
+  <p>הפקודה הראשונה של כל מתכנת היא להדפיס משהו למסך. ב-JavaScript עושים את זה עם <code>console.log</code> (״קונסול לוג״, ״רשום בקונסולה״):</p>
+  <pre><code>console.<span class="f">log</span>(<span class="s">"שלום עולם!"</span>);
+console.<span class="f">log</span>(7 * 6);   <span class="c">// מדפיס 42</span></code></pre>
+  <ul>
+    <li>טקסט תמיד בתוך מירכאות: <code>"כך"</code> או <code>'כך'</code>. טקסט בתכנות נקרא <span class="t">String</span> (<strong>מחרוזת</strong>).</li>
+    <li>בסוף כל פקודה שמים <code>;</code> (נקודה-פסיק). זה כמו נקודה בסוף משפט. JavaScript לפעמים מסתדרת בלי, אבל עדיף לשים.</li>
+    <li>כל מה שאחרי <code>//</code> הוא <span class="t">Comment</span> (<strong>הערה</strong>). המחשב מתעלם ממנו. הערות הן בשביל בני אדם, כולל אתה בעוד חודש, כשתשכח למה כתבת משהו.</li>
+  </ul>
+
+  <h2>2. משתנים: קופסאות עם שם</h2>
+  <p><span class="t">Variable</span> (<strong>משתנה</strong>) הוא כמו קופסה עם מדבקה. אתה שם בה ערך, ואחר כך יכול להשתמש בו לפי השם.</p>
+  <pre><code><span class="k">let</span> score = 0;           <span class="c">// צור קופסה בשם score ושים בה 0</span>
+score = score + 10;       <span class="c">// קח את מה שיש, הוסף 10, ושים בחזרה</span>
+console.<span class="f">log</span>(score);       <span class="c">// 10</span>
+
+<span class="k">const</span> gravity = 9.8;      <span class="c">// const = קבוע, אי אפשר לשנות אחר כך</span></code></pre>
+  <ul>
+    <li><code>let</code> (״לֶט״, ״תן ל...״) יוצר משתנה שאפשר לשנות.</li>
+    <li><code>const</code> (״קוֹנְסְט״, מ-constant, ״קבוע״) יוצר משתנה שאי אפשר לשנות. השתמש בו כשאפשר, כי זה מונע באגים.</li>
+    <li>שים לב: <code>=</code> בתכנות <strong>לא</strong> אומר ״שווה״. הוא אומר ״שים בתוך״. זה נקרא <strong>השמה</strong>.</li>
+    <li>שמות משתנים כותבים באנגלית, בלי רווחים. מקובל לכתוב ב<span class="t">camelCase</span>: <code>playerHealth</code>, <code>carSpeed</code>. תן שמות ברורים: <code>playerHealth</code> טוב בהרבה מ-<code>x</code>.</li>
+  </ul>
+
+  <h2>3. סוגי מידע</h2>
+  <p>לכל ערך יש <span class="t">Data Type</span> (<strong>סוג נתונים</strong>). החשובים:</p>
+  <div class="table-wrap"><table>
+    <tr><th>סוג</th><th>דוגמה</th><th>הסבר</th></tr>
+    <tr><td><span class="t">Number</span> (מספר)</td><td class="en">42, -3, 9.81</td><td>כל מספר, שלם או עם נקודה.</td></tr>
+    <tr><td><span class="t">String</span> (מחרוזת)</td><td class="en">"GTA", 'שלום'</td><td>טקסט, תמיד במירכאות.</td></tr>
+    <tr><td><span class="t">Boolean</span> (בוליאני)</td><td class="en">true, false</td><td>אמת או שקר. כמו ביט. <code>isAlive = true</code></td></tr>
+    <tr><td><span class="t">Array</span> (מערך)</td><td class="en">[1, 2, 3]</td><td>רשימה מסודרת של ערכים.</td></tr>
+    <tr><td><span class="t">Object</span> (אובייקט)</td><td class="en">{ name: "CJ", hp: 100 }</td><td>אוסף של תכונות עם שמות.</td></tr>
+    <tr><td><span class="t">Undefined</span> / <span class="t">Null</span></td><td class="en">undefined, null</td><td>״אין כלום״. undefined = עוד לא שמו ערך. null = שמו בכוונה ״ריק״.</td></tr>
+  </table></div>
+
+  <h3>פעולות על מספרים ומחרוזות</h3>
+  <pre><code>console.<span class="f">log</span>(10 + 3);   <span class="c">// 13  חיבור</span>
+console.<span class="f">log</span>(10 - 3);   <span class="c">// 7   חיסור</span>
+console.<span class="f">log</span>(10 * 3);   <span class="c">// 30  כפל</span>
+console.<span class="f">log</span>(10 / 4);   <span class="c">// 2.5 חילוק</span>
+console.<span class="f">log</span>(10 % 3);   <span class="c">// 1   שארית (מודולו): כמה נשאר אחרי חלוקה</span>
+
+<span class="k">let</span> name = <span class="s">"דנה"</span>;
+console.<span class="f">log</span>(<span class="s">"שלום "</span> + name);          <span class="c">// חיבור מחרוזות: "שלום דנה"</span>
+console.<span class="f">log</span>(<span class="s">`שלום ${name}, בת 14`</span>);  <span class="c">// תבנית: עם גרש הפוך ` ו-${}</span></code></pre>
+
+  <h2>4. תנאים: if / else</h2>
+  <p>כאן התוכנית מתחילה ״לחשוב״. <code>if</code> (״איף״, <strong>אם</strong>) בודק אם משהו נכון, ורק אז מריץ את הקוד שבסוגריים המסולסלים <code>{ }</code>. <code>else</code> (״אֶלְס״, <strong>אחרת</strong>) רץ כשהתנאי לא נכון.</p>
+  <pre><code><span class="k">let</span> hp = 25;
+
+<span class="k">if</span> (hp &lt;= 0) {
+  console.<span class="f">log</span>(<span class="s">"Game Over"</span>);
+} <span class="k">else if</span> (hp &lt; 30) {
+  console.<span class="f">log</span>(<span class="s">"זהירות! חיים נמוכים"</span>);
+} <span class="k">else</span> {
+  console.<span class="f">log</span>(<span class="s">"הכול בסדר"</span>);
+}</code></pre>
+  <h3>סימני השוואה</h3>
+  <div class="table-wrap"><table>
+    <tr><th>סימן</th><th>משמעות</th><th>דוגמה שמחזירה true</th></tr>
+    <tr><td class="en">===</td><td>שווה בדיוק</td><td class="en">5 === 5</td></tr>
+    <tr><td class="en">!==</td><td>לא שווה</td><td class="en">5 !== 3</td></tr>
+    <tr><td class="en">&gt; , &lt;</td><td>גדול מ, קטן מ</td><td class="en">10 &gt; 3</td></tr>
+    <tr><td class="en">&gt;= , &lt;=</td><td>גדול או שווה, קטן או שווה</td><td class="en">5 &gt;= 5</td></tr>
+    <tr><td class="en">&amp;&amp;</td><td>וגם (AND)</td><td class="en">hp &gt; 0 &amp;&amp; ammo &gt; 0</td></tr>
+    <tr><td class="en">||</td><td>או (OR)</td><td class="en">isNight || isRaining</td></tr>
+    <tr><td class="en">!</td><td>לא (NOT)</td><td class="en">!isDead</td></tr>
+  </table></div>
+  <div class="box warn"><b>טעות קלאסית</b><p><code>=</code> זה השמה (״שים בתוך״). <code>===</code> זה השוואה (״האם שווה?״). אם תכתוב <code>if (hp = 0)</code> במקום <code>if (hp === 0)</code>, תאפס בטעות את החיים. כולם עשו את הטעות הזאת לפחות פעם אחת.</p></div>
+  <p>שמת לב ש-<code>&amp;&amp;</code>, <code>||</code> ו-<code>!</code> הם בדיוק השערים הלוגיים AND, OR ו-NOT מפרק 1? הכול מתחבר.</p>
+
+  <h2>5. לולאות: לחזור על דברים</h2>
+  <p>במקום לכתוב אותו קוד 100 פעמים, משתמשים ב<span class="t">Loop</span> (<strong>לולאה</strong>).</p>
+  <pre><code><span class="c">// for: כשיודעים כמה פעמים</span>
+<span class="k">for</span> (<span class="k">let</span> i = 1; i &lt;= 3; i++) {
+  console.<span class="f">log</span>(<span class="s">"גל אויבים מספר"</span>, i);
+}
+<span class="c">// let i = 1   ← מתחילים מ-1</span>
+<span class="c">// i &lt;= 3      ← ממשיכים כל עוד i קטן או שווה 3</span>
+<span class="c">// i++         ← אחרי כל סיבוב, מוסיפים 1 ל-i</span>
+
+<span class="c">// while: כל עוד משהו נכון</span>
+<span class="k">let</span> fuel = 50;
+<span class="k">while</span> (fuel &gt; 0) {
+  fuel = fuel - 20;
+}
+console.<span class="f">log</span>(<span class="s">"נגמר הדלק"</span>);</code></pre>
+  <div class="box warn"><b>לולאה אינסופית</b><p>אם התנאי של <code>while</code> אף פעם לא הופך ל-false, הלולאה תרוץ לנצח והתוכנית ״תיתקע״. במעבדה שלנו יש הגנה שעוצרת אחרי 3 שניות. בעולם האמיתי, הדפדפן פשוט יקפא.</p></div>
+
+  <h2>6. פונקציות: מתכונים שאפשר להפעיל שוב ושוב</h2>
+  <p><span class="t">Function</span> (<strong>פונקציה</strong>) היא חתיכת קוד עם שם, שאפשר ״לקרוא״ לה מתי שרוצים. היא יכולה לקבל מידע (<span class="t">Parameter</span>, <strong>פרמטר</strong>) ולהחזיר תוצאה (<code>return</code>, <strong>החזר</strong>).</p>
+  <pre><code><span class="k">function</span> <span class="f">heal</span>(hp, amount) {
+  <span class="k">let</span> result = hp + amount;
+  <span class="k">if</span> (result &gt; 100) result = 100;   <span class="c">// לא יותר מ-100</span>
+  <span class="k">return</span> result;
+}
+
+console.<span class="f">log</span>(<span class="f">heal</span>(50, 30));   <span class="c">// 80</span>
+console.<span class="f">log</span>(<span class="f">heal</span>(90, 30));   <span class="c">// 100</span>
+
+<span class="c">// צורה מקוצרת: פונקציית חץ (arrow function)</span>
+<span class="k">const</span> <span class="f">double</span> = (n) =&gt; n * 2;
+console.<span class="f">log</span>(<span class="f">double</span>(21));    <span class="c">// 42</span></code></pre>
+  <p>למה פונקציות כל כך חשובות? כי הן מאפשרות לפרק תוכנית ענקית לחלקים קטנים וברורים. במשחק יהיו לך פונקציות כמו <code>movePlayer()</code>, <code>shoot()</code>, <code>checkCollision()</code>, <code>drawScreen()</code>. כל אחת עושה דבר אחד, ועושה אותו טוב.</p>
+
+  <h2>7. מערכים: רשימות</h2>
+  <pre><code><span class="k">const</span> weapons = [<span class="s">"אגרוף"</span>, <span class="s">"אקדח"</span>, <span class="s">"רובה"</span>];
+
+console.<span class="f">log</span>(weapons[0]);       <span class="c">// "אגרוף" ← הספירה מתחילה מ-0!</span>
+console.<span class="f">log</span>(weapons.length);   <span class="c">// 3 ← כמה פריטים יש</span>
+weapons.<span class="f">push</span>(<span class="s">"רימון"</span>);           <span class="c">// הוסף לסוף</span>
+
+<span class="k">for</span> (<span class="k">const</span> w <span class="k">of</span> weapons) {    <span class="c">// עבור על כל פריט</span>
+  console.<span class="f">log</span>(<span class="s">"יש לי:"</span>, w);
+}
+
+<span class="k">const</span> prices = [10, 50, 200];
+<span class="k">const</span> expensive = prices.<span class="f">filter</span>(p =&gt; p &gt; 20);   <span class="c">// [50, 200]</span>
+<span class="k">const</span> doubled = prices.<span class="f">map</span>(p =&gt; p * 2);         <span class="c">// [20, 100, 400]</span></code></pre>
+  <p>הדבר הכי מבלבל בהתחלה: <strong>הספירה מתחילה מ-0</strong>. הפריט הראשון הוא במקום 0, השני במקום 1. המספר הזה נקרא <span class="t">Index</span> (<strong>אינדקס</strong>). תתרגל, זה ככה כמעט בכל השפות.</p>
+
+  <h2>8. אובייקטים: דברים עם תכונות</h2>
+  <p>בעולם האמיתי, לדברים יש תכונות. למכונית יש צבע, מהירות ודלק. ב-JavaScript מתארים את זה עם <span class="t">Object</span> (<strong>אובייקט</strong>):</p>
+  <pre><code><span class="k">const</span> car = {
+  model: <span class="s">"Infernus"</span>,
+  color: <span class="s">"אדום"</span>,
+  speed: 0,
+  maxSpeed: 220,
+  <span class="f">accelerate</span>() {                    <span class="c">// פונקציה בתוך אובייקט = מתודה</span>
+    <span class="k">this</span>.speed = Math.<span class="f">min</span>(<span class="k">this</span>.speed + 20, <span class="k">this</span>.maxSpeed);
+  }
+};
+
+car.<span class="f">accelerate</span>();
+car.<span class="f">accelerate</span>();
+console.<span class="f">log</span>(car.model, <span class="s">"נוסעת"</span>, car.speed, <span class="s">"קמ״ש"</span>);   <span class="c">// Infernus נוסעת 40 קמ״ש</span></code></pre>
+  <p>פונקציה שנמצאת בתוך אובייקט נקראת <span class="t">Method</span> (<strong>מתודה</strong>). המילה <code>this</code> (״דיס״, <strong>זה</strong>) אומרת ״האובייקט הנוכחי״. כשיש לך הרבה מכוניות, אפשר ליצור ״תבנית״ אחת בשם <span class="t">Class</span> (<strong>מחלקה</strong>) ולייצר ממנה כמה שרוצים. הסגנון הזה, לבנות תוכנה מאובייקטים, נקרא <span class="t">OOP</span>, תכנות מונחה עצמים, והוא הבסיס של כמעט כל מנועי המשחק.</p>
+  <pre><code><span class="k">class</span> <span class="f">Car</span> {
+  <span class="f">constructor</span>(model, color) {   <span class="c">// רץ כשיוצרים מכונית חדשה</span>
+    <span class="k">this</span>.model = model;
+    <span class="k">this</span>.color = color;
+    <span class="k">this</span>.speed = 0;
+  }
+  <span class="f">honk</span>() { console.<span class="f">log</span>(<span class="k">this</span>.model + <span class="s">": טוּט טוּט!"</span>); }
+}
+
+<span class="k">const</span> a = <span class="k">new</span> <span class="f">Car</span>(<span class="s">"Banshee"</span>, <span class="s">"כחול"</span>);
+<span class="k">const</span> b = <span class="k">new</span> <span class="f">Car</span>(<span class="s">"Faggio"</span>, <span class="s">"צהוב"</span>);
+a.<span class="f">honk</span>();  b.<span class="f">honk</span>();</code></pre>
+
+  <h2>9. איך קוראים הודעת שגיאה</h2>
+  <p>שגיאות הן לא אויבות. הן <strong>רמזים</strong>. הודעת שגיאה אומרת לך בדרך כלל שלושה דברים: <strong>סוג</strong> השגיאה, <strong>מה</strong> קרה, ו<strong>איפה</strong> (מספר שורה).</p>
+  <div class="table-wrap"><table>
+    <tr><th>השגיאה</th><th>מה היא אומרת</th><th>סיבה נפוצה</th></tr>
+    <tr><td class="en">ReferenceError: x is not defined</td><td>״אני לא מכיר משהו בשם x״</td><td>טעות כתיב בשם משתנה, או ששכחת ליצור אותו.</td></tr>
+    <tr><td class="en">SyntaxError: Unexpected token</td><td>״משהו כתוב לא לפי החוקים״</td><td>סוגריים חסרים, מירכאות שלא נסגרו, פסיק מיותר.</td></tr>
+    <tr><td class="en">TypeError: x is not a function</td><td>״ניסית להפעיל משהו שהוא לא פונקציה״</td><td>טעות בשם פונקציה, או סדר לא נכון.</td></tr>
+    <tr><td class="en">TypeError: Cannot read properties of undefined</td><td>״ניסית לקרוא תכונה ממשהו שלא קיים״</td><td>האובייקט עוד לא נוצר, או שהשם שגוי.</td></tr>
+  </table></div>
+  <p>בחר במעבדה את הדוגמה ״באג לתיקון״, הרץ, קרא את השגיאה, ותקן. זו מיומנות חשובה יותר מכל מה שכתוב בפרק הזה.</p>
+
+  <h2>10. JavaScript בדף אינטרנט</h2>
+  <p>עד עכשיו הדפסנו לקונסולה. אבל הכוח האמיתי של JavaScript הוא לשלוט בדף אינטרנט: לשנות טקסט, להגיב ללחיצות, ולהזיז דברים. הדפדפן מציג את הדף כעץ של אלמנטים בשם <span class="t">DOM</span>, ו-JavaScript יכולה לשנות אותו. ופעולות של המשתמש, כמו לחיצה או הקשה, נקראות <span class="t">Event</span> (<strong>אירוע</strong>):</p>
+  <pre><code><span class="k">const</span> button = document.<span class="f">querySelector</span>(<span class="s">"button"</span>);   <span class="c">// מצא את הכפתור בדף</span>
+<span class="k">let</span> clicks = 0;
+button.<span class="f">addEventListener</span>(<span class="s">"click"</span>, () =&gt; {          <span class="c">// כשלוחצים עליו...</span>
+  clicks++;
+  button.textContent = <span class="s">"לחצת "</span> + clicks + <span class="s">" פעמים"</span>;
+});</code></pre>
+  <p>את זה נפגוש שוב בפרק הבא, כשנבנה אתרים.</p>
+
+  <div class="box idea">
+    <b>תרגילים (נסה במעבדה)</b>
+    <ol>
+      <li>הדפס את המספרים מ-1 עד 100.</li>
+      <li>הדפס רק את המספרים הזוגיים מ-1 עד 20. (רמז: <code>i % 2 === 0</code>)</li>
+      <li>כתוב פונקציה <code>isAdult(age)</code> שמחזירה <code>true</code> אם הגיל 18 ומעלה.</li>
+      <li>צור מערך של 5 משחקים שאתה אוהב והדפס כל אחד עם המספר שלו.</li>
+      <li>אתגר: <strong>FizzBuzz</strong>. הדפס מספרים מ-1 עד 30, אבל במקום מספר שמתחלק ב-3 הדפס ״Fizz״, במקום מספר שמתחלק ב-5 הדפס ״Buzz״, ובמקום מספר שמתחלק בשניהם הדפס ״FizzBuzz״. זו שאלה שמופיעה בראיונות עבודה אמיתיים!</li>
+    </ol>
+  </div>
+
+  <div class="quiz"><script type="application/json">[
+    {"q":"מה ההבדל בין let ל-const?","o":["אין הבדל","const אי אפשר לשנות אחרי שנוצר","let רק למספרים","const רק לטקסט"],"a":1},
+    {"q":"מה יודפס? const a = [\"x\",\"y\",\"z\"]; console.log(a[1]);","o":["x","y","z","1"],"a":1,"w":"הספירה מתחילה מ-0, אז a[1] הוא הפריט השני."},
+    {"q":"מה עושה return בפונקציה?","o":["מוחק את הפונקציה","מחזיר תוצאה למי שקרא לפונקציה","חוזר לתחילת הקוד","מדפיס למסך"],"a":1},
+    {"q":"מה התוצאה של 17 % 5?","o":["3.4","2","12","85"],"a":1,"w":"17 = 5×3 + 2, אז השארית היא 2."},
+    {"q":"מה ההבדל בין = ל-===?","o":["= משים ערך, === משווה","זה אותו דבר","=== משים ערך פעמיים","= רק למחרוזות"],"a":0}
+  ]</script></div>
+</section>
