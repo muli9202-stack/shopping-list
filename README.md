@@ -35,3 +35,8 @@ service cloud.firestore {
 ```
 
 בדיקה מקומית מול האמולטור: `http://localhost:4173/?firestoreEmulator=127.0.0.1:8085`.
+
+## דף נחיתה למועדון הצרכנות
+
+דף רשימת המתנה סטטי ועצמאי נמצא ב־`public/club/` ומתפרסם בכתובת `/club/`.
+הוראות הגדרה (Google Sheets, וואטסאפ, אנליטיקס) ב־[`club-setup/README.md`](club-setup/README.md).

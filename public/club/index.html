@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>[שם המועדון] – הנחה קבועה על כל הקניות בסופר | הצטרפות חינם</title>
+  <meta name="description" content="מועדון צרכנות למשפחות: טוענים כרטיס קנייה של רשת שיווק ומקבלים הנחה קבועה ברגע הטעינה. בלי קופונים ובלי מבצעים. ההצטרפות לרשימת ההמתנה חינם ולא מחייבת.">
+  <meta name="theme-color" content="#0b5a3c">
+  <meta name="robots" content="index, follow">
+  <!-- להחליף את https://YOUR-DOMAIN/club/ בכתובת האמיתית של הדף (ראו club-setup/README.md) -->
+  <link rel="canonical" href="https://YOUR-DOMAIN/club/">
+
+  <!-- תמונת שיתוף לפייסבוק, וואטסאפ ואינסטגרם -->
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="he_IL">
+  <meta property="og:site_name" content="[שם המועדון]">
+  <meta property="og:title" content="הנחה קבועה על כל הקניות בסופר. בלי קופונים, בלי כאב ראש.">
+  <meta property="og:description" content="מצטרפים לכוח קנייה של אלפי משפחות וחוסכים על כל קנייה – אוטומטית. ההצטרפות חינם.">
+  <meta property="og:url" content="https://YOUR-DOMAIN/club/">
+  <meta property="og:image" content="https://YOUR-DOMAIN/club/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="[שם המועדון] – הנחה קבועה על הקניות בסופר">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/heebo-hebrew-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/heebo-hebrew-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Google Analytics ופיקסל פייסבוק נטענים אוטומטית מ-config.js כשממלאים את המזהים שלהם.
+       קוד מעקב נוסף (למשל Google Tag Manager או TikTok) אפשר להדביק כאן. -->
+  <script src="config.js"></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">דילוג לתוכן הראשי</a>
+
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" href="#top" aria-label="[שם המועדון] – לראש הדף">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+          <rect width="32" height="32" rx="9" fill="currentColor"/>
+          <path d="M9 12h14l-1.6 8.2a2 2 0 0 1-2 1.6h-6.8a2 2 0 0 1-2-1.6Z" fill="#fff"/>
+          <path d="M12.5 12a3.5 3.5 0 0 1 7 0" fill="none" stroke="#fff" stroke-width="2"/>
+          <path d="m13 16.8 2 2 4-4" fill="none" stroke="#0b5a3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>[שם המועדון]</span>
+      </a>
+      <a class="btn btn-small btn-primary" href="#join">הצטרפות חינם</a>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <!-- 1. פתיח -->
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="container hero-inner">
+        <p class="eyebrow">מועדון צרכנות למשפחות · בקרוב</p>
+        <h1 id="hero-title">הנחה קבועה על כל הקניות בסופר. <span class="nowrap">בלי קופונים,</span> <span class="nowrap">בלי כאב ראש.</span></h1>
+        <p class="hero-sub">מצטרפים לכוח קנייה של אלפי משפחות וחוסכים על כל קנייה – אוטומטית.</p>
+        <a class="btn btn-cta" href="#join">אני רוצה להצטרף – חינם</a>
+        <ul class="hero-points">
+          <li><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>ההצטרפות חינם</li>
+          <li><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>לא מחייב</li>
+          <li><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>בלי פרטי אשראי</li>
+        </ul>
+        <p class="hero-note">המועדון נמצא בהקמה. כרגע אוספים רשימת המתנה – ככל שנהיה יותר, ההסכם עם הרשת יהיה טוב יותר.</p>
+        <p class="counter" id="counter" hidden></p>
+      </div>
+    </section>
+
+    <!-- 2. איך זה עובד -->
+    <section class="section" id="how" aria-labelledby="how-title">
+      <div class="container">
+        <h2 id="how-title">איך זה עובד?</h2>
+        <p class="lead">שלושה צעדים. בלי אפליקציות מסובכות ובלי לגזור קופונים.</p>
+        <ol class="steps">
+          <li class="step">
+            <span class="step-icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48" focusable="false"><circle cx="18" cy="17" r="7"/><path d="M5 39c1.5-7 6.5-11 13-11s11.5 4 13 11"/><path d="M36 16v12M30 22h12"/></svg>
+            </span>
+            <span class="step-num" aria-hidden="true">1</span>
+            <h3>מצטרפים בחינם</h3>
+            <p>נרשמים למועדון. בלי דמי חבר ובלי התחייבות.</p>
+          </li>
+          <li class="step">
+            <span class="step-icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48" focusable="false"><rect x="5" y="11" width="38" height="26" rx="4"/><path d="M5 19h38"/><path d="M11 29h10"/><path d="m32 26 3 3 5-6"/></svg>
+            </span>
+            <span class="step-num" aria-hidden="true">2</span>
+            <h3>טוענים את כרטיס הקנייה בהנחה</h3>
+            <p>טוענים סכום על כרטיס הקנייה של הרשת. ההנחה מתקבלת מיד, ברגע הטעינה. לדוגמה, בהנחה של 3%: טוענים 1,000 ₪ ומשלמים 970 ₪.</p>
+          </li>
+          <li class="step">
+            <span class="step-icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48" focusable="false"><path d="M4 8h6l5 22h22l4-15H13"/><circle cx="18" cy="38" r="3"/><circle cx="33" cy="38" r="3"/></svg>
+            </span>
+            <span class="step-num" aria-hidden="true">3</span>
+            <h3>קונים בסופר כרגיל וחוסכים</h3>
+            <p>משלמים בקופה עם הכרטיס. אותם מוצרים, אותו סופר – רק זול יותר.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 3. דרגות ההנחה -->
+    <section class="section section-tint" id="tiers" aria-labelledby="tiers-title">
+      <div class="container narrow">
+        <h2 id="tiers-title">ככל שקונים יותר – ההנחה גדלה</h2>
+        <p class="lead">גובה ההנחה נקבע לפי סך הטעינות שלכם באותו חודש.</p>
+        <table class="tiers">
+          <caption class="visually-hidden">דרגות ההנחה המתוכננות לפי טעינה חודשית</caption>
+          <thead>
+            <tr><th scope="col">טעינה חודשית</th><th scope="col">הנחה מתוכננת</th></tr>
+          </thead>
+          <tbody>
+            <tr data-tier="0"><th scope="row">עד 1,500 ₪</th><td><span class="pct">3%</span></td></tr>
+            <tr data-tier="1"><th scope="row">1,500–3,000 ₪</th><td><span class="pct">4%</span></td></tr>
+            <tr data-tier="2"><th scope="row">מעל 3,000 ₪</th><td><span class="pct">5%</span></td></tr>
+          </tbody>
+        </table>
+        <p class="fine">אחוזי ההנחה הסופיים ייקבעו בהסכם עם הרשת.</p>
+      </div>
+    </section>
+
+    <!-- 4. מחשבון חיסכון -->
+    <section class="section" id="calculator" aria-labelledby="calc-title">
+      <div class="container narrow">
+        <h2 id="calc-title">כמה אתם יכולים לחסוך?</h2>
+        <div class="calc card">
+          <label class="calc-label" for="spend-range">כמה אתם מוציאים בחודש בסופר?</label>
+          <div class="calc-input-row">
+            <input type="range" id="spend-range" min="500" max="6000" step="50" value="2000" aria-describedby="spend-hint">
+            <div class="calc-number">
+              <label class="visually-hidden" for="spend-number">סכום בשקלים</label>
+              <input type="number" id="spend-number" inputmode="numeric" min="500" max="6000" step="50" value="2000">
+              <span aria-hidden="true">₪</span>
+            </div>
+          </div>
+          <p class="fine" id="spend-hint">בין 500 ל־6,000 ₪ בחודש</p>
+          <div class="calc-result" aria-live="polite" aria-atomic="true">
+            <p class="calc-main">תחסכו כ־<strong id="save-month">80</strong> ₪ בחודש – כ־<strong id="save-year">960</strong> ₪ בשנה</p>
+            <p class="calc-sub" id="calc-rate">לפי הנחה מתוכננת של 4%</p>
+          </div>
+          <a class="btn btn-primary btn-block" href="#join">אני רוצה לחסוך – להצטרפות חינם</a>
+        </div>
+        <p class="fine">החישוב הוא הערכה בלבד, לפי טבלת הדרגות המתוכננת. אחוזי ההנחה הסופיים ייקבעו בהסכם עם הרשת.</p>
+      </div>
+    </section>
+
+    <!-- 5. למה זה עובד -->
+    <section class="section section-tint" id="why" aria-labelledby="why-title">
+      <div class="container narrow">
+        <h2 id="why-title">למה זה עובד? כוח קנייה.</h2>
+        <p class="lead">כשאלפי משפחות מרכזות את הקניות שלהן, הרשת מקבלת לקוחות נאמנים ותשלום מראש – ובתמורה נותנת הנחה קבועה לכל חברי המועדון.</p>
+        <div class="flow" role="img" aria-label="תרשים: המשפחות מתאחדות במועדון. המועדון מביא לרשת לקוחות נאמנים ותשלום מראש, והרשת נותנת בתמורה הנחה קבועה לכל החברים.">
+          <div class="flow-node">
+            <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><circle cx="15" cy="16" r="5"/><circle cx="33" cy="16" r="5"/><circle cx="24" cy="24" r="4"/><path d="M5 38c1-6 5-9 10-9s9 3 10 9M23 38c1-6 5-9 10-9s9 3 10 9"/></svg>
+            <span>משפחות</span>
+          </div>
+          <div class="flow-arrow"><span>מתאחדות</span></div>
+          <div class="flow-node flow-node-main">
+            <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M8 20 24 8l16 12v18a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2Z"/><path d="m17 28 5 5 9-10"/></svg>
+            <span>המועדון</span>
+          </div>
+          <div class="flow-arrow flow-arrow-both"><span>לקוחות נאמנים ותשלום מראש</span><span>הנחה קבועה</span></div>
+          <div class="flow-node">
+            <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M6 18h36l-3-9H9Z"/><path d="M9 18v22h30V18"/><path d="M20 40V29h8v11"/></svg>
+            <span>רשת השיווק</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. הדוח החודשי -->
+    <section class="section" id="report" aria-labelledby="report-title">
+      <div class="container report-grid">
+        <div class="report-text">
+          <h2 id="report-title">כל חודש – דוח חיסכון ברור</h2>
+          <p class="lead">בסוף כל חודש תקבלו דוח פשוט: כמה הוצאתם, כמה חסכתם, וכמה חסכתם מתחילת השנה. בלי אותיות קטנות.</p>
+          <p class="fine">הדמיה להמחשה בלבד. המספרים הם דוגמה.</p>
+        </div>
+        <figure class="phone" aria-labelledby="phone-caption">
+          <div class="phone-screen">
+            <div class="phone-notch" aria-hidden="true"></div>
+            <p class="phone-app">[שם המועדון]</p>
+            <p class="phone-title">הדוח החודשי שלכם · אוקטובר</p>
+            <dl class="phone-stats">
+              <div class="stat">
+                <dt>באוקטובר הוצאתם</dt>
+                <dd>2,340 ₪</dd>
+              </div>
+              <div class="stat stat-save">
+                <dt>חסכתם</dt>
+                <dd>94 ₪</dd>
+              </div>
+              <div class="stat">
+                <dt>מתחילת השנה חסכתם</dt>
+                <dd>870 ₪</dd>
+              </div>
+            </dl>
+            <p class="phone-foot">דרגת ההנחה החודש: 4%</p>
+          </div>
+          <figcaption id="phone-caption" class="visually-hidden">דוגמה לדוח חודשי: באוקטובר הוצאתם 2,340 ₪, חסכתם 94 ₪, ומתחילת השנה חסכתם 870 ₪.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 7. שאלות נפוצות -->
+    <section class="section section-tint" id="faq" aria-labelledby="faq-title">
+      <div class="container narrow">
+        <h2 id="faq-title">שאלות נפוצות</h2>
+        <div class="faq">
+          <details>
+            <summary>כמה עולה להצטרף?</summary>
+            <div class="faq-body"><p>חינם. אין דמי חבר ואין דמי הרשמה.</p></div>
+          </details>
+          <details>
+            <summary>מתי המועדון מתחיל לפעול?</summary>
+            <div class="faq-body"><p>כשנגיע למספר נרשמים שיאפשר הסכם עם רשת. נעדכן את כל הנרשמים.</p></div>
+          </details>
+          <details>
+            <summary>האם אני מתחייב למשהו?</summary>
+            <div class="faq-body"><p>לא. ההרשמה לא מחייבת ואפשר לבטל בכל עת.</p></div>
+          </details>
+          <details>
+            <summary>באיזו רשת?</summary>
+            <div class="faq-body"><p>נודיע עם חתימת ההסכם.</p></div>
+          </details>
+          <details>
+            <summary>מה עושים עם הפרטים שלי?</summary>
+            <div class="faq-body"><p>משמשים רק לעדכונים על המועדון. לא נמכרים ולא מועברים לאף גורם. פרטים נוספים ב<a href="privacy.html">מדיניות הפרטיות</a>.</p></div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. טופס הרשמה -->
+    <section class="section section-join" id="join" aria-labelledby="join-title" tabindex="-1">
+      <div class="container narrow">
+        <div class="card join-card">
+          <div id="join-form-wrap">
+            <h2 id="join-title">הצטרפו לרשימת ההמתנה</h2>
+            <p class="lead">חינם ולא מחייב. נעדכן אתכם ברגע שהמועדון יוצא לדרך.</p>
+
+            <form id="join-form" novalidate>
+              <p class="fine">שדות המסומנים ב־<span aria-hidden="true">*</span><span class="visually-hidden">כוכבית</span> הם שדות חובה.</p>
+
+              <div class="field">
+                <label for="f-name">שם מלא <span class="req" aria-hidden="true">*</span></label>
+                <input id="f-name" name="name" type="text" autocomplete="name" required minlength="2" maxlength="80" aria-describedby="f-name-err">
+                <p class="error" id="f-name-err" hidden></p>
+              </div>
+
+              <div class="field">
+                <label for="f-phone">טלפון נייד <span class="req" aria-hidden="true">*</span></label>
+                <input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" dir="ltr" required maxlength="20" placeholder="050-1234567" aria-describedby="f-phone-err">
+                <p class="error" id="f-phone-err" hidden></p>
+              </div>
+
+              <div class="field">
+                <label for="f-city">עיר מגורים <span class="req" aria-hidden="true">*</span></label>
+                <input id="f-city" name="city" type="text" autocomplete="address-level2" required minlength="2" maxlength="60" aria-describedby="f-city-err">
+                <p class="error" id="f-city-err" hidden></p>
+              </div>
+
+              <div class="field-row">
+                <div class="field">
+                  <label for="f-household">מספר נפשות במשפחה <span class="req" aria-hidden="true">*</span></label>
+                  <select id="f-household" name="household" required aria-describedby="f-household-err">
+                    <option value="">בחרו</option>
+                    <option>1</option><option>2</option><option>3</option><option>4</option>
+                    <option>5</option><option>6</option><option>7</option><option value="8+">8 ומעלה</option>
+                  </select>
+                  <p class="error" id="f-household-err" hidden></p>
+                </div>
+
+                <div class="field">
+                  <label for="f-spend">הוצאה חודשית משוערת בסופר <span class="req" aria-hidden="true">*</span></label>
+                  <select id="f-spend" name="spend" required aria-describedby="f-spend-err">
+                    <option value="">בחרו</option>
+                    <option value="עד 1,500">עד 1,500 ₪</option>
+                    <option value="1,500–3,000">1,500–3,000 ₪</option>
+                    <option value="מעל 3,000">מעל 3,000 ₪</option>
+                  </select>
+                  <p class="error" id="f-spend-err" hidden></p>
+                </div>
+              </div>
+
+              <!-- מלכודת לבוטים: שדה שבני אדם לא רואים ולא ממלאים -->
+              <div class="hp" aria-hidden="true">
+                <label for="f-website">אתר</label>
+                <input id="f-website" name="website" type="text" tabindex="-1" autocomplete="off">
+              </div>
+
+              <div class="check">
+                <input id="f-privacy" name="privacy" type="checkbox" required aria-describedby="f-privacy-err">
+                <label for="f-privacy">קראתי ואני מסכים/ה ל<a href="privacy.html" target="_blank" rel="noopener">מדיניות הפרטיות<span class="visually-hidden"> (נפתח בחלון חדש)</span></a> <span class="req" aria-hidden="true">*</span></label>
+              </div>
+              <p class="error" id="f-privacy-err" hidden></p>
+
+              <div class="check">
+                <input id="f-updates" name="updates" type="checkbox" aria-controls="email-field">
+                <label for="f-updates">אני מסכים/ה לקבל עדכונים בוואטסאפ ובמייל</label>
+              </div>
+
+              <div class="field" id="email-field" hidden>
+                <label for="f-email">אימייל לעדכונים (לא חובה)</label>
+                <input id="f-email" name="email" type="email" autocomplete="email" dir="ltr" maxlength="100" aria-describedby="f-email-err">
+                <p class="error" id="f-email-err" hidden></p>
+              </div>
+
+              <button class="btn btn-cta btn-block" type="submit" id="submit-btn">הצטרפו לרשימת ההמתנה</button>
+              <p class="error form-error" id="form-error" role="alert" hidden></p>
+              <p class="fine center">בלי תשלום, בלי פרטי אשראי ובלי תעודת זהות.</p>
+            </form>
+          </div>
+
+          <div id="thanks" hidden>
+            <div class="thanks-icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48" focusable="false"><circle cx="24" cy="24" r="21"/><path d="m14 24.5 7 7 13-14"/></svg>
+            </div>
+            <h2 id="thanks-title" tabindex="-1">תודה! נרשמתם לרשימת ההמתנה</h2>
+            <p class="lead" id="thanks-msg">נעדכן אתכם ברגע שהמועדון יוצא לדרך.</p>
+            <p><strong>שתפו את הקישור – כל חבר שמצטרף מקרב את ההשקה.</strong></p>
+            <div class="share-link">
+              <label for="share-url" class="visually-hidden">הקישור האישי שלכם לשיתוף</label>
+              <input id="share-url" type="text" readonly dir="ltr">
+              <button class="btn btn-outline" type="button" id="copy-btn">העתקה</button>
+            </div>
+            <p class="copy-status" id="copy-status" role="status"></p>
+            <a class="btn btn-whatsapp btn-block" id="wa-share" href="#" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.2c0-.1-.2-.2-.5-.3Z" fill="currentColor"/></svg>
+              שיתוף בוואטסאפ<span class="visually-hidden"> (נפתח בחלון חדש)</span>
+            </a>
+            <button class="btn btn-outline btn-block" type="button" id="native-share" hidden>שיתוף באפליקציה אחרת</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 9. כותרת תחתונה -->
+  <footer class="footer">
+    <div class="container">
+      <p class="footer-brand">[שם המועדון]</p>
+      <p>מופעל על ידי [שם החברה] · ח.פ. [מספר]</p>
+      <p>ליצירת קשר: <a href="tel:+972500000000" dir="ltr">[טלפון]</a><span id="footer-wa-wrap" hidden> · <a id="footer-wa" href="#" target="_blank" rel="noopener">וואטסאפ<span class="visually-hidden"> (נפתח בחלון חדש)</span></a></span></p>
+      <nav aria-label="קישורים משפטיים">
+        <ul class="footer-links">
+          <li><a href="privacy.html">מדיניות פרטיות</a></li>
+          <li><a href="terms.html">תקנון</a></li>
+          <li><a href="accessibility.html">הצהרת נגישות</a></li>
+        </ul>
+      </nav>
+      <p class="fine">© <span id="year">2026</span> [שם החברה]. המועדון נמצא בהקמה ואינו פעיל עדיין. אחוזי ההנחה הסופיים ייקבעו בהסכם עם הרשת.</p>
+    </div>
+  </footer>
+
+  <!-- כפתור וואטסאפ צף -->
+  <a class="fab-whatsapp" id="fab-wa" href="#" target="_blank" rel="noopener" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.2c0-.1-.2-.2-.5-.3Z" fill="currentColor"/></svg>
+    <span class="visually-hidden">שאלה? כתבו לנו בוואטסאפ (נפתח בחלון חדש)</span>
+  </a>
+
+  <!-- רכיב נגישות -->
+  <div class="a11y" id="a11y">
+    <button class="a11y-toggle" id="a11y-toggle" type="button" aria-expanded="false" aria-controls="a11y-panel">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="4" r="2" fill="currentColor"/><path d="M4 8.5c2.5.8 5.2 1.2 8 1.2s5.5-.4 8-1.2M12 9.7V15m0 0-3 6m3-6 3 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span class="visually-hidden">תפריט נגישות</span>
+    </button>
+    <div class="a11y-panel" id="a11y-panel" role="region" aria-labelledby="a11y-title" hidden>
+      <div class="a11y-head">
+        <h2 id="a11y-title">נגישות</h2>
+        <button type="button" class="a11y-close" id="a11y-close"><span aria-hidden="true">✕</span><span class="visually-hidden">סגירת תפריט הנגישות</span></button>
+      </div>
+      <div class="a11y-size" role="group" aria-labelledby="a11y-size-label">
+        <span id="a11y-size-label">גודל טקסט</span>
+        <button type="button" data-a11y="smaller" aria-label="הקטנת טקסט">א-</button>
+        <output id="a11y-size-value" aria-live="polite">100%</output>
+        <button type="button" data-a11y="larger" aria-label="הגדלת טקסט">א+</button>
+      </div>
+      <button type="button" class="a11y-opt" data-a11y="contrast" aria-pressed="false">ניגודיות גבוהה</button>
+      <button type="button" class="a11y-opt" data-a11y="links" aria-pressed="false">הדגשת קישורים</button>
+      <button type="button" class="a11y-opt" data-a11y="font" aria-pressed="false">גופן קריא</button>
+      <button type="button" class="a11y-opt" data-a11y="motion" aria-pressed="false">עצירת אנימציות</button>
+      <button type="button" class="a11y-reset" data-a11y="reset">איפוס הגדרות</button>
+      <a class="a11y-link" href="accessibility.html">הצהרת נגישות</a>
+    </div>
+  </div>
+</body>
+</html>

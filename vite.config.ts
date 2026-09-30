@@ -31,6 +31,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2}'],
+        // The club landing page (public/club) is a separate static site, not part of the app.
+        globIgnores: ['club/**'],
+        navigateFallbackDenylist: [/\/club\//],
       },
     }),
   ],
