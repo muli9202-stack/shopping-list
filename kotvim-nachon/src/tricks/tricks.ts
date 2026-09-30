@@ -27,6 +27,18 @@ export interface Trick {
 
 /** Original tips & tricks for every common difficulty. Narrated aloud step by step. */
 export const TRICKS: Record<SkillId, Trick> = {
+  roots: {
+    skill: 'roots',
+    title: 'השורש שומר על האותיות',
+    emoji: '🌳',
+    steps: [
+      { say: 'לכל מילה בעברית יש שורש: שלוש אותיות שנשארות בכל המילים של אותה משפחה.', caption: 'מה זה שורש?', visual: { kind: 'family', root: 'כתב', kids: ['מכתב', 'כתיבה', 'לכתוב'] } },
+      { say: 'מכתב, כתיבה, לכתוב. בכולן יש כ, ת ו-ב. זה השורש של המשפחה.', caption: 'השורש: כ-ת-ב', visual: { kind: 'text', big: 'כ-ת-ב', emoji: '🌳', color: '#9c36b5' } },
+      { say: 'איך מוצאים שורש? מורידים את האותיות שנוספו מסביב, כמו מ בהתחלה, ומה שנשאר הוא השורש.', caption: 'מורידים את התוספות', visual: { kind: 'morph', from: 'מכתב', to: 'כתב', emoji: '✂️' } },
+      { say: 'והטריק הכי חשוב: אם אתם יודעים לכתוב מילה אחת במשפחה, אתם יודעים את כולן! צבע נכתב עם ע, אז גם צבעוני וצובע.', caption: 'המשפחה שומרת על האותיות', visual: { kind: 'family', root: 'צבע', kids: ['צבעוני', 'צובע', 'צבעים'] } },
+      { say: 'כשאתם מתלבטים איך לכתוב מילה, חפשו מילה מאותה משפחה שאתם כבר מכירים.', caption: 'מתלבטים? חפשו משפחה!', visual: { kind: 'list', items: [{ w: 'רכבת', e: '🚆' }, { w: 'רוכב', e: '🚴' }, { w: 'לרכוב', e: '🐎' }] } },
+    ],
+  },
   im_im: {
     skill: 'im_im',
     title: 'הידיים של עם',

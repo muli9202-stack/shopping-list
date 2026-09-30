@@ -210,7 +210,7 @@ export async function speak(text: string, opts: { rate?: number; force?: boolean
       if (plan.some((p) => 'clip' in p)) {
         for (const part of plan) {
           if (my !== token) return;
-          if ('clip' in part) await playClip(part.clip);
+          if ('clip' in part) await playClip(part.clip, () => my === token);
         }
         return;
       }

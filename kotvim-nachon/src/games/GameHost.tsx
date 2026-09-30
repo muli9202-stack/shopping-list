@@ -17,6 +17,7 @@ import { FishingGame } from './FishingGame';
 import { WhackGame } from './WhackGame';
 import { TrainGame } from './TrainGame';
 import { DetectiveGame } from './DetectiveGame';
+import { RootsGame } from './RootsGame';
 import { updateActive, useStore } from '../store';
 import { addPoints, recordAnswer } from '../engine/progress';
 import { classifyWord } from '../engine/analyze';
@@ -44,6 +45,7 @@ export const GAME_INFO: Record<GameId, { title: string; emoji: string; color: st
   whack: { title: 'הקש בשפן', emoji: '🐰', color: '#e8590c' },
   train: { title: 'רכבת המילים', emoji: '🚂', color: '#c2255c' },
   detective: { title: 'בלש הטעויות', emoji: '🔍', color: '#495057' },
+  roots: { title: 'עץ השורשים', emoji: '🌳', color: '#9c36b5' },
 };
 
 const COMPONENTS: Record<GameId, (p: GameProps) => React.ReactNode> = {
@@ -62,6 +64,7 @@ const COMPONENTS: Record<GameId, (p: GameProps) => React.ReactNode> = {
   whack: WhackGame,
   train: TrainGame,
   detective: DetectiveGame,
+  roots: RootsGame,
 };
 
 export const POINTS_PER_CORRECT = 10;

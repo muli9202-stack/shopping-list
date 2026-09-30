@@ -172,7 +172,12 @@ export function detectiveItems(skills: SkillId[], grade: number, count: number, 
   const bySkill = new Map<string, { skill: SkillId; entry: WordEntry }>();
   for (const skill of skills)
     for (const entry of WORDS[skill] ?? []) if (hasDistractor(skill, entry.w) && !bySkill.has(entry.w)) bySkill.set(entry.w, { skill, entry });
+  // a topic with few sentences borrows words from the other topics, so the game always fills up
   const fit = sentences.filter((x) => x.g <= grade + 1);
+  const covered = fit.filter((x) => x.s.split(' ').some((w) => bySkill.has(w.replace(/[.,!?:]/g, '')))).length;
+  if (covered < count)
+    for (const [skill, list] of Object.entries(WORDS) as [SkillId, WordEntry[]][])
+      if (skill !== 'im_im') for (const entry of list) if (hasDistractor(skill, entry.w) && !bySkill.has(entry.w)) bySkill.set(entry.w, { skill, entry });
   const out: DetectiveItem[] = [];
   const focusFirst = (a: DetectiveItem[]) => a.sort((x, y) => Number(!!focus[y.skill]?.has(y.right)) - Number(!!focus[x.skill]?.has(x.right)));
   for (const x of shuffle(fit)) {

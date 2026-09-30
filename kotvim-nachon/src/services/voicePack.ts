@@ -15,7 +15,8 @@ let indexPromise: Promise<Index | null> | null = null;
 const packs = new Map<number, Promise<ArrayBuffer>>();
 const decoded = new Map<string, Promise<AudioBuffer>>();
 let ctx: AudioContext | null = null;
-let current: AudioBufferSourceNode | null = null;
+/** every clip that is playing – stopping speech stops all of them, so two voices never overlap */
+const playing = new Set<AudioBufferSourceNode>();
 
 function audio(): AudioContext {
   ctx ??= new AudioContext();
@@ -128,17 +129,22 @@ export async function planSpeech(text: string, slow: boolean): Promise<Part[] | 
 }
 
 export function stopClip() {
-  try {
-    current?.stop();
-  } catch {
-    // already stopped
-  }
-  current = null;
+  for (const src of playing)
+    try {
+      src.stop();
+    } catch {
+      // already stopped
+    }
+  playing.clear();
 }
 
-/** Play one clip; resolves when it ends (or is stopped). */
-export async function playClip(c: Clip): Promise<void> {
+/**
+ * Play one clip; resolves when it ends (or is stopped). `alive` is checked after the (async) loading:
+ * if newer speech started meanwhile, this clip is dropped instead of playing on top of it.
+ */
+export async function playClip(c: Clip, alive: () => boolean = () => true): Promise<void> {
   const buf = await decode(c);
+  if (!alive()) return;
   const ac = audio();
   await new Promise<void>((resolve) => {
     const src = ac.createBufferSource();
@@ -146,8 +152,13 @@ export async function playClip(c: Clip): Promise<void> {
     const gain = ac.createGain();
     gain.gain.value = 1;
     src.connect(gain).connect(ac.destination);
-    src.onended = () => resolve();
-    current = src;
+    src.onended = () => {
+      playing.delete(src);
+      resolve();
+    };
+    // only one clip at a time
+    stopClip();
+    playing.add(src);
     src.start();
     // safety net if the browser never reports the end
     setTimeout(resolve, buf.duration * 1000 + 800);

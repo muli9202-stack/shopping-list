@@ -112,3 +112,25 @@ test('more than 1000 unique tips, never repeated', () => {
     seen.push(t!.id);
   }
 });
+
+import { FAMILIES } from '../data/roots.ts';
+import { rootItems } from './roots.ts';
+
+test('every family word holds its root letters in order', () => {
+  const regular = (w: string) => w.replace(/[םןץףך]/g, (c) => ({ ם: 'מ', ן: 'נ', ץ: 'צ', ף: 'פ', ך: 'כ' })[c]!);
+  for (const f of FAMILIES)
+    for (const w of f.words) {
+      let i = 0;
+      for (const ch of regular(w)) if (ch === f.root[i]) i++;
+      assert.equal(i, f.root.length, `${w} / ${f.root}`);
+    }
+});
+
+test('the roots game always has an answer among the options', () => {
+  for (let g = 3; g <= 8; g++)
+    for (const it of rootItems(g, 12)) {
+      const [answer, options] = it.kind === 'spell' ? [it.q.answer, it.q.options] : [it.answer, it.options];
+      assert.ok(options.includes(answer));
+      assert.equal(new Set(options).size, options.length);
+    }
+});

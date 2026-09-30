@@ -16,6 +16,7 @@ import { SKILLS } from '../src/data/skills.ts';
 import { TRICKS } from '../src/tricks/tricks.ts';
 import { allTips } from '../src/data/tips.ts';
 import { DETECTIVE_SENTENCES } from '../src/data/detective.ts';
+import { FAMILIES } from '../src/data/roots.ts';
 import { voiceKey, voiceSegments } from '../src/services/voiceKey.ts';
 
 interface Item {
@@ -52,6 +53,9 @@ for (const d of [...DICTATIONS, ...SHORT_DICTATIONS]) d.sentences.forEach((s, i)
 for (const list of Object.values(STORY_IDEAS)) for (const i of list) add(i.text);
 add('הרעיון לסיפור:');
 for (const d of DETECTIVE_SENTENCES) add(d.s, { slow: true });
+for (const f of FAMILIES) for (const w of f.words) add(w);
+add('מה השורש של המילה');
+add('איזו מילה מאותה משפחה כמו');
 
 // guides and tricks
 for (const g of Object.values(GUIDES)) {

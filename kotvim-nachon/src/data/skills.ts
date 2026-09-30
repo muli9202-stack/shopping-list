@@ -24,6 +24,7 @@ export const SKILLS: SkillDef[] = [
   { id: 'finals', title: 'אותיות סופיות', parentTitle: 'אותיות סופיות (ם ן ץ ף ך)', groups: [['מ', 'ם'], ['נ', 'ן'], ['צ', 'ץ'], ['פ', 'ף'], ['כ', 'ך']], color: '#20c997', icon: '🏁', minGrade: 1 },
   { id: 'prefixes', title: 'אותיות שנדבקות', parentTitle: 'תחיליות (ו, ה, ב, כ, ל, מ, ש)', groups: [], color: '#fab005', icon: '🚂', minGrade: 1 },
   { id: 'im_im', title: 'אם או עם?', parentTitle: 'אם / עם', groups: [], color: '#7950f2', icon: '🤝', minGrade: 1 },
+  { id: 'roots', title: 'שורשים ומשפחות', parentTitle: 'שורשים ומשפחות מילים', groups: [], color: '#9c36b5', icon: '🌳', minGrade: 3 },
   { id: 'full_spelling', title: 'כתיב מלא', parentTitle: 'כתיב מלא וחסר (ו/י)', groups: [['ו', ''], ['י', '']], color: '#1098ad', icon: '🧩', minGrade: 2 },
 ];
 

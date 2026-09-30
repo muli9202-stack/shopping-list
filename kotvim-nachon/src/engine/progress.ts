@@ -115,6 +115,7 @@ const LETTER_GAMES: GameId[] = ['cards', 'balloons', 'rain', 'sort', 'builder', 
 const SKILL_GAMES: Partial<Record<SkillId, GameId[]>> = {
   im_im: ['balloons', 'sort', 'truefalse', 'cards', 'rocket', 'path', 'train', 'listen', 'detective'],
   prefixes: ['balloons', 'truefalse', 'cards', 'listen', 'bubbles', 'rocket', 'path', 'whack', 'train', 'builder', 'detective'],
+  roots: ['roots', 'cards', 'truefalse', 'builder', 'roots', 'balloons', 'detective', 'train', 'listen', 'roots', 'rocket', 'path'],
   full_spelling: ['balloons', 'builder', 'truefalse', 'listen', 'memory', 'cards', 'bubbles', 'rocket', 'path', 'whack', 'train', 'detective'],
 };
 

@@ -8,7 +8,8 @@ export type SkillId =
   | 'finals'
   | 'prefixes'
   | 'im_im'
-  | 'full_spelling';
+  | 'full_spelling'
+  | 'roots';
 
 /** Game difficulty: easy, medium, champions, experts. */
 export type Level = 1 | 2 | 3 | 4;
@@ -28,7 +29,8 @@ export type GameId =
   | 'fishing'
   | 'whack'
   | 'train'
-  | 'detective';
+  | 'detective'
+  | 'roots';
 
 /** Daily aggregate for one skill – used for the parents' progress charts. */
 export interface DayStat {
