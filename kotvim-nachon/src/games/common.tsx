@@ -16,6 +16,8 @@ export interface GameProps {
   skills: SkillId[];
   grade: number;
   rounds: number;
+  /** difficulty 1-3: more options, faster movement, more rounds */
+  level?: 1 | 2 | 3;
   /** report every answer – feeds the mistake map */
   report: (skill: SkillId, correct: boolean, expected: string, typed: string) => void;
   finish: (correct: number, total: number) => void;
@@ -217,4 +219,40 @@ export function WriteBox({ value, onChange, onEnter, placeholder, minHeight = 11
       />
     </div>
   );
+}
+
+/**
+ * Round bookkeeping shared by the question games: current index, score, and moving on after an
+ * answer (with a short pause so the child sees the result).
+ */
+export function useRounds(total: number, finish: (correct: number, total: number) => void) {
+  const [i, setI] = useState(0);
+  const [locked, setLocked] = useState(false);
+  const [score, setScore] = useState(0);
+  const answer = (ok: boolean, pause = ok ? 1200 : 2300) => {
+    setLocked(true);
+    const nextScore = score + (ok ? 1 : 0);
+    if (ok) setScore(nextScore);
+    setTimeout(() => {
+      setLocked(false);
+      if (i + 1 >= total) finish(nextScore, total);
+      else setI(i + 1);
+    }, pause);
+  };
+  return { i, locked, score, answer };
+}
+
+/** Font size that keeps a word inside its box: long words get smaller. */
+export function fitFont(text: string, base: number, min = 20): number {
+  const extra = Math.max(0, [...text].length - 4);
+  return Math.max(min, Math.round(base - extra * base * 0.09));
+}
+
+/** Options for a question at a difficulty level: level 1 keeps it to two choices. */
+export function optionsFor(q: Question, level: 1 | 2 | 3 = 2): string[] {
+  if (level === 1 && q.options.length > 2) {
+    const wrong = q.options.find((o) => o !== q.answer)!;
+    return Math.random() < 0.5 ? [q.answer, wrong] : [wrong, q.answer];
+  }
+  return q.options;
 }

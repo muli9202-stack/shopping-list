@@ -345,7 +345,7 @@ function ResultView({ outcome, child, onAgain }: { outcome: Outcome; child: Chil
       confetti(outcome.total > 80 ? 200 : 100);
       sfx('win');
       flyPoints(outcome.total);
-      speak(`${pick(PRAISE)} ${outcome.feedback}`);
+      speak(`${pick(PRAISE)} ${outcome.feedback}`, { local: true });
     }, 300);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -405,7 +405,7 @@ function ResultView({ outcome, child, onAgain }: { outcome: Outcome; child: Chil
       <div className="card row" style={{ alignItems: 'flex-start' }}>
         <Mascot size={70} cheer />
         <div className="grow">{outcome.feedback}</div>
-        {voiceOn && <button className="icon-btn" onClick={() => speak(outcome.feedback, { force: true })}>🔊</button>}
+        {voiceOn && <button className="icon-btn" onClick={() => speak(outcome.feedback, { force: true, local: true })}>🔊</button>}
       </div>
 
       <div className="card">

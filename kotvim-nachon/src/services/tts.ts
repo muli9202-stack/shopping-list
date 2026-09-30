@@ -108,13 +108,14 @@ async function deviceSpeak(text: string, rate: number, my: number) {
 }
 
 /** Speak Hebrew text. `force` speaks even when voice guidance is off (dictation, "hear the word" buttons). */
-export async function speak(text: string, opts: { rate?: number; force?: boolean } = {}): Promise<void> {
+/** `local` keeps the text on the device (used for feedback about the child's own story). */
+export async function speak(text: string, opts: { rate?: number; force?: boolean; local?: boolean } = {}): Promise<void> {
   if (!text || (!enabled && !opts.force)) return;
   stop();
   const my = token;
   const rate = opts.rate ?? 0.95;
   try {
-    const mp3 = await cloudAudio(text, rate);
+    const mp3 = opts.local ? null : await cloudAudio(text, rate);
     if (my !== token) return;
     if (mp3) return await playMp3(mp3, my);
     await deviceSpeak(text, rate, my);

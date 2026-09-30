@@ -9,6 +9,12 @@ import { BuilderGame } from './BuilderGame';
 import { MemoryGame } from './MemoryGame';
 import { TrueFalseGame } from './TrueFalseGame';
 import { ListenGame } from './ListenGame';
+import { RocketGame } from './RocketGame';
+import { BubblesGame } from './BubblesGame';
+import { PathGame } from './PathGame';
+import { FishingGame } from './FishingGame';
+import { WhackGame } from './WhackGame';
+import { TrainGame } from './TrainGame';
 import { updateActive, useStore } from '../store';
 import { addPoints, recordAnswer } from '../engine/progress';
 import { classifyWord } from '../engine/analyze';
@@ -25,6 +31,12 @@ export const GAME_INFO: Record<GameId, { title: string; emoji: string; color: st
   memory: { title: 'זיכרון', emoji: '🧠', color: '#20c997' },
   truefalse: { title: 'נכון או לא?', emoji: '✅', color: '#2ec27e' },
   listen: { title: 'שומעים וכותבים', emoji: '👂', color: '#3a86ff' },
+  bubbles: { title: 'בועות קסם', emoji: '🫧', color: '#15aabf' },
+  rocket: { title: 'חללית המילים', emoji: '🚀', color: '#364fc7' },
+  path: { title: 'גשר האבנים', emoji: '🪨', color: '#5c940d' },
+  fishing: { title: 'דיג המילים', emoji: '🎣', color: '#1864ab' },
+  whack: { title: 'הקש בשפן', emoji: '🐰', color: '#e8590c' },
+  train: { title: 'רכבת המילים', emoji: '🚂', color: '#c2255c' },
 };
 
 const COMPONENTS: Record<GameId, (p: GameProps) => React.ReactNode> = {
@@ -36,6 +48,12 @@ const COMPONENTS: Record<GameId, (p: GameProps) => React.ReactNode> = {
   memory: MemoryGame,
   truefalse: TrueFalseGame,
   listen: ListenGame,
+  bubbles: BubblesGame,
+  rocket: RocketGame,
+  path: PathGame,
+  fishing: FishingGame,
+  whack: WhackGame,
+  train: TrainGame,
 };
 
 export const POINTS_PER_CORRECT = 10;
@@ -48,6 +66,7 @@ export function GameHost({
   game,
   skills,
   rounds = 8,
+  level = 2,
   source = 'game',
   onFinish,
   title,
@@ -55,6 +74,7 @@ export function GameHost({
   game: GameId;
   skills: SkillId[];
   rounds?: number;
+  level?: 1 | 2 | 3;
   source?: 'game' | 'learn' | 'diagnostic';
   onFinish: (correct: number, total: number) => void;
   title?: string;
@@ -90,7 +110,7 @@ export function GameHost({
 
   const finish = useCallback((c: number, t: number) => finishRef.current(c, t), []);
   const Comp = COMPONENTS[game];
-  const props = { skills: frozen.skills, grade: frozen.grade, rounds, report, finish };
+  const props = { skills: frozen.skills, grade: frozen.grade, rounds, level, report, finish };
 
   return (
     <>

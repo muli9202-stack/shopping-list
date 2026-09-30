@@ -72,6 +72,12 @@ function union<T>(a: T[], b: T[], key: (x: T) => string, sort: (x: T) => number,
     .slice(-cap);
 }
 
+function mergeMax(a: Record<string, number>, b: Record<string, number>): Record<string, number> {
+  const out = { ...a };
+  for (const [k, v] of Object.entries(b)) out[k] = Math.max(out[k] ?? 0, v);
+  return out;
+}
+
 function countMap(list: string[]): Map<string, number> {
   const m = new Map<string, number>();
   list.forEach((x) => m.set(x, (m.get(x) ?? 0) + 1));
@@ -115,6 +121,7 @@ export function mergeChild(a: Child, b: Child): Child {
     mistakes: union<MistakeRecord>(a.mistakes, b.mistakes, (m) => `${m.t}|${m.expected}|${m.typed}`, (m) => m.t, 300),
     writings: union<WritingRecord>(a.writings, b.writings, (w) => String(w.t), (w) => w.t, 60),
     seenTricks: [...new Set([...a.seenTricks, ...b.seenTricks])].sort(),
+    gameStars: mergeMax(a.gameStars ?? {}, b.gameStars ?? {}),
     diagnosed: a.diagnosed || b.diagnosed,
     worlds,
     streak: lastDay.streak,

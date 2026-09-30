@@ -21,6 +21,7 @@ import { PracticeScreen, StageScreen } from './screens/StageScreen';
 import { TrickScreen, TricksScreen } from './screens/TricksScreen';
 import { WriteScreen } from './screens/WriteScreen';
 import { RoomScreen } from './room/RoomScreen';
+import { GamesScreen } from './screens/GamesScreen';
 
 export default function App() {
   const route = useRoute();
@@ -97,7 +98,9 @@ export default function App() {
     case 'tricks':
       return <TricksScreen />;
     case 'practice':
-      return <PracticeScreen skill={route.skill} game={route.game} />;
+      return <PracticeScreen skill={route.skill} game={route.game} level={route.level ?? 1} />;
+    case 'games':
+      return <GamesScreen />;
     case 'write':
       return <WriteScreen />;
     case 'room':

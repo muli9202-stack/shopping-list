@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { updateActive, useActiveChild } from '../store';
 import { useNav } from '../nav';
 import { Stars, TopBar } from '../ui/kit';
 import { useGuide } from '../ui/guide';
 import { MascotSays } from '../ui/Mascot';
 import { SKILL_BY_ID } from '../data/skills';
-import { STAGES_PER_WORLD, ensureWorld, gamesForSkill, isWeak, stageAt, weakestSkills } from '../engine/progress';
+import { STAGES_PER_WORLD, ensureWorld, stageAt } from '../engine/progress';
 import { GAME_INFO } from '../games/GameHost';
-import type { SkillId, World } from '../types';
+import { catalogSize } from './GamesScreen';
+import type { World } from '../types';
 import { sfx } from '../ui/effects';
 
 export function worldInfo(w: World) {
@@ -21,7 +22,6 @@ const STAGE_ICON = { trick: '💡', game: '🎮', boss: '👑' };
 export function LearnScreen() {
   const child = useActiveChild();
   const go = useNav((s) => s.go);
-  const [practiceSkill, setPracticeSkill] = useState<SkillId | null>(null);
 
   useEffect(() => {
     if (child?.diagnosed) updateActive((c) => ensureWorld(c));
@@ -47,11 +47,17 @@ export function LearnScreen() {
 
   const worlds = child.worlds.slice(-6);
   const offset = child.worlds.length - worlds.length;
-  const weak = weakestSkills(child).slice(0, 4);
 
   return (
     <div className="screen" style={{ background: 'linear-gradient(#e7f5ff, #fff9db)' }}>
       <TopBar title="🗺️ מפת הלמידה" guide="learn" />
+      <button className="big-square" style={{ background: 'linear-gradient(135deg,#8338ec,#ff5d8f)', minHeight: 110, marginBottom: 6 }} onClick={() => go({ name: 'games' })}>
+        <span className="emoji" style={{ fontSize: 56 }}>🎲</span>
+        <span className="grow">
+          עולם המשחקים
+          <span className="sub">{catalogSize(child.grade)} משחקים לבחירה!</span>
+        </span>
+      </button>
 
       <div className="map">
         {worlds.map((w, wi) => {
@@ -101,33 +107,6 @@ export function LearnScreen() {
         })}
       </div>
 
-      <div className="card" style={{ marginTop: -20 }}>
-        <h3 style={{ marginTop: 0 }}>🎲 ארגז המשחקונים</h3>
-        <p className="small muted" style={{ marginTop: 0 }}>
-          בחרו נושא ומשחק – מתאמנים כמה שרוצים!
-        </p>
-        <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
-          {weak.map((s) => (
-            <button key={s} className={`chip ${practiceSkill === s ? 'on' : ''}`} onClick={() => setPracticeSkill(s)}>
-              {SKILL_BY_ID[s].icon} {SKILL_BY_ID[s].title} {isWeak(child, s) ? '💪' : ''}
-            </button>
-          ))}
-        </div>
-        {practiceSkill && (
-          <div className="grid2" style={{ marginTop: 12 }}>
-            {gamesForSkill(practiceSkill).map((g) => (
-              <button
-                key={g}
-                className="btn"
-                style={{ background: GAME_INFO[g].color, color: '#fff', borderRadius: 20, fontSize: 18 }}
-                onClick={() => go({ name: 'practice', skill: practiceSkill, game: g })}
-              >
-                {GAME_INFO[g].emoji} {GAME_INFO[g].title}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

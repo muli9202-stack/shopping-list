@@ -40,6 +40,11 @@ jobs:
           npm test
           npx tsc -b
 
+      - name: Check content with the Hebrew spell checker (hspell)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq hspell
+          npm run validate-content -- --check
+
       - name: Build web app
         env:
           VITE_FIREBASE_CONFIG: ${{ secrets.FIREBASE_WEB_CONFIG }}

@@ -18,7 +18,13 @@ export type GameId =
   | 'memory'
   | 'truefalse'
   | 'listen'
-  | 'sort';
+  | 'sort'
+  | 'bubbles'
+  | 'rocket'
+  | 'path'
+  | 'fishing'
+  | 'whack'
+  | 'train';
 
 /** Daily aggregate for one skill – used for the parents' progress charts. */
 export interface DayStat {
@@ -99,6 +105,8 @@ export interface Child {
   room: RoomState;
   writings: WritingRecord[];
   seenTricks: SkillId[];
+  /** best stars per catalog game, key = `${game}:${skill}:${level}` */
+  gameStars?: Record<string, number>;
   aiSummary?: { t: number; text: string };
 }
 

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { updateActive, useActiveChild } from '../store';
 import { useNav } from '../nav';
 import { TopBar, Stars, PRAISE, pick } from '../ui/kit';
-import { GameHost } from '../games/GameHost';
+import { GAME_INFO, GameHost } from '../games/GameHost';
+import { LEVEL_NAMES, gameKey } from './GamesScreen';
 import { TrickPlayer } from '../tricks/TrickPlayer';
 import { addPoints, completeStage, reviewSkills, stageAt } from '../engine/progress';
 import { worldInfo } from './LearnScreen';
@@ -87,21 +88,29 @@ export function StageScreen() {
 }
 
 /** Free practice from the game box – points per answer, no stage progress. */
-export function PracticeScreen({ skill, game }: { skill: SkillId; game: GameId }) {
+export function PracticeScreen({ skill, game, level }: { skill: SkillId; game: GameId; level: 1 | 2 | 3 }) {
   const back = useNav((s) => s.back);
   const [done, setDone] = useState<null | { stars: number }>(null);
   const [round, setRound] = useState(0);
   return (
     <div className="screen" style={{ background: 'linear-gradient(#f3f0ff, #fff7e6)' }}>
-      <TopBar title="🎲 אימון" />
+      <TopBar title={`${GAME_INFO[game].emoji} ${GAME_INFO[game].title} · ${LEVEL_NAMES[level]}`} />
       {!done && (
         <GameHost
           key={round}
           game={game}
           skills={[skill]}
           rounds={8}
+          level={level}
           onFinish={(c, t) => {
             const stars = starsFor(c, t);
+            const key = gameKey(game, skill, level);
+            // best result per game; finishing a level with 2+ stars opens the next level
+            updateActive((ch) => ({
+              ...addPoints(ch, 10 + stars * 10 * level),
+              gameStars: { ...(ch.gameStars ?? {}), [key]: Math.max(ch.gameStars?.[key] ?? 0, stars) },
+            }));
+            if (stars >= 2 && level < 3) speak('יש! נפתח שלב חדש!');
             setDone({ stars });
             sfx('win');
             confetti(100);

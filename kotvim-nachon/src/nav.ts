@@ -14,7 +14,8 @@ export type Route =
   | { name: 'stage' }
   | { name: 'trick'; skill: SkillId; back?: boolean }
   | { name: 'tricks' }
-  | { name: 'practice'; skill: SkillId; game: GameId }
+  | { name: 'practice'; skill: SkillId; game: GameId; level?: 1 | 2 | 3 }
+  | { name: 'games' }
   | { name: 'write' }
   | { name: 'room' }
   | { name: 'deleteAccount' };

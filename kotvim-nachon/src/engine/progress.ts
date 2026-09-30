@@ -110,16 +110,16 @@ export function isWeak(child: Child, skill: SkillId): boolean {
 
 export const STAGES_PER_WORLD = 5;
 
-const LETTER_GAMES: GameId[] = ['cards', 'balloons', 'rain', 'sort', 'builder', 'memory', 'truefalse', 'listen'];
+const LETTER_GAMES: GameId[] = ['cards', 'balloons', 'rain', 'sort', 'builder', 'memory', 'truefalse', 'listen', 'bubbles', 'rocket', 'path', 'fishing', 'whack', 'train'];
+/** Which games fit which topic (e.g. אם/עם only works in sentence games). */
 const SKILL_GAMES: Partial<Record<SkillId, GameId[]>> = {
-  im_im: ['balloons', 'sort', 'truefalse', 'cards'],
-  prefixes: ['balloons', 'truefalse', 'cards', 'listen'],
-  full_spelling: ['balloons', 'builder', 'truefalse', 'listen', 'memory', 'cards'],
-  finals: ['cards', 'rain', 'balloons', 'builder', 'memory', 'truefalse', 'listen'],
+  im_im: ['balloons', 'sort', 'truefalse', 'cards', 'rocket', 'path', 'train', 'listen'],
+  prefixes: ['balloons', 'truefalse', 'cards', 'listen', 'bubbles', 'rocket', 'path', 'whack', 'train', 'builder'],
+  full_spelling: ['balloons', 'builder', 'truefalse', 'listen', 'memory', 'cards', 'bubbles', 'rocket', 'path', 'whack', 'train'],
 };
 
 export function gamesForSkill(skill: SkillId | 'review'): GameId[] {
-  if (skill === 'review') return ['balloons', 'truefalse', 'cards', 'listen'];
+  if (skill === 'review') return ['balloons', 'truefalse', 'cards', 'listen', 'rocket', 'path', 'train'];
   return SKILL_GAMES[skill] ?? LETTER_GAMES;
 }
 
