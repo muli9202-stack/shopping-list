@@ -16,7 +16,8 @@ import type { SkillId } from '../types';
  */
 export function DiagnosticScreen() {
   const child = useActiveChild();
-  const replace = useNav((s) => s.replace);
+  // the learning map is already underneath this screen – go back to it instead of opening a second one
+  const back = useNav((s) => s.back);
   const [round, setRound] = useState<{ n: 1 | 2; skills: SkillId[] }>(() => ({ n: 1, skills: child ? eligibleSkills(child.grade) : [] }));
   const [done, setDone] = useState(false);
   if (!child) return null;
@@ -42,7 +43,7 @@ export function DiagnosticScreen() {
             </div>
           ))}
         </div>
-        <button className="btn big green" onClick={() => replace({ name: 'learn' })}>
+        <button className="btn big green" onClick={back}>
           למפה! 🗺️
         </button>
       </div>
