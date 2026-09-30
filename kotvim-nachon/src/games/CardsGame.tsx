@@ -23,7 +23,7 @@ export function CardsGame({ skills, grade, rounds, report, finish }: GameProps) 
     report(q.skill, ok, q.word, q.kind === 'missing' ? q.display.replace('_', opt) : opt);
     if (ok) {
       sfx('good');
-      speak(`${pick(PRAISE)} ${q.say}`);
+      speak(pick(PRAISE));
       setScore((s) => s + 1);
     } else {
       sfx('bad');

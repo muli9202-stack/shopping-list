@@ -121,7 +121,7 @@ export function BalloonsGame({ skills, grade, rounds, report, finish }: GameProp
       burst(stage, b.position.clone(), COLORS[0]);
       stage.scene.remove(b);
       sfx('win');
-      speak(`${pick(PRAISE)} ${cur.say}`);
+      speak(pick(PRAISE));
       score.current += 1;
       setFill(cur.answer);
       setTimeout(() => {
@@ -131,17 +131,28 @@ export function BalloonsGame({ skills, grade, rounds, report, finish }: GameProp
         else setI(iRef.current + 1);
       }, 1500);
     } else {
+      // a wrong balloon is a mistake: show the right one and move on (no endless tries)
+      busy.current = true;
       sfx('bad');
-      speak(pick(ENCOURAGE));
+      speak(`${pick(ENCOURAGE)}. כותבים ${cur.say}`);
       b.userData.popped = true;
+      const right = balloons.current.find((x) => x.userData.opt === cur.answer);
       const start = performance.now();
       stage.onFrame(() => {
         const p = (performance.now() - start) / 600;
         if (p < 1) {
-          b.scale.setScalar(1 - p * 0.9);
+          b.scale.setScalar(Math.max(0.01, 1 - p * 0.9));
           b.rotation.z += 0.3;
         } else if (b.parent) stage.scene.remove(b);
+        if (right && right.parent) right.scale.setScalar(1.15 + Math.sin(performance.now() / 120) * 0.08);
       });
+      setFill(cur.answer);
+      setTimeout(() => {
+        busy.current = false;
+        setFill(null);
+        if (iRef.current + 1 >= qsRef.current.length) finish(score.current, qsRef.current.length);
+        else setI(iRef.current + 1);
+      }, 2300);
     }
   };
   const qsRef = useRef(qs);

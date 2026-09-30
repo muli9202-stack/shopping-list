@@ -40,17 +40,17 @@ export function FishingGame({ skills, grade, rounds, level = 2, report, finish }
     if (ok) {
       setCaught(f.id);
       sfx('coin');
-      speak(`${pick(PRAISE)} ${q.say}`);
+      speak(pick(PRAISE));
     } else {
       sfx('bad');
-      speak(pick(ENCOURAGE));
+      speak(`${pick(ENCOURAGE)}. כותבים ${q.say}`);
     }
     answer(ok, ok ? 1400 : 1200);
   };
 
   return (
     <GameShell game="fishing" title="🎣 דיג המילים" done={i} total={qs.length}>
-      <QuestionPrompt q={q} grade={grade} fill={caught !== null ? q.answer : null} />
+      <QuestionPrompt q={q} grade={grade} fill={locked ? q.answer : null} />
       <div style={{ position: 'relative', height: 300, borderRadius: 26, overflow: 'hidden', background: 'linear-gradient(#74c0fc, #1864ab)', boxShadow: 'var(--shadow)' }}>
         <style>{`@keyframes swimR{from{transform:translateX(-120px)}to{transform:translateX(520px)}}@keyframes swimL{from{transform:translateX(520px) scaleX(-1)}to{transform:translateX(-120px) scaleX(-1)}}`}</style>
         {[0, 1, 2, 3, 4, 5].map((k) => (

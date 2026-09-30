@@ -106,7 +106,7 @@ export function RainGame({ skills, grade, rounds, report, finish }: GameProps) {
     if (ok) {
       busy.current = true;
       sfx('win');
-      speak(`${pick(PRAISE)} ${cur.say}`);
+      speak(pick(PRAISE));
       score.current += 1;
       setFill(cur.answer);
       stage.scene.remove(c);
@@ -117,9 +117,18 @@ export function RainGame({ skills, grade, rounds, report, finish }: GameProps) {
         else setI(iRef.current + 1);
       }, 1500);
     } else {
+      // a wrong letter is a mistake: show the right letter and move on
+      busy.current = true;
       sfx('bad');
-      speak(pick(ENCOURAGE));
-      c.position.y = 7;
+      speak(`${pick(ENCOURAGE)}. כותבים ${cur.say}`);
+      stage.scene.remove(c);
+      setFill(cur.answer);
+      setTimeout(() => {
+        busy.current = false;
+        setFill(null);
+        if (iRef.current + 1 >= qsRef.current.length) finish(score.current, qsRef.current.length);
+        else setI(iRef.current + 1);
+      }, 2300);
     }
   };
 

@@ -1,4 +1,5 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { speak } from '../services/tts';
 import type { GameId, SkillId } from '../types';
 import type { GameProps } from './common';
 import { CardsGame } from './CardsGame';
@@ -85,6 +86,14 @@ export function GameHost({
   const wrongs = useRef<Record<string, number>>({});
   const shown = useRef<Set<string>>(new Set());
   const [trick, setTrick] = useState<SkillId | null>(null);
+  // hearts: three mistakes and the game is lost – play it again (the placement check has no hearts)
+  const hearts = source === 'diagnostic' ? Infinity : 3;
+  const [lost, setLost] = useState(0);
+  const [attempt, setAttempt] = useState(0);
+  const lostRef = useRef(0);
+  useEffect(() => {
+    if (lost >= hearts) speak('אוי, נגמרו הלבבות. לא נורא, מנסים שוב!');
+  }, [lost, hearts]);
   const finishRef = useRef(onFinish);
   finishRef.current = onFinish;
 
@@ -98,6 +107,8 @@ export function GameHost({
       });
       if (correct && source !== 'diagnostic') flyPoints(POINTS_PER_CORRECT);
       if (!correct && source !== 'diagnostic') {
+        lostRef.current += 1;
+        setLost(lostRef.current);
         wrongs.current[skill] = (wrongs.current[skill] ?? 0) + 1;
         if (wrongs.current[skill] === 2 && !shown.current.has(skill) && TRICKS[skill]) {
           shown.current.add(skill);
@@ -108,13 +119,44 @@ export function GameHost({
     [source],
   );
 
-  const finish = useCallback((c: number, t: number) => finishRef.current(c, t), []);
+  const finish = useCallback((c: number, t: number) => {
+    if (lostRef.current < hearts) finishRef.current(c, t);
+  }, [hearts]);
   const Comp = COMPONENTS[game];
   const props = { skills: frozen.skills, grade: frozen.grade, rounds, level, report, finish };
 
   return (
     <>
-      {game === 'listen' && title ? <ListenGame {...props} title={title} /> : <Comp {...props} />}
+      {hearts !== Infinity && (
+        <div className="row" style={{ justifyContent: 'center', gap: 4, fontSize: 24, marginBottom: 6 }} aria-label={`${Math.max(0, hearts - lost)} לבבות`}>
+          {Array.from({ length: hearts }, (_, k) => (
+            <span key={k} style={{ transition: 'transform .3s', transform: k >= hearts - lost ? 'scale(.8)' : 'none' }}>
+              {k < hearts - lost ? '❤️' : '🤍'}
+            </span>
+          ))}
+        </div>
+      )}
+      <div key={attempt}>{game === 'listen' && title ? <ListenGame {...props} title={title} /> : <Comp {...props} />}</div>
+      {lost >= hearts && (
+        <div className="overlay">
+          <div className="modal center" style={{ gap: 10 }}>
+            <div style={{ fontSize: 64 }}>💔</div>
+            <h2 style={{ margin: 0 }}>אוי, נגמרו הלבבות</h2>
+            <p style={{ margin: 0 }}>היו שלוש טעויות. לא נורא – מנסים שוב, והפעם עם יותר תשומת לב!</p>
+            <button
+              className="btn green big"
+              onClick={() => {
+                lostRef.current = 0;
+                setLost(0);
+                wrongs.current = {};
+                setAttempt((a) => a + 1);
+              }}
+            >
+              🔁 עוד ניסיון
+            </button>
+          </div>
+        </div>
+      )}
       {trick && (
         <div className="overlay">
           <div className="modal" style={{ maxWidth: 480 }}>

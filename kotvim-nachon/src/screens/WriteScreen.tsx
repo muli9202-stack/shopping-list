@@ -5,7 +5,7 @@ import { TopBar, PRAISE, pick } from '../ui/kit';
 import { isFirstTime, useGuide } from '../ui/guide';
 import { Mascot, MascotSays } from '../ui/Mascot';
 import { DICTATIONS, SHORT_DICTATIONS, STORY_IDEAS, bandFor, type Dictation } from '../data/stories';
-import { WriteBox } from '../games/common';
+import { LiveWrite } from '../ui/LiveWrite';
 import { isKnownWord } from '../engine/spellcheck';
 import { checkStory } from '../services/ai';
 import { speak, stop } from '../services/tts';
@@ -160,7 +160,7 @@ function StoryMode({ child, onDone }: { child: Child; onDone: (o: Outcome) => vo
       <button className="btn ghost" onClick={() => setIdx(idx + 1)}>
         🎲 רעיון אחר
       </button>
-      <WriteBox value={text} onChange={setText} placeholder={young ? 'כתבו כאן משפט אחד או שניים...' : 'כתבו כאן את הסיפור...'} />
+      <LiveWrite value={text} onChange={setText} placeholder={young ? 'כתבו כאן משפט אחד או שניים...' : 'כתבו כאן את הסיפור...'} />
       <div className="row">
         <span className="muted grow">{words} מילים {words >= 15 ? '🌟' : words >= 5 ? '👍' : ''}</span>
         <button className="btn green big" disabled={words < (young ? 2 : 3)} onClick={check}>
@@ -262,7 +262,7 @@ function DictationMode({ child, onDone }: { child: Child; onDone: (o: Outcome) =
           <div key={k} className="grow" style={{ height: 10, borderRadius: 6, background: k < i ? 'var(--green)' : k === i ? 'var(--yellow)' : '#dee2e6' }} />
         ))}
       </div>
-      <WriteBox key={i} value={cur} onChange={setCur} placeholder="כתבו את המשפט ששמעתם..." minHeight={90} />
+      <LiveWrite key={i} value={cur} onChange={setCur} placeholder="כתבו את המשפט ששמעתם..." expected={d.sentences[i]} />
       <button className="btn green big" disabled={!cur.trim()} onClick={next}>
         {i + 1 < d.sentences.length ? 'למשפט הבא ⬅️' : 'סיימתי! בדיקה ✨'}
       </button>
