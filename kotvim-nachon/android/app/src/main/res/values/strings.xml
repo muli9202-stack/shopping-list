@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">כותבים נכון</string>
+    <string name="title_activity_main">כותבים נכון</string>
+    <string name="package_name">com.kotvimnachon.app</string>
+    <string name="custom_url_scheme">com.kotvimnachon.app</string>
+</resources>

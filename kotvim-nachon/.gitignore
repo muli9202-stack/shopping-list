@@ -1,0 +1,10 @@
+node_modules
+dist
+*.tsbuildinfo
+.env
+.env.local
+android/app/google-services.json
+*.jks
+*.keystore
+functions/lib
+functions/node_modules
