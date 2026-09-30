@@ -90,8 +90,11 @@ export function GameHost({
     // the child's own mistake words that are due for review come first in the questions
     const child = useStore.getState().children.find((c) => c.id === useStore.getState().activeChildId);
     setFocusWords(child ? dueWords(child) : []);
-    return { skills, grade: liveGrade };
+    // the level changes the words: "קל" takes easier words, "אלופים" words above the child's grade
+    return { skills, grade: Math.max(1, Math.min(8, liveGrade + (level - 2))) };
   });
+  const streak = useRef(0);
+  const [combo, setCombo] = useState(0);
   const [tip, setTip] = useState<Tip | null>(null);
   const wrongs = useRef<Record<string, number>>({});
   const shown = useRef<Set<string>>(new Set());
@@ -116,7 +119,17 @@ export function GameHost({
         if (correct && source !== 'diagnostic') next = addPoints(next, POINTS_PER_CORRECT);
         return next;
       });
-      if (correct && source !== 'diagnostic') flyPoints(POINTS_PER_CORRECT);
+      if (correct && source !== 'diagnostic') {
+        streak.current += 1;
+        // a streak of right answers earns extra points
+        const bonus = streak.current >= 3 ? Math.min(streak.current, 10) * 2 : 0;
+        if (bonus) updateActive((c) => addPoints(c, bonus));
+        flyPoints(POINTS_PER_CORRECT + bonus);
+        setCombo(streak.current);
+      } else if (!correct) {
+        streak.current = 0;
+        setCombo(0);
+      }
       if (!correct && source !== 'diagnostic') {
         lostRef.current += 1;
         setLost(lostRef.current);
@@ -163,6 +176,11 @@ export function GameHost({
               {k < hearts - lost ? '❤️' : '🤍'}
             </span>
           ))}
+        </div>
+      )}
+      {combo >= 3 && (
+        <div key={combo} className="combo" aria-live="polite">
+          🔥 {combo} ברצף!
         </div>
       )}
       {tip && (
