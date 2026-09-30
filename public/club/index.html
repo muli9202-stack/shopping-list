@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>[שם המועדון] – הנחה קבועה על כל הקניות בסופר | הצטרפות חינם</title>
   <meta name="description" content="מועדון צרכנות למשפחות: טוענים כרטיס קנייה של רשת שיווק ומקבלים הנחה קבועה ברגע הטעינה. בלי קופונים ובלי מבצעים. ההצטרפות לרשימת ההמתנה חינם ולא מחייבת.">
-  <meta name="theme-color" content="#0b5a3c">
+  <meta name="theme-color" content="#0b0f0e">
   <meta name="robots" content="index, follow">
   <!-- להחליף את https://YOUR-DOMAIN/club/ בכתובת האמיתית של הדף (ראו club-setup/README.md) -->
   <link rel="canonical" href="https://YOUR-DOMAIN/club/">
@@ -25,7 +25,8 @@
 
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" href="fonts/heebo-hebrew-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="fonts/heebo-hebrew-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/heebo-hebrew-900-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="img/hero-market.webp" as="image">
   <link rel="stylesheet" href="style.css">
 
   <!-- Google Analytics ופיקסל פייסבוק נטענים אוטומטית מ-config.js כשממלאים את המזהים שלהם.
@@ -39,15 +40,26 @@
   <header class="topbar">
     <div class="container topbar-inner">
       <a class="brand" href="#top" aria-label="[שם המועדון] – לראש הדף">
-        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-          <rect width="32" height="32" rx="9" fill="currentColor"/>
-          <path d="M9 12h14l-1.6 8.2a2 2 0 0 1-2 1.6h-6.8a2 2 0 0 1-2-1.6Z" fill="#fff"/>
-          <path d="M12.5 12a3.5 3.5 0 0 1 7 0" fill="none" stroke="#fff" stroke-width="2"/>
-          <path d="m13 16.8 2 2 4-4" fill="none" stroke="#0b5a3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+          <path d="M6 12h28l-3.2 16.4a4 4 0 0 1-3.9 3.2H13.1a4 4 0 0 1-3.9-3.2Z" fill="currentColor"/>
+          <path d="M13 12a7 7 0 0 1 14 0" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>
+          <path d="m14.5 21.5 4 4 7-7.5" fill="none" stroke="var(--green)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <span>[שם המועדון]</span>
+        <span class="brand-text"><span class="brand-name">[שם המועדון]</span><span class="brand-tag">מועדון צרכנות</span></span>
       </a>
-      <a class="btn btn-small btn-primary" href="#join">הצטרפות חינם</a>
+      <nav class="mainnav" aria-label="ניווט ראשי">
+        <ul>
+          <li><a href="#how">איך זה עובד</a></li>
+          <li><a href="#tiers">דרגות ההנחה</a></li>
+          <li><a href="#calculator">מחשבון חיסכון</a></li>
+          <li><a href="#why">למה זה עובד</a></li>
+          <li><a href="#faq">שאלות נפוצות</a></li>
+        </ul>
+      </nav>
+      <div class="topbar-actions">
+        <a class="btn btn-dark btn-small nav-calc" href="#calculator">כמה אחסוך?</a>
+        <a class="btn btn-dark btn-small" href="#join">הצטרפות חינם!</a>
+      </div>
     </div>
   </header>
 
@@ -55,47 +67,53 @@
     <!-- 1. פתיח -->
     <section class="hero" id="top" aria-labelledby="hero-title">
       <div class="container hero-inner">
-        <p class="eyebrow">מועדון צרכנות למשפחות · בקרוב</p>
-        <h1 id="hero-title">הנחה קבועה על כל הקניות בסופר. <span class="nowrap">בלי קופונים,</span> <span class="nowrap">בלי כאב ראש.</span></h1>
-        <p class="hero-sub">מצטרפים לכוח קנייה של אלפי משפחות וחוסכים על כל קנייה – אוטומטית.</p>
-        <a class="btn btn-cta" href="#join">אני רוצה להצטרף – חינם</a>
-        <ul class="hero-points">
-          <li><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>ההצטרפות חינם</li>
-          <li><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>לא מחייב</li>
-          <li><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>בלי פרטי אשראי</li>
-        </ul>
-        <p class="hero-note">המועדון נמצא בהקמה. כרגע אוספים רשימת המתנה – ככל שנהיה יותר, ההסכם עם הרשת יהיה טוב יותר.</p>
-        <p class="counter" id="counter" hidden></p>
+        <div class="hero-text">
+          <p class="hero-brand">[שם המועדון]</p>
+          <h1 id="hero-title">הנחה קבועה על כל הקניות בסופר. <span class="nowrap">בלי קופונים,</span> <span class="nowrap">בלי כאב ראש.</span></h1>
+          <p class="hero-sub">מצטרפים לכוח קנייה של אלפי משפחות וחוסכים על כל קנייה – אוטומטית.</p>
+          <p class="hero-note">מצטרפים עכשיו, בשלב ההקמה, עד לחתימת ההסכם עם הרשת. ההצטרפות <strong>חינם ולא מחייבת!</strong></p>
+          <a class="btn btn-green" href="#join">אני רוצה להצטרף – חינם <svg class="chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 6-6 6 6 6M18 6l-6 6 6 6"/></svg></a>
+          <ul class="hero-points">
+            <li>בלי דמי חבר</li>
+            <li>בלי פרטי אשראי</li>
+            <li>אפשר לבטל בכל עת</li>
+          </ul>
+          <p class="counter" id="counter" hidden></p>
+        </div>
+        <figure class="hero-media">
+          <img src="img/family-shopping.webp" width="1100" height="896" alt="אם ובת בוחרות ירקות בסופר" fetchpriority="high">
+          <figcaption class="hero-tag"><strong>הנחה קבועה</strong> ברגע טעינת הכרטיס</figcaption>
+        </figure>
       </div>
     </section>
 
     <!-- 2. איך זה עובד -->
-    <section class="section" id="how" aria-labelledby="how-title">
+    <section class="section dots" id="how" aria-labelledby="how-title">
       <div class="container">
         <h2 id="how-title">איך זה עובד?</h2>
         <p class="lead">שלושה צעדים. בלי אפליקציות מסובכות ובלי לגזור קופונים.</p>
         <ol class="steps">
           <li class="step">
+            <span class="step-num" aria-hidden="true">1</span>
             <span class="step-icon" aria-hidden="true">
               <svg viewBox="0 0 48 48" focusable="false"><circle cx="18" cy="17" r="7"/><path d="M5 39c1.5-7 6.5-11 13-11s11.5 4 13 11"/><path d="M36 16v12M30 22h12"/></svg>
             </span>
-            <span class="step-num" aria-hidden="true">1</span>
             <h3>מצטרפים בחינם</h3>
             <p>נרשמים למועדון. בלי דמי חבר ובלי התחייבות.</p>
           </li>
           <li class="step">
+            <span class="step-num" aria-hidden="true">2</span>
             <span class="step-icon" aria-hidden="true">
               <svg viewBox="0 0 48 48" focusable="false"><rect x="5" y="11" width="38" height="26" rx="4"/><path d="M5 19h38"/><path d="M11 29h10"/><path d="m32 26 3 3 5-6"/></svg>
             </span>
-            <span class="step-num" aria-hidden="true">2</span>
             <h3>טוענים את כרטיס הקנייה בהנחה</h3>
-            <p>טוענים סכום על כרטיס הקנייה של הרשת. ההנחה מתקבלת מיד, ברגע הטעינה. לדוגמה, בהנחה של 3%: טוענים 1,000 ₪ ומשלמים 970 ₪.</p>
+            <p>טוענים סכום על כרטיס הקנייה של הרשת, וההנחה מתקבלת מיד. לדוגמה, בהנחה של 3%: טוענים 1,000 ₪ ומשלמים 970 ₪.</p>
           </li>
           <li class="step">
+            <span class="step-num" aria-hidden="true">3</span>
             <span class="step-icon" aria-hidden="true">
               <svg viewBox="0 0 48 48" focusable="false"><path d="M4 8h6l5 22h22l4-15H13"/><circle cx="18" cy="38" r="3"/><circle cx="33" cy="38" r="3"/></svg>
             </span>
-            <span class="step-num" aria-hidden="true">3</span>
             <h3>קונים בסופר כרגיל וחוסכים</h3>
             <p>משלמים בקופה עם הכרטיס. אותם מוצרים, אותו סופר – רק זול יותר.</p>
           </li>
@@ -104,7 +122,7 @@
     </section>
 
     <!-- 3. דרגות ההנחה -->
-    <section class="section section-tint" id="tiers" aria-labelledby="tiers-title">
+    <section class="section dots" id="tiers" aria-labelledby="tiers-title">
       <div class="container narrow">
         <h2 id="tiers-title">ככל שקונים יותר – ההנחה גדלה</h2>
         <p class="lead">גובה ההנחה נקבע לפי סך הטעינות שלכם באותו חודש.</p>
@@ -119,55 +137,66 @@
             <tr data-tier="2"><th scope="row">מעל 3,000 ₪</th><td><span class="pct">5%</span></td></tr>
           </tbody>
         </table>
-        <p class="fine">אחוזי ההנחה הסופיים ייקבעו בהסכם עם הרשת.</p>
+        <p class="fine center">אחוזי ההנחה הסופיים ייקבעו בהסכם עם הרשת.</p>
       </div>
     </section>
 
     <!-- 4. מחשבון חיסכון -->
-    <section class="section" id="calculator" aria-labelledby="calc-title">
-      <div class="container narrow">
-        <h2 id="calc-title">כמה אתם יכולים לחסוך?</h2>
-        <div class="calc card">
-          <label class="calc-label" for="spend-range">כמה אתם מוציאים בחודש בסופר?</label>
-          <div class="calc-input-row">
-            <input type="range" id="spend-range" min="500" max="6000" step="50" value="2000" aria-describedby="spend-hint">
-            <div class="calc-number">
-              <label class="visually-hidden" for="spend-number">סכום בשקלים</label>
-              <input type="number" id="spend-number" inputmode="numeric" min="500" max="6000" step="50" value="2000">
-              <span aria-hidden="true">₪</span>
+    <section class="section section-calc" id="calculator" aria-labelledby="calc-title">
+      <div class="container">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">
+              <h2 id="calc-title">כך החיסכון שלכם מצטבר</h2>
+              <p>הזיזו את הסמן לפי ההוצאה החודשית שלכם בסופר, וראו כמה תחסכו לאורך שנה.</p>
+            </div>
+            <div class="panel-big" aria-hidden="true">
+              <span class="big-num"><span id="big-year">960</span> ₪</span>
+              <span class="big-label">חיסכון משוער בשנה</span>
             </div>
           </div>
-          <p class="fine" id="spend-hint">בין 500 ל־6,000 ₪ בחודש</p>
-          <div class="calc-result" aria-live="polite" aria-atomic="true">
-            <p class="calc-main">תחסכו כ־<strong id="save-month">80</strong> ₪ בחודש – כ־<strong id="save-year">960</strong> ₪ בשנה</p>
-            <p class="calc-sub" id="calc-rate">לפי הנחה מתוכננת של 4%</p>
+
+          <div class="calc">
+            <label class="calc-label" for="spend-range">כמה אתם מוציאים בחודש בסופר?</label>
+            <div class="calc-input-row">
+              <input type="range" id="spend-range" min="500" max="6000" step="50" value="2000" aria-describedby="spend-hint">
+              <div class="calc-number">
+                <label class="visually-hidden" for="spend-number">סכום בשקלים</label>
+                <input type="number" id="spend-number" inputmode="numeric" min="500" max="6000" step="50" value="2000">
+                <span aria-hidden="true">₪</span>
+              </div>
+            </div>
+            <p class="fine" id="spend-hint">בין 500 ל־6,000 ₪ בחודש</p>
+            <div class="calc-result" aria-live="polite" aria-atomic="true">
+              <p class="calc-main">תחסכו כ־<strong id="save-month">80</strong> ₪ בחודש – כ־<strong id="save-year">960</strong> ₪ בשנה</p>
+              <p class="calc-sub" id="calc-rate">לפי הנחה מתוכננת של 4%</p>
+            </div>
           </div>
-          <a class="btn btn-primary btn-block" href="#join">אני רוצה לחסוך – להצטרפות חינם</a>
+
+          <div class="chart-box">
+            <svg id="chart" viewBox="0 0 1000 380" role="img" aria-labelledby="chart-desc" preserveAspectRatio="none"></svg>
+            <p id="chart-desc" class="visually-hidden">גרף החיסכון המצטבר לאורך 12 חודשים לפי הסכום שבחרתם.</p>
+            <div class="chart-months" aria-hidden="true"><span style="right:0">חודש 1</span><span class="mid" style="right:18.2%">3</span><span style="right:45.5%">6</span><span class="mid" style="right:72.7%">9</span><span class="now" style="left:0">חודש 12</span></div>
+          </div>
+          <p class="panel-foot">החישוב הוא הערכה בלבד, לפי טבלת הדרגות המתוכננת. אחוזי ההנחה הסופיים ייקבעו בהסכם עם הרשת.</p>
+          <a class="btn btn-green" href="#join">להצטרפות חינם <svg class="chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 6-6 6 6 6M18 6l-6 6 6 6"/></svg></a>
         </div>
-        <p class="fine">החישוב הוא הערכה בלבד, לפי טבלת הדרגות המתוכננת. אחוזי ההנחה הסופיים ייקבעו בהסכם עם הרשת.</p>
       </div>
     </section>
 
     <!-- 5. למה זה עובד -->
-    <section class="section section-tint" id="why" aria-labelledby="why-title">
-      <div class="container narrow">
-        <h2 id="why-title">למה זה עובד? כוח קנייה.</h2>
-        <p class="lead">כשאלפי משפחות מרכזות את הקניות שלהן, הרשת מקבלת לקוחות נאמנים ותשלום מראש – ובתמורה נותנת הנחה קבועה לכל חברי המועדון.</p>
-        <div class="flow" role="img" aria-label="תרשים: המשפחות מתאחדות במועדון. המועדון מביא לרשת לקוחות נאמנים ותשלום מראש, והרשת נותנת בתמורה הנחה קבועה לכל החברים.">
-          <div class="flow-node">
-            <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><circle cx="15" cy="16" r="5"/><circle cx="33" cy="16" r="5"/><circle cx="24" cy="24" r="4"/><path d="M5 38c1-6 5-9 10-9s9 3 10 9M23 38c1-6 5-9 10-9s9 3 10 9"/></svg>
-            <span>משפחות</span>
-          </div>
-          <div class="flow-arrow"><span>מתאחדות</span></div>
-          <div class="flow-node flow-node-main">
-            <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M8 20 24 8l16 12v18a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2Z"/><path d="m17 28 5 5 9-10"/></svg>
-            <span>המועדון</span>
-          </div>
-          <div class="flow-arrow flow-arrow-both"><span>לקוחות נאמנים ותשלום מראש</span><span>הנחה קבועה</span></div>
-          <div class="flow-node">
-            <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M6 18h36l-3-9H9Z"/><path d="M9 18v22h30V18"/><path d="M20 40V29h8v11"/></svg>
-            <span>רשת השיווק</span>
-          </div>
+    <section class="section photo-section" id="why" aria-labelledby="why-title">
+      <div class="container">
+        <div class="glass">
+          <h2 id="why-title">למה זה עובד?</h2>
+          <p class="glass-sub">כוח קנייה</p>
+          <p>כשאלפי משפחות מרכזות את הקניות שלהן, הרשת מקבלת לקוחות נאמנים ותשלום מראש – ובתמורה נותנת הנחה קבועה לכל חברי המועדון.</p>
+          <ul>
+            <li>בלי לצבור נקודות ובלי לרדוף אחרי מבצעים שנגמרים.</li>
+            <li>ההנחה קבועה, על כל הקנייה, ברגע טעינת הכרטיס.</li>
+            <li>ככל שיותר משפחות מצטרפות, ההסכם מול הרשת חזק יותר.</li>
+          </ul>
+          <a class="btn btn-green" href="#join">הצטרפות חינם <svg class="chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 6-6 6 6 6M18 6l-6 6 6 6"/></svg></a>
         </div>
       </div>
     </section>
@@ -207,7 +236,7 @@
     </section>
 
     <!-- 7. שאלות נפוצות -->
-    <section class="section section-tint" id="faq" aria-labelledby="faq-title">
+    <section class="section dots" id="faq" aria-labelledby="faq-title">
       <div class="container narrow">
         <h2 id="faq-title">שאלות נפוצות</h2>
         <div class="faq">
@@ -310,7 +339,7 @@
                 <p class="error" id="f-email-err" hidden></p>
               </div>
 
-              <button class="btn btn-cta btn-block" type="submit" id="submit-btn">הצטרפו לרשימת ההמתנה</button>
+              <button class="btn btn-green btn-block" type="submit" id="submit-btn">הצטרפו לרשימת ההמתנה</button>
               <p class="error form-error" id="form-error" role="alert" hidden></p>
               <p class="fine center">בלי תשלום, בלי פרטי אשראי ובלי תעודת זהות.</p>
             </form>

@@ -87,3 +87,12 @@ npx playwright screenshot --viewport-size=1200,630 http://localhost:8765/club/og
 אין המלצות או ציטוטים, אין מונה מזויף, אין שמות של רשתות שיווק, ואחוזי ההנחה מוצגים תמיד כ"מתוכננים"
 שייקבעו בהסכם עם הרשת. לא נאספים תעודת זהות, פרטי אשראי או כתובת מגורים מלאה.
 אימייל נאסף רק כשדה רשות, ורק למי שסימן הסכמה לקבל עדכונים.
+
+## מקור התמונות
+
+התמונות ב־`public/club/img/` הן מ־Wikimedia Commons, ברישיון חופשי (נחלת הכלל / CC0), ואין חובה לציין קרדיט:
+- `hero-market.webp` – "Produce section, Misa Market, Ohrid, 2026" (CC0)
+- `family-shopping.webp` – "Agriculture Research Service (ARS) (8411841617)" (נחלת הכלל, USDA)
+- `fresh-produce.webp` – "Fruit and berries in a grocery store, Paris" (נחלת הכלל)
+
+מומלץ להחליף אותן בהמשך בצילומים של משפחות ישראליות.

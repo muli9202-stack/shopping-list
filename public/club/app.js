@@ -110,6 +110,53 @@
     return TIERS.length - 1;
   }
 
+  // Cumulative savings over 12 months, drawn to the chart's real pixel size.
+  var lastMonthly = 0;
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  function el(name, attrs, text) {
+    var n = document.createElementNS(SVGNS, name);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function drawChart(monthly) {
+    lastMonthly = monthly;
+    var svg = $('chart');
+    if (!svg) return;
+    var W = svg.clientWidth || 600, H = svg.clientHeight || 240;
+    var padTop = 46, padBottom = 12, padX = 18;
+    var maxV = Math.max(monthly * 12, 1);
+    var x = function (m) { return W - padX - (m - 1) / 11 * (W - 2 * padX); }; // month 1 on the right (RTL)
+    var y = function (v) { return H - padBottom - v / maxV * (H - padTop - padBottom); };
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var defs = el('defs', {});
+    var grad = el('linearGradient', { id: 'chartFill', x1: 0, y1: 0, x2: 0, y2: 1 });
+    grad.appendChild(el('stop', { offset: '0%', 'stop-color': '#22d66b', 'stop-opacity': '.45' }));
+    grad.appendChild(el('stop', { offset: '100%', 'stop-color': '#22d66b', 'stop-opacity': '0' }));
+    defs.appendChild(grad);
+    svg.appendChild(defs);
+    for (var g = 0; g <= 3; g++) {
+      var gy = y(maxV * g / 3);
+      svg.appendChild(el('line', { class: 'grid', x1: padX, x2: W - padX, y1: gy, y2: gy }));
+    }
+    var pts = [];
+    for (var m = 1; m <= 12; m++) pts.push([x(m), y(monthly * m)]);
+    var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
+    svg.appendChild(el('path', { class: 'area', d: d + ' L' + pts[11][0] + ' ' + (H - padBottom) + ' L' + pts[0][0] + ' ' + (H - padBottom) + ' Z' }));
+    svg.appendChild(el('path', { class: 'line', d: d }));
+    var small = W < 520;
+    pts.forEach(function (p, i) {
+      var m = i + 1, last = m === 12;
+      svg.appendChild(el('circle', { class: 'pt' + (last ? ' pt-end' : ''), cx: p[0], cy: p[1], r: last ? 7 : 5 }));
+      var show = small ? (m === 6 || m === 12) : (m === 1 || m % 3 === 0);
+      if (show) {
+        var anchor = last ? 'start' : (m === 1 ? 'end' : 'middle');
+        svg.appendChild(el('text', { x: p[0], y: p[1] - 16, 'text-anchor': anchor, direction: 'ltr', fill: '#ffffff', stroke: '#101514', 'stroke-width': 5, 'paint-order': 'stroke', 'font-weight': 900, 'font-size': small ? 15 : 19 }, fmt.format(monthly * m) + ' ₪'));
+      }
+    });
+  }
+
   function setupCalculator() {
     var range = $('spend-range');
     var num = $('spend-number');
@@ -125,7 +172,11 @@
       range.style.setProperty('--fill', ((amount - min) / (max - min) * 100) + '%');
       range.setAttribute('aria-valuetext', fmt.format(amount) + ' שקלים');
       for (var i = 0; i < rows.length; i++) rows[i].classList.toggle('is-active', i === t);
+      $('big-year').textContent = fmt.format(monthly * 12);
+      drawChart(monthly);
     }
+
+    window.addEventListener('resize', function () { drawChart(lastMonthly); });
 
     range.addEventListener('input', function () {
       num.value = range.value;
