@@ -59,7 +59,7 @@
       const prev = chapters[i - 1], next = chapters[i + 1];
       const foot = el("div", { class: "chapter-foot" },
         prev ? el("button", { onclick: () => go(prev.id) }, "→ " + prev.dataset.title) : el("span"),
-        el("button", { class: "done-btn", onclick: () => { done.has(c.id) ? done.delete(c.id) : done.add(c.id); store.set("done", [...done]); refreshProgress(); } }, ""),
+        el("button", { class: "done-btn", onclick: () => { done.has(c.id) ? done.delete(c.id) : done.add(c.id); store.set("done", [...done]); refreshProgress(); if (done.has(c.id)) award("done:" + c.id, 50, "סיימת פרק"); } }, ""),
         next ? el("button", { onclick: () => go(next.id) }, next.dataset.title + " ←") : el("span"));
       c.append(foot);
     });
@@ -80,9 +80,21 @@
   }
   window.addEventListener("hashchange", () => { show(location.hash.slice(1)); window.scrollTo(0, 0); });
   $("#menu-btn").addEventListener("click", () => toc.classList.toggle("open"));
+  let textCache = null;
   $("#toc-filter").addEventListener("input", e => {
-    const q = e.target.value.trim();
-    $$("#toc-list a").forEach(a => { a.hidden = q && !a.textContent.includes(q); });
+    const q = e.target.value.trim().toLowerCase();
+    if (!textCache) textCache = new Map(chapters.map(c => [c.id, c.textContent.toLowerCase()]));
+    $$("#toc-list h4").forEach(h => { h.hidden = !!q; });
+    $$("#toc-list a").forEach(a => {
+      let badge = $(".hits", a);
+      if (!q) { a.hidden = false; if (badge) badge.remove(); return; }
+      const txt = textCache.get(a.dataset.id);
+      let n = 0, i = txt.indexOf(q);
+      while (i !== -1 && n < 99) { n++; i = txt.indexOf(q, i + q.length); }
+      a.hidden = n === 0;
+      if (!badge) { badge = el("span", { class: "hits" }); a.append(badge); }
+      badge.textContent = n;
+    });
   });
   document.addEventListener("click", e => {
     const a = e.target.closest("a[href^='#']");
@@ -153,7 +165,8 @@
       const body = el("div");
       let right = 0, answered = 0;
       const score = el("div", { class: "score" }, `ענית על 0 מתוך ${data.length}`);
-      data.forEach(item => {
+      const cid = qz.closest(".chapter").id;
+      data.forEach((item, qi) => {
         const why = el("div", { class: "why" });
         const opts = el("div", { class: "opts" });
         item.o.forEach((o, i) => {
@@ -162,11 +175,12 @@
             if (opts.dataset.done) return;
             opts.dataset.done = "1";
             answered++;
-            if (i === item.a) { right++; b.classList.add("right"); why.textContent = "נכון! " + (item.w || ""); }
+            if (i === item.a) { right++; b.classList.add("right"); why.textContent = "נכון! " + (item.w || ""); award("quiz:" + cid + ":" + qi, 10, "תשובה נכונה"); }
             else { b.classList.add("wrong"); opts.children[item.a].classList.add("right"); why.textContent = "לא בדיוק. " + (item.w || ""); }
             score.textContent = answered === data.length
               ? `סיימת: ${right} מתוך ${data.length} נכונות${right === data.length ? " — מושלם!" : ""}`
               : `ענית על ${answered} מתוך ${data.length}`;
+            if (answered === data.length && right === data.length) award("perfect:" + cid, 25, "בוחן מושלם");
           });
           opts.append(b);
         });
@@ -177,11 +191,12 @@
   }
 
   /* ---------------- Demos ---------------- */
-  const demos = {};
+  const demos = window.MG_DEMOS || (window.MG_DEMOS = {});
   function initDemos(root) {
     $$(".demo[data-demo]", root).forEach(d => {
       if (demoInit.has(d)) return;
       demoInit.add(d);
+      d.addEventListener("pointerdown", () => award("demo:" + d.dataset.demo, 5, "ניסית מעבדה"), { once: true });
       const fn = demos[d.dataset.demo];
       if (fn) { try { fn(d); } catch (err) { d.append(el("p", {}, "הדמו לא הצליח להיטען: " + err.message)); } }
     });
@@ -934,7 +949,113 @@ try{\n${ta.value}\n;postMessage({t:"done"})}catch(e){postMessage({t:"err",s:e.na
     };
   };
 
+  /* ---------------- XP, levels, achievements, settings ---------------- */
+  const LEVELS = [[0, "מתחיל"], [150, "חניך"], [400, "מתכנת צעיר"], [800, "בונה"], [1400, "מפתח"], [2200, "מהנדס"], [3200, "ארכיטקט"], [4500, "מאסטר"], [6500, "אגדה"]];
+  let xp = store.get("xp", 0);
+  const awarded = new Set(store.get("awarded", []));
+  const toastBox = el("div", { class: "toasts", "aria-live": "polite" });
+  document.body.append(toastBox);
+  function toast(msg, cls) {
+    const t = el("div", { class: "toast " + (cls || "") }, msg);
+    toastBox.append(t);
+    setTimeout(() => t.classList.add("out"), 2200);
+    setTimeout(() => t.remove(), 2700);
+  }
+  function levelOf(x) { let i = 0; while (i + 1 < LEVELS.length && x >= LEVELS[i + 1][0]) i++; return i; }
+  function award(key, n, label) {
+    if (key) { if (awarded.has(key)) return; awarded.add(key); store.set("awarded", [...awarded]); }
+    const before = levelOf(xp);
+    xp += n; store.set("xp", xp);
+    toast(`+${n} XP · ${label}`);
+    if (levelOf(xp) > before) toast(`עלית לרמה ${levelOf(xp) + 1}: ${LEVELS[levelOf(xp)][1]}!`, "big");
+    refreshXp(); checkAchievements();
+  }
+  const count = pre => [...awarded].filter(k => k.startsWith(pre)).length;
+  const ACH = [
+    ["צעד ראשון", "סיימת פרק ראשון", () => done.size >= 1],
+    ["קורא מתמיד", "סיימת 10 פרקים", () => done.size >= 10],
+    ["חצי דרך", "סיימת חצי מהפרקים", () => done.size >= chapters.length / 2],
+    ["סיימתי הכול", "סיימת את כל הפרקים", () => done.size >= chapters.length],
+    ["מדען מתחיל", "ניסית מעבדה ראשונה", () => count("demo:") >= 1],
+    ["חוקר", "ניסית 15 מעבדות", () => count("demo:") >= 15],
+    ["מעבדן על", "ניסית 40 מעבדות", () => count("demo:") >= 40],
+    ["תשובה נכונה", "ענית נכון על שאלה", () => count("quiz:") >= 1],
+    ["יודע-כל", "50 תשובות נכונות", () => count("quiz:") >= 50],
+    ["מושלם", "בוחן אחד בלי טעויות", () => count("perfect:") >= 1],
+    ["פרפקציוניסט", "10 בחנים מושלמים", () => count("perfect:") >= 10],
+    ["פותר בעיות", "פתרת אתגר קוד ראשון", () => count("challenge:") >= 1],
+    ["האקר", "פתרת 10 אתגרי קוד", () => count("challenge:") >= 10],
+    ["אלוף האתגרים", "פתרת 25 אתגרי קוד", () => count("challenge:") >= 25],
+    ["מילונאי", "למדת 30 מונחים בכרטיסיות", () => count("card:") >= 30],
+    ["מאסטר מילים", "למדת 150 מונחים בכרטיסיות", () => count("card:") >= 150],
+  ];
+  const ach = new Set(store.get("ach", []));
+  function checkAchievements() {
+    ACH.forEach(([name, desc, test]) => {
+      if (!ach.has(name) && test()) { ach.add(name); store.set("ach", [...ach]); toast("הישג חדש: " + name, "big"); }
+    });
+  }
+  function refreshXp() {
+    const L = levelOf(xp);
+    $("#xp-btn").textContent = `רמה ${L + 1} · ${xp} XP`;
+  }
+  const panel = $("#profile");
+  function openProfile() {
+    const L = levelOf(xp), cur = LEVELS[L][0], next = LEVELS[L + 1] ? LEVELS[L + 1][0] : cur;
+    const pct = next > cur ? Math.round(100 * (xp - cur) / (next - cur)) : 100;
+    const theme = store.get("theme", "system"), fs = store.get("fs", "m");
+    const body = $(".profile-body", panel);
+    body.innerHTML = "";
+    const confirmRow = el("div", { class: "row", hidden: "" },
+      el("span", {}, "למחוק את כל ההתקדמות, ה-XP וההישגים?"),
+      el("button", { class: "danger", onclick: () => { ["done", "xp", "awarded", "ach", "cards"].forEach(k => store.set(k, null)); location.reload(); } }, "כן, למחוק"),
+      el("button", { onclick: () => { confirmRow.hidden = true; } }, "ביטול"));
+    body.append(
+      el("div", { class: "lvl-name" }, `רמה ${L + 1}: ${LEVELS[L][1]}`),
+      el("div", { class: "lvl-bar" }, el("i", { style: `width:${pct}%` })),
+      el("div", { class: "muted" }, LEVELS[L + 1] ? `${xp} XP · עוד ${next - xp} XP לרמה ${L + 2} (${LEVELS[L + 1][1]})` : `${xp} XP · הרמה הגבוהה ביותר!`),
+      el("div", { class: "stat-grid" },
+        ...[["פרקים", done.size + "/" + chapters.length], ["מעבדות שניסית", count("demo:")], ["תשובות נכונות", count("quiz:")], ["אתגרי קוד", count("challenge:")], ["מונחים שלמדת", count("card:")]]
+          .map(([k, v]) => el("div", {}, el("b", {}, String(v)), el("span", {}, k)))),
+      el("h3", {}, "הישגים"),
+      el("div", { class: "ach-grid" }, ...ACH.map(([name, desc]) => el("div", { class: "ach" + (ach.has(name) ? " got" : "") }, el("b", {}, (ach.has(name) ? "★ " : "☆ ") + name), el("span", {}, desc)))),
+      el("h3", {}, "הגדרות"),
+      el("div", { class: "row" }, el("span", {}, "ערכת צבעים:"),
+        ...[["system", "לפי המכשיר"], ["light", "בהיר"], ["dark", "כהה"]].map(([v, t]) => el("button", { class: theme === v ? "on" : "", onclick: () => { store.set("theme", v); applySettings(); openProfile(); } }, t))),
+      el("div", { class: "row" }, el("span", {}, "גודל טקסט:"),
+        ...[["s", "קטן"], ["m", "רגיל"], ["l", "גדול"], ["xl", "ענק"]].map(([v, t]) => el("button", { class: fs === v ? "on" : "", onclick: () => { store.set("fs", v); applySettings(); openProfile(); } }, t))),
+      el("div", { class: "row" }, el("button", { class: "danger", onclick: () => { confirmRow.hidden = false; } }, "איפוס התקדמות")),
+      confirmRow);
+    panel.hidden = false;
+  }
+  function applySettings() {
+    const theme = store.get("theme", "system");
+    if (theme === "system") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset.fs = store.get("fs", "m");
+  }
+  $("#xp-btn").addEventListener("click", openProfile);
+  $(".profile-close", panel).addEventListener("click", () => { panel.hidden = true; });
+  panel.addEventListener("click", e => { if (e.target === panel) panel.hidden = true; });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") panel.hidden = true; });
+  applySettings();
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  window.MG = { $, $$, el, store, head, visible, makeInput, award, toast, sleep, loadThree, GLOSSARY: G };
+
   /* ---------------- Boot ---------------- */
+  chapters.forEach((c, i) => { const e = $(".eyebrow", c); if (e) e.textContent = e.textContent.replace(/^פרק \d+/, "פרק " + i); });
+  $$("pre.copy").forEach(pre => {
+    const b = el("button", { class: "copy-btn", type: "button" }, "העתק");
+    b.addEventListener("click", async () => {
+      const txt = pre.querySelector("code").textContent;
+      try { await navigator.clipboard.writeText(txt); b.textContent = "הועתק ✓"; }
+      catch (e) { const r = document.createRange(); r.selectNodeContents(pre.querySelector("code")); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); b.textContent = "סומן, לחץ Ctrl+C"; }
+      setTimeout(() => { b.textContent = "העתק"; }, 1800);
+    });
+    pre.append(b);
+  });
+  const dc = $("#demo-count"); if (dc) dc.textContent = $$(".demo[data-demo]").length;
+  const tc = $("#term-count"); if (tc) tc.textContent = G.length;
   buildToc();
   addFooters();
   buildQuizzes();
@@ -947,6 +1068,8 @@ try{\n${ta.value}\n;postMessage({t:"done"})}catch(e){postMessage({t:"err",s:e.na
   });
   const wc = $("#word-count"); if (wc) wc.textContent = words.toLocaleString("he-IL");
   refreshProgress();
+  refreshXp();
   show(location.hash.slice(1) || store.get("last", chapters[0].id));
   window.scrollTo(0, 0);
+  window.addEventListener("load", () => setTimeout(() => window.scrollTo(0, 0), 0));
 })();

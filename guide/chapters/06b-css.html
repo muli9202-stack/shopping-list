@@ -1,0 +1,89 @@
+<section class="chapter" id="css" data-title="עיצוב ו-CSS לעומק" data-part="שלב 3 · בנייה">
+  <div class="chapter-head">
+    <div class="eyebrow">פרק 15 · פריסה, צבע, טיפוגרפיה ואנימציה</div>
+    <h1>עיצוב ו-CSS לעומק</h1>
+    <p>אתר שעובד זה התחלה. אתר שאנשים <em>אוהבים</em> להשתמש בו דורש עיצוב. הנה הכלים והעקרונות שמעצבים ומפתחים משתמשים בהם כל יום.</p>
+  </div>
+
+  <h2>Flexbox: סידור בשורה או בעמודה</h2>
+  <p>בעבר, לסדר שלושה כפתורים אחד ליד השני במרכז היה כאב ראש. היום יש <span class="t">Flexbox</span>. שמים <code>display: flex</code> על ה״מיכל״, והילדים שלו מסתדרים בשורה. יש שני צירים: <strong>הציר הראשי</strong> (הכיוון של השורה, נשלט ע״י <code>justify-content</code>) ו<strong>הציר השני</strong> (ניצב לו, נשלט ע״י <code>align-items</code>).</p>
+
+  <div class="demo" data-demo="flex"></div>
+
+  <div class="box tip"><b>המתכון למרכז מושלם</b><p>השאלה הכי נפוצה בתולדות ה-CSS, ״איך ממרכזים משהו?״, נפתרה בשלוש שורות: <code>display: flex; justify-content: center; align-items: center;</code></p></div>
+
+  <h2>Grid: טבלאות של פריסה</h2>
+  <p>כש-Flexbox מסדר בציר אחד, <span class="t">Grid</span> מסדר בשניים: שורות ועמודות ביחד. מושלם לגלריות, דשבורדים ומבנה של דף שלם.</p>
+  <pre><code>.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));   <span class="c">/* כמה עמודות שנכנסות, כל אחת לפחות 200px */</span>
+  gap: 16px;
+}</code></pre>
+  <p>השורה הזאת לבדה יוצרת גלריה שמסתדרת לבד: 4 עמודות במחשב, 2 בטאבלט ואחת בטלפון, בלי אף Media Query. הכרטיסים של ״מפת המדריך״ בפרק הפתיחה בנויים בדיוק ככה.</p>
+
+  <h2>צבע</h2>
+  <p>ראית בפרק 1 שכל צבע במסך הוא שלושה מספרים: אדום, ירוק וכחול. ב-CSS כותבים צבע בכמה דרכים:</p>
+  <div class="table-wrap"><table>
+    <tr><th>צורה</th><th>דוגמה</th><th>מתי טוב</th></tr>
+    <tr><td>שם</td><td class="en">tomato, navy</td><td>לניסויים מהירים</td></tr>
+    <tr><td>הקסדצימלי</td><td class="en">#ff6347</td><td>הכי נפוץ. כל זוג תווים הוא 0-255 בבסיס 16</td></tr>
+    <tr><td class="en">rgb()</td><td class="en">rgb(255, 99, 71)</td><td>כשרוצים לחשב צבעים בקוד</td></tr>
+    <tr><td class="en">hsl()</td><td class="en">hsl(9, 100%, 64%)</td><td>הכי נוח לבני אדם: גוון (0-360 על גלגל הצבעים), רוויה, בהירות</td></tr>
+  </table></div>
+  <p><strong>כללי אצבע של מעצבים:</strong></p>
+  <ul>
+    <li><strong>פלטה קטנה:</strong> צבע רקע, צבע טקסט, צבע ״דגש״ אחד (לכפתורים וקישורים), ואולי שניים-שלושה צבעי מצב (ירוק להצלחה, אדום לשגיאה). לא יותר.</li>
+    <li><strong>ניגודיות</strong> (<span class="t">Contrast</span>): טקסט אפור בהיר על לבן נראה ״אלגנטי״ ואי אפשר לקרוא אותו. חשוב במיוחד לאנשים עם ראייה חלשה.</li>
+    <li><strong>מצב כהה:</strong> היום מצופה שאתר יעבוד גם בבהיר וגם בכהה. משתמשים ב<span class="t">CSS Variables</span> (<code>--bg</code>, <code>--text</code>) ומחליפים אותם. המדריך הזה בנוי כך: נסה להחליף ערכת צבעים בפרופיל שלך (הכפתור ״רמה״ למעלה).</li>
+  </ul>
+
+  <h2>טיפוגרפיה: האומנות של טקסט</h2>
+  <p><span class="t">Typography</span> (<strong>טיפוגרפיה</strong>) היא הבחירה של גופנים, גדלים ורווחים. 90% מכל אתר הוא טקסט, אז זה אולי הדבר החשוב ביותר בעיצוב.</p>
+  <ul>
+    <li><strong>שני גופנים לכל היותר:</strong> אחד לכותרות, אחד לטקסט. <strong>Google Fonts</strong> מציע מאות גופנים חינמיים, כולל עשרות בעברית (Rubik, Heebo, Assistant, Secular One ועוד).</li>
+    <li><strong>גודל טקסט:</strong> 16px לפחות לטקסט רגיל.</li>
+    <li><strong>אורך שורה:</strong> 50-75 תווים. שורות ארוכות מדי מעייפות את העין.</li>
+    <li><strong>רווח בין שורות</strong> (<code>line-height</code>): בערך 1.5 עד 1.8 לטקסט רגיל.</li>
+    <li><strong>היררכיה:</strong> הקורא צריך להבין מה חשוב תוך שנייה, לפי גודל ומשקל.</li>
+  </ul>
+
+  <h2>אנימציות ומעברים</h2>
+  <pre><code>.button {
+  transition: transform 0.2s ease-out, background 0.2s;   <span class="c">/* כל שינוי יקרה בהדרגה */</span>
+}
+.button:hover {
+  transform: translateY(-3px) scale(1.05);               <span class="c">/* קופץ קצת למעלה ומתנפח */</span>
+}
+
+@keyframes pulse {                                        <span class="c">/* אנימציה עם שלבים */</span>
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+.loading { animation: pulse 1.2s infinite; }</code></pre>
+  <p>ה-<code>ease-out</code> שם? זו בדיוק פונקציית Easing מהפרק על מתמטיקה! כלל חשוב: אנימציות קצרות (0.15 עד 0.3 שניות) מרגישות מהירות ומקצועיות. ארוכות מדי מרגישות איטיות. ותמיד לכבד משתמשים שביקשו פחות תנועה (<code>prefers-reduced-motion</code>), כי לחלק מהאנשים תנועה גורמת לסחרחורת.</p>
+
+  <h2>נגישות: אתר לכולם</h2>
+  <p><span class="t">Accessibility</span> (<strong>נגישות</strong>, מקוצר a11y) היא לבנות אתרים שגם אנשים עם מוגבלויות יכולים להשתמש בהם: עיוורים שמשתמשים ב<strong>קורא מסך</strong> שמקריא את הדף, אנשים שמשתמשים רק במקלדת, עיוורי צבעים. בישראל יש על זה גם חוק. היסודות:</p>
+  <ul>
+    <li><code>alt</code> לכל תמונה, שמתאר מה יש בה.</li>
+    <li>להשתמש בתגיות הנכונות: <code>&lt;button&gt;</code> לכפתור (לא <code>&lt;div&gt;</code> עם לחיצה).</li>
+    <li>שכל דבר יעבוד גם עם <kbd>Tab</kbd> ו-<kbd>Enter</kbd>, ושיהיה סימון ברור של מה שנבחר.</li>
+    <li>לא להעביר מידע רק דרך צבע (״השדות האדומים שגויים״ לא עוזר לעיוור צבעים).</li>
+  </ul>
+
+  <h2>כלים של מעצבים</h2>
+  <ul>
+    <li><strong>Figma:</strong> הכלי הפופולרי לעיצוב ממשקים. חינמי למתחילים, עובד בדפדפן, ואפשר לעבוד בו ביחד בזמן אמת.</li>
+    <li><strong>Tailwind CSS:</strong> ספרייה שבה כותבים עיצוב כ״מחלקות קטנות״ ישר ב-HTML: <code>class="p-4 bg-blue-500 rounded-xl"</code>. מאוד פופולרי.</li>
+    <li><strong>Coolors</strong> ו-<strong>Adobe Color:</strong> מחוללי פלטות צבעים.</li>
+    <li><strong>Dribbble</strong> ו-<strong>Behance:</strong> השראה מעבודות של מעצבים.</li>
+  </ul>
+
+  <div class="quiz"><script type="application/json">[
+    {"q":"איך ממרכזים משהו לגמרי עם Flexbox?","o":["display: flex; justify-content: center; align-items: center;","text-align: middle","margin: center","position: center"],"a":0},
+    {"q":"מה ההבדל בין Flexbox ל-Grid?","o":["Flexbox בציר אחד, Grid בשורות ועמודות ביחד","Grid ישן יותר","Flexbox רק לטלפון","אין הבדל"],"a":0},
+    {"q":"מה זה hsl?","o":["גוון, רוויה, בהירות","גובה, רוחב, אורך","סוג של גופן","שם של אתר"],"a":0},
+    {"q":"מה אורך שורה נוח לקריאה?","o":["10-20 תווים","50-75 תווים","200 תווים","לא משנה"],"a":1},
+    {"q":"למה חשוב alt לתמונות?","o":["כדי שקורא מסך יתאר את התמונה לעיוורים","כדי שהתמונה תיטען מהר","זה לא חשוב","כדי לשנות צבע"],"a":0}
+  ]</script></div>
+</section>

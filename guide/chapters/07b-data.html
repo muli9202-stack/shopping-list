@@ -1,0 +1,77 @@
+<section class="chapter" id="data" data-title="מסדי נתונים ו-SQL" data-part="שלב 3 · בנייה">
+  <div class="chapter-head">
+    <div class="eyebrow">פרק 17 · לשמור מידע, לשאול עליו שאלות, ולא לאבד אותו</div>
+    <h1>מסדי נתונים ו-SQL</h1>
+    <p>כל אפליקציה, מאינסטגרם ועד טבלת השיאים במשחק שלך, שומרת מידע. בפרק הזה תכתוב שאילתות אמיתיות למסד נתונים.</p>
+  </div>
+
+  <h2>למה לא פשוט לשמור בקובץ?</h2>
+  <p>אפשר לשמור מידע בקובץ טקסט. אבל מה קורה כשיש 100 מיליון משתמשים? כשאלף אנשים כותבים באותה שנייה? כשצריך למצוא ״כל השחקנים מחיפה עם ניקוד מעל 1000״? קובץ לא יודע לעשות את זה מהר ובבטחה. <span class="t">Database</span> (מסד נתונים) הוא תוכנה שנבנתה בדיוק לזה: שמירה מסודרת, חיפוש מהיר (בעזרת <strong>אינדקסים</strong>, כמו האינדקס של גוגל), עבודה של הרבה משתמשים במקביל, וגיבויים.</p>
+
+  <h2>טבלאות, שורות ועמודות</h2>
+  <p>במסד נתונים טבלאי (<strong>רלציוני</strong>), המידע יושב בטבלאות, כמו גיליון אקסל:</p>
+  <ul>
+    <li>כל <strong>טבלה</strong> מתארת סוג אחד של דבר: <code>players</code>, <code>items</code>, <code>matches</code>.</li>
+    <li>כל <strong>שורה</strong> (<em>row</em>) היא פריט אחד: שחקן אחד.</li>
+    <li>כל <strong>עמודה</strong> (<em>column</em>) היא תכונה: שם, גיל, עיר, ניקוד.</li>
+    <li>לכל שורה יש מזהה ייחודי שנקרא <span class="t">Primary Key</span> (<strong>מפתח ראשי</strong>), בדרך כלל עמודת <code>id</code>. שני שחקנים יכולים להיקרא ״נועה״, אבל לכל אחת id אחר.</li>
+  </ul>
+
+  <h2>SQL: לשאול שאלות</h2>
+  <p><span class="t">SQL</span> היא שפה ״הצהרתית״: אתה לא אומר למחשב <em>איך</em> למצוא, רק <em>מה</em> אתה רוצה. ״תן לי את השמות והניקוד של 3 השחקנים הכי טובים״ נכתב כמעט כמו באנגלית:</p>
+  <pre><code><span class="k">SELECT</span> name, score        <span class="c">-- אילו עמודות</span>
+<span class="k">FROM</span> players               <span class="c">-- מאיזו טבלה</span>
+<span class="k">WHERE</span> age &gt;= 13           <span class="c">-- סינון (לא חובה)</span>
+<span class="k">ORDER BY</span> score <span class="k">DESC</span>       <span class="c">-- מיון מהגבוה לנמוך</span>
+<span class="k">LIMIT</span> 3;                  <span class="c">-- רק 3 תוצאות</span></code></pre>
+  <p>נסה בעצמך! יש כאן מסד נתונים קטן עם 10 שחקנים. לחץ על הדוגמאות, ואז שנה אותן וכתוב שאילתות משלך:</p>
+
+  <div class="demo" data-demo="sql"></div>
+
+  <div class="box idea"><b>אתגרים ל-SQL</b>
+    <ol>
+      <li>מצא את כל השחקנים מתל אביב.</li>
+      <li>מצא את השחקן הצעיר ביותר (רמז: ORDER BY age ו-LIMIT 1).</li>
+      <li>כמה שחקנים משחקים Fortnite?</li>
+      <li>מה הניקוד הגבוה ביותר מבין שחקני Minecraft? (רמז: MAX)</li>
+      <li>אילו שחקנים בני 14 עם ניקוד מעל 900?</li>
+    </ol>
+  </div>
+
+  <h2>לשנות מידע</h2>
+  <p>חוץ מ-<code>SELECT</code> (לקרוא), יש עוד שלוש פקודות בסיסיות. ביחד קוראים להן <span class="t">CRUD</span>: <strong>C</strong>reate (צור), <strong>R</strong>ead (קרא), <strong>U</strong>pdate (עדכן), <strong>D</strong>elete (מחק). כמעט כל אפליקציה בעולם היא בעצם ״CRUD עם עיצוב יפה״.</p>
+  <pre><code><span class="k">INSERT INTO</span> players (name, age, city, game, score)       <span class="c">-- צור</span>
+<span class="k">VALUES</span> (<span class="s">'גיא'</span>, 15, <span class="s">'נתניה'</span>, <span class="s">'GTA'</span>, 0);
+
+<span class="k">UPDATE</span> players <span class="k">SET</span> score = score + 50 <span class="k">WHERE</span> id = 4;     <span class="c">-- עדכן</span>
+
+<span class="k">DELETE FROM</span> players <span class="k">WHERE</span> id = 6;                        <span class="c">-- מחק</span></code></pre>
+  <div class="box warn"><b>הפקודה הכי מסוכנת בעולם</b><p><code>DELETE FROM players;</code> בלי <code>WHERE</code> מוחקת <strong>את כל הטבלה</strong>. מתכנתים ותיקים מספרים על זה סיפורי אימה. בגלל זה עושים גיבויים, ועובדים על עותק ״לבדיקות״ לפני שנוגעים במידע האמיתי.</p></div>
+
+  <h2>קשרים בין טבלאות</h2>
+  <p>הכוח האמיתי של מסד רלציוני הוא <strong>קשרים</strong>. במקום לכתוב את כל פרטי השחקן בכל פעם שהוא קונה פריט, יש טבלת <code>purchases</code> עם עמודה <code>player_id</code> שמצביעה על השחקן. עמודה כזאת נקראת <span class="t">Foreign Key</span> (<strong>מפתח זר</strong>). פקודת <code>JOIN</code> מחברת טבלאות ביחד:</p>
+  <pre><code><span class="k">SELECT</span> players.name, items.title, purchases.price
+<span class="k">FROM</span> purchases
+<span class="k">JOIN</span> players <span class="k">ON</span> purchases.player_id = players.id
+<span class="k">JOIN</span> items   <span class="k">ON</span> purchases.item_id   = items.id;</code></pre>
+
+  <h2>SQL מול NoSQL</h2>
+  <div class="table-wrap"><table>
+    <tr><th></th><th>SQL (רלציוני)</th><th>NoSQL (מסמכים)</th></tr>
+    <tr><td>מבנה</td><td>טבלאות עם עמודות קבועות</td><td>״מסמכים״ גמישים, כמו אובייקטי JSON</td></tr>
+    <tr><td>דוגמאות</td><td>PostgreSQL, MySQL, SQLite</td><td>Firebase Firestore, MongoDB</td></tr>
+    <tr><td>טוב ל...</td><td>נתונים עם הרבה קשרים: חנויות, בנקים, מערכות</td><td>התחלה מהירה, נתונים שמשתנים, זמן אמת</td></tr>
+  </table></div>
+  <p>אגב, <strong>SQLite</strong> הוא מסד נתונים זעיר שיושב בתוך קובץ אחד, והוא כנראה התוכנה הנפוצה ביותר בעולם: הוא נמצא בכל טלפון, בכל דפדפן ובהרבה משחקים (לשמירת נתונים). ובתוך הדפדפן עצמו יש מסד נתונים בשם <strong>IndexedDB</strong>, שבו, למשל, אפליקציית רשימת הקניות שהמדריך הזה יושב בתוכה שומרת את הרשימות שלך.</p>
+
+  <h2>SQL Injection: למה בודקים כל קלט</h2>
+  <p>נניח שאתר בונה שאילתה ככה: <code>"SELECT * FROM users WHERE name = '" + input + "'"</code>. מה קורה אם מישהו מקליד בשדה השם: <code>' OR '1'='1</code>? השאילתה הופכת ל״תן לי את כל המשתמשים״! זו <span class="t">SQL Injection</span>, אחת הפריצות הנפוצות בהיסטוריה. הפתרון: לעולם לא לחבר קלט של משתמש ישירות לשאילתה, אלא להשתמש ב<strong>שאילתות עם פרמטרים</strong>, שהספריות מספקות.</p>
+
+  <div class="quiz"><script type="application/json">[
+    {"q":"מה עושה WHERE בשאילתת SQL?","o":["ממיין","מסנן שורות לפי תנאי","מוחק טבלה","בוחר עמודות"],"a":1},
+    {"q":"מה זה Primary Key?","o":["סיסמה של מסד הנתונים","מזהה ייחודי לכל שורה","העמודה הראשונה תמיד","מפתח הצפנה"],"a":1},
+    {"q":"מה ראשי התיבות CRUD?","o":["Create, Read, Update, Delete","Copy, Run, Upload, Download","Code, Review, Upload, Deploy","אין דבר כזה"],"a":0},
+    {"q":"מה יקרה אחרי DELETE FROM players; (בלי WHERE)?","o":["כלום","נמחק שחקן אחד","כל השחקנים יימחקו","שגיאה"],"a":2},
+    {"q":"איך מתגוננים מ-SQL Injection?","o":["סיסמה ארוכה","שאילתות עם פרמטרים ולא חיבור קלט ישיר","לא להשתמש ב-SQL","לכבות את השרת"],"a":1}
+  ]</script></div>
+</section>

@@ -1,0 +1,145 @@
+<section class="chapter" id="snake" data-title="פרויקט מודרך: בנה סנייק" data-part="שלב 4 · משחקים">
+  <div class="chapter-head">
+    <div class="eyebrow">פרק 22 · משחק שלם, מאפס, ב-60 שורות</div>
+    <h1>פרויקט מודרך: בנה סנייק</h1>
+    <p>הגיע הזמן לבנות משחק שלם בעצמך, מהשורה הראשונה ועד שחברים משחקים בו. קודם תשחק, אחר כך נבנה אותו ביחד, חתיכה אחרי חתיכה.</p>
+  </div>
+
+  <h2>קודם שחק</h2>
+  <div class="demo" data-demo="snake"></div>
+
+  <h2>לפני שכותבים קוד: לתכנן</h2>
+  <p>מתכנתים טובים לא מתחילים להקליד מיד. הם עונים קודם על שלוש שאלות:</p>
+  <ol>
+    <li><strong>מה ה״מצב״ של המשחק?</strong> כלומר, איזה מידע צריך לזכור בכל רגע? הנחש (רשימה של משבצות), הכיוון שלו, מיקום התפוח, הניקוד, והאם המשחק נגמר.</li>
+    <li><strong>מה קורה בכל ״צעד״?</strong> הראש זז משבצת אחת בכיוון. אם הוא נכנס לקיר או לעצמו, המשחק נגמר. אם הוא אכל תפוח, הנחש גדל ותפוח חדש מופיע. אחרת, הזנב מתקצר במשבצת (כך הנחש ״זוחל״).</li>
+    <li><strong>איך השחקן שולט?</strong> החיצים משנים את הכיוון, אבל אסור להסתובב 180 מעלות ישר לתוך עצמך.</li>
+  </ol>
+  <div class="box idea"><b>הטריק של הנחש</b><p>איך מזיזים נחש שלם? לא מזיזים כל חלק! מוסיפים ראש חדש לפני הראש הנוכחי (<code>unshift</code>), ומורידים את החלק האחרון (<code>pop</code>). כל שאר הגוף נשאר במקום, וזה נראה כאילו הנחש זחל. כשהוא אוכל, פשוט לא מורידים את הזנב, והנחש גדל באחד. זה פתרון אלגנטי שמשתמש במערך כמו ב״תור״ מפרק מבני הנתונים.</p></div>
+
+  <h2>שלב 1: הדף והקנבס</h2>
+  <p>צור תיקייה חדשה, ובתוכה קובץ בשם <code>snake.html</code>. פתח אותו ב-VS Code. <span class="t">Canvas</span> (<strong>קנבס</strong>) הוא משטח ציור שעליו JavaScript יכולה לצייר צורות ופיקסלים.</p>
+  <pre class="copy"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="he" dir="rtl"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;סנייק&lt;/title&gt;
+  &lt;style&gt;
+    body { background: #111; color: #fff; font-family: sans-serif; text-align: center; }
+    canvas { background: #0b1a10; border: 2px solid #333; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;סנייק&lt;/h1&gt;
+  &lt;p id="score"&gt;ניקוד: 0&lt;/p&gt;
+  &lt;canvas id="game" width="400" height="400"&gt;&lt;/canvas&gt;
+  &lt;script&gt;
+    // כל הקוד מהשלבים הבאים נכנס כאן
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+  <h2>שלב 2: המצב של המשחק</h2>
+  <p>הקנבס הוא 400×400 פיקסלים, ונחלק אותו לרשת של 20×20 משבצות, כל אחת 20 פיקסלים.</p>
+  <pre class="copy"><code>const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");   // ה"מכחול" שבעזרתו מציירים
+const SIZE = 20, COLS = 20, ROWS = 20;
+
+let snake = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];   // הראש הוא הראשון
+let dir = { x: 1, y: 0 };                                          // זז ימינה
+let food = randomFood();
+let score = 0;
+let gameOver = false;
+
+function randomFood() {
+  return {
+    x: Math.floor(Math.random() * COLS),
+    y: Math.floor(Math.random() * ROWS),
+  };
+}</code></pre>
+
+  <h2>שלב 3: שליטה עם המקלדת</h2>
+  <p>הבדיקה <code>dir.y === 0</code> מונעת הסתובבות לאחור: אפשר לפנות למעלה רק אם כרגע לא זזים למעלה או למטה.</p>
+  <pre class="copy"><code>document.addEventListener("keydown", (e) =&gt; {
+  if (e.key === "ArrowUp"    &amp;&amp; dir.y === 0) dir = { x: 0, y: -1 };
+  if (e.key === "ArrowDown"  &amp;&amp; dir.y === 0) dir = { x: 0, y: 1 };
+  if (e.key === "ArrowLeft"  &amp;&amp; dir.x === 0) dir = { x: -1, y: 0 };
+  if (e.key === "ArrowRight" &amp;&amp; dir.x === 0) dir = { x: 1, y: 0 };
+});</code></pre>
+
+  <h2>שלב 4: חוקי המשחק (update)</h2>
+  <pre class="copy"><code>function update() {
+  const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };   // הראש החדש
+
+  const hitWall = head.x &lt; 0 || head.y &lt; 0 || head.x &gt;= COLS || head.y &gt;= ROWS;
+  const hitSelf = snake.some(part =&gt; part.x === head.x &amp;&amp; part.y === head.y);
+  if (hitWall || hitSelf) {
+    gameOver = true;
+    return;
+  }
+
+  snake.unshift(head);                                  // הוסף ראש מקדימה
+
+  if (head.x === food.x &amp;&amp; head.y === food.y) {        // אכל תפוח?
+    score++;
+    document.getElementById("score").textContent = "ניקוד: " + score;
+    food = randomFood();                                // (לא מורידים זנב = גדל)
+  } else {
+    snake.pop();                                        // הורד את הזנב
+  }
+}</code></pre>
+
+  <h2>שלב 5: ציור (draw)</h2>
+  <pre class="copy"><code>function draw() {
+  ctx.fillStyle = "#0b1a10";                                   // רקע
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "red";                                       // תפוח
+  ctx.fillRect(food.x * SIZE, food.y * SIZE, SIZE, SIZE);
+
+  ctx.fillStyle = "lime";                                      // נחש
+  snake.forEach(part =&gt; {
+    ctx.fillRect(part.x * SIZE, part.y * SIZE, SIZE - 1, SIZE - 1);
+  });
+
+  if (gameOver) {
+    ctx.fillStyle = "white";
+    ctx.font = "40px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2);
+  }
+}</code></pre>
+
+  <h2>שלב 6: לולאת המשחק</h2>
+  <p>בסנייק הנחש זז בקצב קבוע, אז במקום <code>requestAnimationFrame</code> נשתמש ב-<code>setInterval</code>, שמריץ פונקציה כל מספר קבוע של מילי-שניות:</p>
+  <pre class="copy"><code>function loop() {
+  if (!gameOver) update();
+  draw();
+}
+setInterval(loop, 120);   // 120 מילי-שניות = בערך 8 צעדים בשנייה</code></pre>
+  <p>שמור, ולחץ פעמיים על הקובץ כדי לפתוח אותו בדפדפן. <strong>בנית משחק!</strong> 🐍</p>
+
+  <div class="box warn"><b>לא עובד?</b>
+    <ul>
+      <li>לחץ <kbd>F12</kbd> ובדוק ב-Console אם יש שגיאה אדומה. היא אומרת באיזו שורה.</li>
+      <li>בדוק שכל הקוד נמצא בין <code>&lt;script&gt;</code> ל-<code>&lt;/script&gt;</code>.</li>
+      <li>בדוק שאין טעות כתיב: <code>snake</code> ו-<code>Snake</code> הם שני דברים שונים!</li>
+      <li>בדוק שכל <code>{</code> נסגר ב-<code>}</code>. VS Code צובע סוגריים תואמים באותו צבע.</li>
+    </ul>
+  </div>
+
+  <h2>שדרוגים: הפוך את זה למשחק שלך</h2>
+  <p>עכשיו החלק הכי חשוב: לשנות ולשפר לבד. כל שדרוג כאן הוא תרגיל, מקל לקשה:</p>
+  <ol>
+    <li><strong>צבעים ועיצוב:</strong> ראש בצבע שונה מהגוף. תפוח עגול (<code>ctx.arc</code>). רשת משבצות ברקע.</li>
+    <li><strong>משחק חוזר:</strong> לחיצה על רווח אחרי Game Over מתחילה משחק חדש. (רמז: פונקציה <code>reset()</code> שמאפסת את כל משתני המצב.)</li>
+    <li><strong>שיא:</strong> שמירת הניקוד הגבוה עם <code>localStorage.setItem("best", score)</code>, כך שהוא נשאר גם אחרי סגירת הדפדפן.</li>
+    <li><strong>מהירות עולה:</strong> כל 5 תפוחים המשחק מאיץ. (רמז: במקום <code>setInterval</code> השתמש ב-<code>setTimeout</code> שקורא לעצמו עם זמן שמתקצר.)</li>
+    <li><strong>באג לתיקון:</strong> אם לוחצים מהר מאוד ״למעלה״ ואז ״שמאלה״ כשהנחש זז ימינה, שני הכיוונים משתנים לפני שהנחש זז, והוא נכנס לעצמו! איך מתקנים? (רמז: תור של כיוונים, כמו במשחק שבראש הפרק.)</li>
+    <li><strong>קירות שקופים:</strong> יציאה מצד אחד מחזירה מהצד השני. (רמז: <code>%</code>)</li>
+    <li><strong>צלילים:</strong> צליל כשאוכלים תפוח (ראה פרק הצליל).</li>
+    <li><strong>טלפון:</strong> שליטה בהחלקת אצבע (<code>touchstart</code> ו-<code>touchend</code>, והשוואת ההפרש ב-x וב-y).</li>
+    <li><strong>אתגר גדול:</strong> מכשולים, שלבים, או מצב שני שחקנים על אותה מקלדת (חיצים מול WASD).</li>
+  </ol>
+  <p>וכשסיימת? העלה את המשחק ל-GitHub Pages או ל-itch.io (ראה פרק הפרסום), ושלח קישור לחברים. זה הרגע שבו אתה הופך ממי ש״לומד לתכנת״ למי ש״בונה משחקים״.</p>
+</section>

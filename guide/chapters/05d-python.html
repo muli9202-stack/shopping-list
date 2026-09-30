@@ -1,0 +1,92 @@
+<section class="chapter" id="python" data-title="Python: השפה השנייה" data-part="שלב 2 · תכנות">
+  <div class="chapter-head">
+    <div class="eyebrow">פרק 12 · השפה של ה-AI, של המדע ושל האוטומציה</div>
+    <h1>Python: השפה השנייה</h1>
+    <p>אחרי שאתה יודע JavaScript, ללמוד Python זה עניין של ימים, לא חודשים. הרעיונות זהים, רק ״הדקדוק״ שונה.</p>
+  </div>
+
+  <h2>למה Python?</h2>
+  <p><span class="t">Python</span> (פייתון, על שם קבוצת הקומיקאים ״מונטי פייתון״ ולא על שם הנחש) היא אחת השפות הפופולריות בעולם. היא נוצרה כדי להיות <strong>קריאה</strong>: קוד פייתון נראה כמעט כמו אנגלית. היא השפה הראשית של:</p>
+  <ul>
+    <li><strong>בינה מלאכותית ולמידת מכונה:</strong> PyTorch, TensorFlow, וכמעט כל מחקר AI.</li>
+    <li><strong>מדע נתונים:</strong> ניתוח נתונים, גרפים, סטטיסטיקה.</li>
+    <li><strong>אוטומציה:</strong> סקריפטים קטנים שעושים עבודה משעממת בשבילך: לשנות שמות ל-500 קבצים, להוריד נתונים מאתר, לשלוח הודעות.</li>
+    <li><strong>שרתים:</strong> Django, Flask, FastAPI (אינסטגרם נבנה בהתחלה על Django).</li>
+    <li><strong>לימוד:</strong> רוב האוניברסיטאות מלמדות אותה בקורס הראשון, והיא נפוצה מאוד בבגרות במדעי המחשב.</li>
+    <li><strong>משחקים:</strong> ספריית <strong>Pygame</strong> למשחקים דו-ממדיים, ו-GDScript של Godot דומה לה מאוד.</li>
+  </ul>
+
+  <h2>ההבדל הגדול: הזחה</h2>
+  <p>ב-JavaScript, סוגריים מסולסלים <code>{ }</code> קובעים מה שייך למה. בפייתון אין סוגריים כאלה: <strong>ההזחה</strong> (<span class="t">Indentation</span>, הרווחים בתחילת השורה) קובעת. זה מכריח לכתוב קוד מסודר, אבל גם אומר שרווח אחד לא במקום שובר את התוכנית.</p>
+  <pre><code><span class="k">if</span> score &gt; 100:
+    <span class="f">print</span>(<span class="s">"ניצחת!"</span>)        <span class="c"># 4 רווחים = בתוך ה-if</span>
+    level += 1
+<span class="f">print</span>(<span class="s">"הסוף"</span>)             <span class="c"># בלי רווחים = מחוץ ל-if, רץ תמיד</span></code></pre>
+
+  <h2>זה לצד זה</h2>
+  <div class="demo" data-demo="jspy"></div>
+
+  <h2>מילון הבדלים מהיר</h2>
+  <div class="table-wrap"><table>
+    <tr><th>דבר</th><th>JavaScript</th><th>Python</th></tr>
+    <tr><td>הדפסה</td><td class="en">console.log(x)</td><td class="en">print(x)</td></tr>
+    <tr><td>הערה</td><td class="en">// הערה</td><td class="en"># הערה</td></tr>
+    <tr><td>משתנה</td><td class="en">let x = 5;</td><td class="en">x = 5</td></tr>
+    <tr><td>אמת / שקר</td><td class="en">true / false</td><td class="en">True / False</td></tr>
+    <tr><td>״כלום״</td><td class="en">null / undefined</td><td class="en">None</td></tr>
+    <tr><td>וגם / או / לא</td><td class="en">&amp;&amp; / || / !</td><td class="en">and / or / not</td></tr>
+    <tr><td>אורך</td><td class="en">arr.length</td><td class="en">len(arr)</td></tr>
+    <tr><td>הוספה לרשימה</td><td class="en">arr.push(x)</td><td class="en">arr.append(x)</td></tr>
+    <tr><td>פונקציה</td><td class="en">function f(a) { }</td><td class="en">def f(a):</td></tr>
+    <tr><td>לולאה על מספרים</td><td class="en">for (let i=0; i&lt;5; i++)</td><td class="en">for i in range(5):</td></tr>
+    <tr><td>קלט מהמשתמש</td><td class="en">prompt("שם?")</td><td class="en">input("שם? ")</td></tr>
+  </table></div>
+
+  <h2>כוח-על של פייתון: רשימות מקוצרות</h2>
+  <p>לפייתון יש דרך קצרה ואלגנטית ליצור רשימות, שנקראת <em>List Comprehension</em>:</p>
+  <pre><code>squares = [n * n <span class="k">for</span> n <span class="k">in</span> <span class="f">range</span>(10)]              <span class="c"># [0, 1, 4, 9, ... 81]</span>
+evens   = [n <span class="k">for</span> n <span class="k">in</span> <span class="f">range</span>(20) <span class="k">if</span> n % 2 == 0]   <span class="c"># רק הזוגיים</span>
+names   = [p[<span class="s">"name"</span>] <span class="k">for</span> p <span class="k">in</span> players <span class="k">if</span> p[<span class="s">"score"</span>] &gt; 1000]</code></pre>
+
+  <h2>משחק ראשון בפייתון: נחש את המספר</h2>
+  <pre><code><span class="k">import</span> random                         <span class="c"># ספרייה מובנית למספרים אקראיים</span>
+
+secret = random.<span class="f">randint</span>(1, 100)
+tries = 0
+<span class="f">print</span>(<span class="s">"חשבתי על מספר בין 1 ל-100"</span>)
+
+<span class="k">while</span> True:
+    guess = <span class="f">int</span>(<span class="f">input</span>(<span class="s">"הניחוש שלך: "</span>))   <span class="c"># int הופך טקסט למספר</span>
+    tries += 1
+    <span class="k">if</span> guess &lt; secret:
+        <span class="f">print</span>(<span class="s">"גדול יותר!"</span>)
+    <span class="k">elif</span> guess &gt; secret:
+        <span class="f">print</span>(<span class="s">"קטן יותר!"</span>)
+    <span class="k">else</span>:
+        <span class="f">print</span>(f<span class="s">"בול! ניחשת ב-{tries} ניסיונות"</span>)   <span class="c"># f-string: משתנים בתוך טקסט</span>
+        <span class="k">break</span>                           <span class="c"># יוצא מהלולאה</span></code></pre>
+
+  <h2>איפה מריצים פייתון?</h2>
+  <ul>
+    <li><strong>בלי להתקין כלום:</strong> Google Colab (מחברת בענן, מצוין ל-AI), Replit, או python.org/shell.</li>
+    <li><strong>במחשב:</strong> מורידים מ-python.org, ומריצים ב-VS Code עם התוסף Python. בטרמינל: <code>python game.py</code>.</li>
+    <li><strong>ספריות:</strong> מתקינים עם <span class="t">pip</span> (כמו npm של JavaScript): <code>pip install pygame</code>.</li>
+  </ul>
+
+  <h2>פרויקטים מומלצים בפייתון</h2>
+  <ol>
+    <li>נחש את המספר (למעלה) ואבן-נייר-מספריים.</li>
+    <li>סקריפט שמסדר את תיקיית ההורדות: מעביר תמונות לתיקייה אחת, מסמכים לאחרת.</li>
+    <li>משחק סנייק ב-Pygame.</li>
+    <li>ניתוח נתונים: הורד קובץ CSV מ-Kaggle (למשל נתוני שחקני כדורגל) ועשה גרפים עם Pandas ו-Matplotlib.</li>
+    <li>מודל AI ראשון: זיהוי ספרות כתובות ביד (מאגר MNIST) עם PyTorch ב-Colab. יש לזה אלפי מדריכים.</li>
+    <li>בוט לדיסקורד (עם הורה, ובשרת שלכם).</li>
+  </ol>
+
+  <div class="quiz"><script type="application/json">[
+    {"q":"מה קובע בפייתון מה נמצא בתוך if או לולאה?","o":["סוגריים מסולסלים","ההזחה (רווחים בתחילת השורה)","נקודה-פסיק","המילה end"],"a":1},
+    {"q":"איך מדפיסים בפייתון?","o":["console.log()","print()","echo","printf()"],"a":1},
+    {"q":"איך כותבים פונקציה בפייתון?","o":["function f():","def f():","fn f() {}","func f"],"a":1},
+    {"q":"באיזה תחום פייתון היא השפה המובילה?","o":["עיצוב אתרים","בינה מלאכותית ומדע נתונים","אפליקציות אייפון","שיידרים"],"a":1}
+  ]</script></div>
+</section>

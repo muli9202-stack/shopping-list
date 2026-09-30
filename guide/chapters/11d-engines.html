@@ -1,0 +1,122 @@
+<section class="chapter" id="engines" data-title="עבודה עם מנועי משחק" data-part="שלב 4 · משחקים">
+  <div class="chapter-head">
+    <div class="eyebrow">פרק 30 · Unity, Godot, Unreal, Roblox ו-Blender בפועל</div>
+    <h1>עבודה עם מנועי משחק</h1>
+    <p>הגיע הזמן לעבור מקנבס בדפדפן לכלים של המקצוענים. הנה איך נראה קוד אמיתי בכל מנוע, והמושגים שחוזרים בכולם.</p>
+  </div>
+
+  <div class="demo" data-demo="enginepick"></div>
+
+  <h2>המושגים שחוזרים בכל המנועים</h2>
+  <div class="table-wrap"><table>
+    <tr><th>מושג</th><th>מה זה</th><th>ב-Unity</th><th>ב-Godot</th><th>ב-Unreal</th></tr>
+    <tr><td>סצנה</td><td>״שלב״ או מסך: כל מה שיש בו</td><td>Scene</td><td>Scene</td><td>Level / Map</td></tr>
+    <tr><td>אובייקט</td><td>כל דבר בעולם: דמות, קיר, מצלמה, אור</td><td>GameObject</td><td>Node</td><td>Actor</td></tr>
+    <tr><td>רכיב</td><td>יכולת שמוסיפים לאובייקט: גוף פיזיקלי, צליל, סקריפט</td><td>Component</td><td>Child Node</td><td>Component</td></tr>
+    <tr><td>תבנית לשכפול</td><td>אובייקט מוכן שאפשר ליצור ממנו הרבה עותקים</td><td>Prefab</td><td>Scene (שמשמשת כתבנית)</td><td>Blueprint Class</td></tr>
+    <tr><td>קוד</td><td>ההתנהגות</td><td>סקריפט C#</td><td>GDScript</td><td>C++ או Blueprints</td></tr>
+    <tr><td>עדכון בכל פריים</td><td>הלולאה שלך</td><td class="en">Update()</td><td class="en">_process(delta)</td><td class="en">Tick(DeltaTime)</td></tr>
+  </table></div>
+  <p>שים לב: בכל המנועים יש פונקציה שרצה בכל פריים ומקבלת את ה-Delta Time. זו בדיוק לולאת המשחק שבנית בעצמך בפרק המשחקים! המנוע פשוט מריץ אותה בשבילך.</p>
+  <p>ורעיון ה<span class="t">Component</span> (<strong>רכיב</strong>) הוא אולי הכי חשוב: במקום ליצור ״מחלקת מכונית״ ענקית, בונים אובייקט ומרכיבים עליו חלקים כמו לגו. גוף פיזיקלי + מודל תלת-ממדי + צליל מנוע + סקריפט נהיגה = מכונית. רוצה מכונית משטרה? אותו דבר + סירנה + סקריפט רדיפה.</p>
+
+  <h2>Unity עם C#</h2>
+  <p>ב-Unity כותבים סקריפטים ב-<span class="t">C#</span>, ״מדביקים״ אותם על אובייקט, והמנוע קורא לפונקציות שלהם. הנה דמות שזזה וקופצת:</p>
+  <pre><code><span class="k">using</span> UnityEngine;
+
+<span class="k">public class</span> <span class="f">PlayerController</span> : MonoBehaviour
+{
+    <span class="k">public float</span> speed = 5f;          <span class="c">// public = אפשר לשנות מהעורך בלי לגעת בקוד!</span>
+    <span class="k">public float</span> jumpForce = 7f;
+    Rigidbody rb;
+
+    <span class="k">void</span> <span class="f">Start</span>()                       <span class="c">// רץ פעם אחת בהתחלה</span>
+    {
+        rb = <span class="f">GetComponent</span>&lt;Rigidbody&gt;();   <span class="c">// מצא את רכיב הפיזיקה של האובייקט</span>
+    }
+
+    <span class="k">void</span> <span class="f">Update</span>()                      <span class="c">// רץ בכל פריים</span>
+    {
+        <span class="k">float</span> x = Input.<span class="f">GetAxis</span>(<span class="s">"Horizontal"</span>);   <span class="c">// חיצים/WASD/ג'ויסטיק: בין -1 ל-1</span>
+        <span class="k">float</span> z = Input.<span class="f">GetAxis</span>(<span class="s">"Vertical"</span>);
+        Vector3 move = <span class="k">new</span> Vector3(x, 0, z) * speed * Time.deltaTime;
+        transform.<span class="f">Translate</span>(move);
+
+        <span class="k">if</span> (Input.<span class="f">GetButtonDown</span>(<span class="s">"Jump"</span>))
+            rb.<span class="f">AddForce</span>(Vector3.up * jumpForce, ForceMode.Impulse);
+    }
+
+    <span class="k">void</span> <span class="f">OnTriggerEnter</span>(Collider other)   <span class="c">// המנוע קורא לזה כשנכנסים לטריגר</span>
+    {
+        <span class="k">if</span> (other.<span class="f">CompareTag</span>(<span class="s">"Coin"</span>))
+            <span class="f">Destroy</span>(other.gameObject);
+    }
+}</code></pre>
+  <p>C# דומה מאוד ל-JavaScript, עם הבדל חשוב אחד: צריך לכתוב <strong>סוג</strong> לכל משתנה (<code>float</code> למספר עשרוני, <code>int</code> לשלם, <code>string</code> לטקסט, <code>bool</code> לאמת/שקר). זה נקרא <span class="t">Static Typing</span>, והוא עוזר למצוא טעויות עוד לפני שמריצים.</p>
+
+  <h2>Godot עם GDScript</h2>
+  <p>ב-Godot, כל דבר הוא <strong>Node</strong> (צומת), והצמתים מסודרים בעץ. דמות היא צומת מסוג <code>CharacterBody2D</code>, ומתחתיה צמתים של ספרייט, צורת התנגשות ומצלמה. הקוד כתוב ב-GDScript, שנראה כמעט כמו Python:</p>
+  <pre><code><span class="k">extends</span> CharacterBody2D
+
+<span class="k">const</span> SPEED = 200.0
+<span class="k">const</span> JUMP_VELOCITY = -400.0
+<span class="k">var</span> gravity = 980.0
+
+<span class="k">func</span> <span class="f">_physics_process</span>(delta):                    <span class="c"># רץ בכל פריים פיזיקלי</span>
+    <span class="k">if</span> <span class="k">not</span> <span class="f">is_on_floor</span>():
+        velocity.y += gravity * delta               <span class="c"># כוח משיכה, בדיוק כמו בפרק הפיזיקה</span>
+
+    <span class="k">if</span> Input.<span class="f">is_action_just_pressed</span>(<span class="s">"ui_accept"</span>) <span class="k">and</span> <span class="f">is_on_floor</span>():
+        velocity.y = JUMP_VELOCITY
+
+    <span class="k">var</span> direction = Input.<span class="f">get_axis</span>(<span class="s">"ui_left"</span>, <span class="s">"ui_right"</span>)
+    velocity.x = direction * SPEED
+
+    <span class="f">move_and_slide</span>()                                <span class="c"># המנוע מזיז ומטפל בהתנגשויות</span></code></pre>
+  <p>שים לב כמה זה קצר: <code>move_and_slide</code> עושה את כל עבודת ההתנגשויות שבנינו ביד במעבדת ה-Platformer.</p>
+
+  <h2>Unreal עם Blueprints</h2>
+  <p>ב-Unreal אפשר לתכנת בלי לכתוב אף שורה, בעזרת <span class="t">Blueprints</span>: קוביות (״צמתים״) שמחברים בחוטים. כל קובייה היא פעולה (״הזז״, ״נגן צליל״, ״אם״), והחוטים הלבנים קובעים את הסדר. למשל:</p>
+  <div class="flow"><span>Event: כשנכנסים לאזור</span><i>←</i><span>Branch: האם זה השחקן?</span><i>←</i><span>Play Sound: ״דינג״</span><i>←</i><span>Add Score: 100</span><i>←</i><span>Destroy Actor: המטבע</span></div>
+  <p>זה בדיוק אותו היגיון כמו קוד: אירוע, תנאי, פעולות. הרבה משחקים מסחריים נבנו בעיקר ב-Blueprints. כשצריך מהירות מקסימלית, כותבים חלקים ב-C++.</p>
+
+  <h2>Roblox Studio עם Luau</h2>
+  <pre><code><span class="c">-- סקריפט שנותן 10 נקודות למי שנוגע במטבע</span>
+<span class="k">local</span> coin = script.Parent
+
+coin.Touched:<span class="f">Connect</span>(<span class="k">function</span>(hit)
+    <span class="k">local</span> player = game.Players:<span class="f">GetPlayerFromCharacter</span>(hit.Parent)
+    <span class="k">if</span> player <span class="k">then</span>
+        player.leaderstats.Coins.Value += 10
+        coin:<span class="f">Destroy</span>()
+    <span class="k">end</span>
+<span class="k">end</span>)</code></pre>
+  <p>היתרון הענק של Roblox: שרתים, מולטיפלייר, שמירת נתונים וקהל של עשרות מיליוני שחקנים ביום, הכול מובנה. בגיל 14 זו אולי הדרך הכי מהירה לבנות משחק שאנשים אמיתיים ישחקו בו.</p>
+
+  <h2>Blender: ליצור את העולם</h2>
+  <p>כל מנוע צריך תוכן: מודלים, טקסטורות, אנימציות. <strong>Blender</strong> הוא הכלי החינמי לזה. תהליך העבודה הטיפוסי:</p>
+  <ol>
+    <li><strong>מידול:</strong> מתחילים מצורה פשוטה (קובייה) ו״דוחפים ומושכים״ פאות. מקשי הקסם: <kbd>G</kbd> להזיז, <kbd>R</kbd> לסובב, <kbd>S</kbd> להגדיל, <kbd>E</kbd> ״לשלוף״ פאה, <kbd>Tab</kbd> למעבר בין מצב אובייקט למצב עריכה.</li>
+    <li><strong>UV ו-טקסטורה:</strong> ״פורשים״ את המודל לדף שטוח וצובעים עליו.</li>
+    <li><strong>ריג ואנימציה:</strong> מכניסים שלד ומזיזים אותו לאורך ציר זמן.</li>
+    <li><strong>ייצוא:</strong> שומרים בפורמט <code>.fbx</code> או <code>.glb</code> וגוררים למנוע.</li>
+  </ol>
+  <div class="box tip"><b>טיפ ל-Low Poly</b><p>אל תנסה ליצור מודלים מציאותיים בהתחלה. סגנון <strong>Low Poly</strong> (מעט משולשים, צבעים שטוחים) קל ללמוד, נראה מעולה, רץ מהר, והרבה משחקי אינדי מצליחים משתמשים בו. מכונית Low Poly לוקחת כמה שעות, לא שבועות.</p></div>
+
+  <h2>איך ללמוד מנוע בלי ללכת לאיבוד</h2>
+  <ol>
+    <li><strong>התחל במדריך הרשמי:</strong> Unity Learn, מדריך ״Your first 2D game״ של Godot, או ה-Learning Portal של Unreal. הם מסודרים ומעודכנים.</li>
+    <li><strong>משחק זעיר ראשון:</strong> לא ״מיני GTA״. פונג, או כדור שמתגלגל ואוסף מטבעות.</li>
+    <li><strong>שכפל משחק קיים:</strong> לבנות מחדש Flappy Bird או Pac-Man מלמד המון, כי העיצוב כבר ברור.</li>
+    <li><strong>אל תקפוץ בין מנועים</strong> בשלושת החודשים הראשונים. תתמיד באחד.</li>
+    <li><strong>קרא את הודעות השגיאה ב-Console</strong> של המנוע. בדיוק כמו בדפדפן.</li>
+  </ol>
+
+  <div class="quiz"><script type="application/json">[
+    {"q":"איזו פונקציה רצה בכל פריים ב-Unity?","o":["Start()","Update()","Main()","Loop()"],"a":1},
+    {"q":"מה זה Prefab ב-Unity?","o":["תבנית של אובייקט שאפשר לשכפל","סוג של אור","שם של מצלמה","קובץ צליל"],"a":0},
+    {"q":"איך נקראים ״האובייקטים״ ב-Godot?","o":["Actors","Nodes","Sprites","Prefabs"],"a":1},
+    {"q":"מה זה Blueprints ב-Unreal?","o":["תוכניות אדריכליות","תכנות ויזואלי בקוביות וחוטים","מודלים תלת-ממדיים","סוג של טקסטורה"],"a":1},
+    {"q":"איזה מקש מזיז אובייקט ב-Blender?","o":["M","G","Z","Q"],"a":1}
+  ]</script></div>
+</section>
