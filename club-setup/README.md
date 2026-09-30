@@ -94,5 +94,7 @@ npx playwright screenshot --viewport-size=1200,630 http://localhost:8765/club/og
 - `hero-market.webp` – "Produce section, Misa Market, Ohrid, 2026" (CC0)
 - `family-shopping.webp` – "Agriculture Research Service (ARS) (8411841617)" (נחלת הכלל, USDA)
 - `fresh-produce.webp` – "Fruit and berries in a grocery store, Paris" (נחלת הכלל)
+- `fruit-display.webp` – "Fruits and Vegetables (20160317-OSEC-SP-0004)" (נחלת הכלל, USDA)
+- `shelf.webp` – "Produce section in Kindly 2024-03-09" (CC0)
 
 מומלץ להחליף אותן בהמשך בצילומים של משפחות ישראליות.

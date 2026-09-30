@@ -161,7 +161,7 @@
     var range = $('spend-range');
     var num = $('spend-number');
     var min = Number(range.min), max = Number(range.max);
-    var rows = document.querySelectorAll('.tiers tbody tr');
+    var rows = document.querySelectorAll('[data-tier]');
 
     function render(amount) {
       var t = tierFor(amount);

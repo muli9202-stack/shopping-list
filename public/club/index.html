@@ -88,32 +88,31 @@
     </section>
 
     <!-- 2. איך זה עובד -->
-    <section class="section dots" id="how" aria-labelledby="how-title">
+    <section class="section section-dark" id="how" aria-labelledby="how-title">
       <div class="container">
         <h2 id="how-title">איך זה עובד?</h2>
-        <p class="lead">שלושה צעדים. בלי אפליקציות מסובכות ובלי לגזור קופונים.</p>
-        <ol class="steps">
-          <li class="step">
-            <span class="step-num" aria-hidden="true">1</span>
-            <span class="step-icon" aria-hidden="true">
-              <svg viewBox="0 0 48 48" focusable="false"><circle cx="18" cy="17" r="7"/><path d="M5 39c1.5-7 6.5-11 13-11s11.5 4 13 11"/><path d="M36 16v12M30 22h12"/></svg>
-            </span>
+        <p class="sub-title">הנחה אחת, קבועה וברורה</p>
+        <div class="dark-intro">
+          <p>אין מסלולים, אין נקודות ואין אותיות קטנות. יש כרטיס קנייה אחד והנחה קבועה.</p>
+          <p class="dark-intro-big">לפני הכול: ההצטרפות למועדון – <strong>חינם לגמרי</strong></p>
+          <p>בשלב הזה אנחנו אוספים רשימת המתנה. ככל שיותר משפחות נרשמות, ההסכם שנשיג מול הרשת יהיה טוב יותר.</p>
+        </div>
+        <ol class="cards">
+          <li class="card-item">
+            <span class="card-icon" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><circle cx="18" cy="17" r="7"/><path d="M5 39c1.5-7 6.5-11 13-11s11.5 4 13 11"/><path d="M36 16v12M30 22h12"/></svg></span>
+            <span class="card-step">צעד 1</span>
             <h3>מצטרפים בחינם</h3>
             <p>נרשמים למועדון. בלי דמי חבר ובלי התחייבות.</p>
           </li>
-          <li class="step">
-            <span class="step-num" aria-hidden="true">2</span>
-            <span class="step-icon" aria-hidden="true">
-              <svg viewBox="0 0 48 48" focusable="false"><rect x="5" y="11" width="38" height="26" rx="4"/><path d="M5 19h38"/><path d="M11 29h10"/><path d="m32 26 3 3 5-6"/></svg>
-            </span>
+          <li class="card-item">
+            <span class="card-icon" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><rect x="5" y="11" width="38" height="26" rx="4"/><path d="M5 19h38"/><path d="M11 29h10"/><path d="m32 26 3 3 5-6"/></svg></span>
+            <span class="card-step">צעד 2</span>
             <h3>טוענים את כרטיס הקנייה בהנחה</h3>
-            <p>טוענים סכום על כרטיס הקנייה של הרשת, וההנחה מתקבלת מיד. לדוגמה, בהנחה של 3%: טוענים 1,000 ₪ ומשלמים 970 ₪.</p>
+            <p>ההנחה מתקבלת מיד, ברגע הטעינה. לדוגמה, בהנחה של 3%: טוענים 1,000 ₪ ומשלמים 970 ₪.</p>
           </li>
-          <li class="step">
-            <span class="step-num" aria-hidden="true">3</span>
-            <span class="step-icon" aria-hidden="true">
-              <svg viewBox="0 0 48 48" focusable="false"><path d="M4 8h6l5 22h22l4-15H13"/><circle cx="18" cy="38" r="3"/><circle cx="33" cy="38" r="3"/></svg>
-            </span>
+          <li class="card-item">
+            <span class="card-icon" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><path d="M4 8h6l5 22h22l4-15H13"/><circle cx="18" cy="38" r="3"/><circle cx="33" cy="38" r="3"/></svg></span>
+            <span class="card-step">צעד 3</span>
             <h3>קונים בסופר כרגיל וחוסכים</h3>
             <p>משלמים בקופה עם הכרטיס. אותם מוצרים, אותו סופר – רק זול יותר.</p>
           </li>
@@ -122,22 +121,35 @@
     </section>
 
     <!-- 3. דרגות ההנחה -->
-    <section class="section dots" id="tiers" aria-labelledby="tiers-title">
-      <div class="container narrow">
-        <h2 id="tiers-title">ככל שקונים יותר – ההנחה גדלה</h2>
-        <p class="lead">גובה ההנחה נקבע לפי סך הטעינות שלכם באותו חודש.</p>
-        <table class="tiers">
-          <caption class="visually-hidden">דרגות ההנחה המתוכננות לפי טעינה חודשית</caption>
-          <thead>
-            <tr><th scope="col">טעינה חודשית</th><th scope="col">הנחה מתוכננת</th></tr>
-          </thead>
-          <tbody>
-            <tr data-tier="0"><th scope="row">עד 1,500 ₪</th><td><span class="pct">3%</span></td></tr>
-            <tr data-tier="1"><th scope="row">1,500–3,000 ₪</th><td><span class="pct">4%</span></td></tr>
-            <tr data-tier="2"><th scope="row">מעל 3,000 ₪</th><td><span class="pct">5%</span></td></tr>
-          </tbody>
-        </table>
-        <p class="fine center">אחוזי ההנחה הסופיים ייקבעו בהסכם עם הרשת.</p>
+    <section class="section photo-band" id="tiers" aria-labelledby="tiers-title">
+      <div class="container">
+        <h2 id="tiers-title"><span class="h2-small">דרגות ההנחה</span> ככל שקונים יותר – ההנחה גדלה</h2>
+        <p class="band-lead">גובה ההנחה נקבע לפי סך הטעינות שלכם באותו חודש.</p>
+        <a class="btn btn-green" href="#join">הצטרפות חינם <svg class="chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 6-6 6 6 6M18 6l-6 6 6 6"/></svg></a>
+        <ul class="cards tier-cards">
+          <li class="card-item" data-tier="0">
+            <span class="card-icon" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><path d="M8 34 20 22l7 7 13-14"/><path d="M32 15h8v8"/></svg></span>
+            <h3>טעינה חודשית עד 1,500 ₪</h3>
+            <p class="tier-pct">3%</p>
+            <p>הנחה מתוכננת על כל טעינה</p>
+            <a class="btn-rect" href="#calculator">לחישוב החיסכון</a>
+          </li>
+          <li class="card-item" data-tier="1">
+            <span class="card-icon" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><path d="M6 36 18 24l7 7 17-18"/><path d="M34 13h8v8"/></svg></span>
+            <h3>טעינה חודשית 1,500–3,000 ₪</h3>
+            <p class="tier-pct">4%</p>
+            <p>הנחה מתוכננת על כל טעינה</p>
+            <a class="btn-rect" href="#calculator">לחישוב החיסכון</a>
+          </li>
+          <li class="card-item" data-tier="2">
+            <span class="card-icon" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><path d="M4 38 16 26l7 7 21-23"/><path d="M36 10h8v8"/></svg></span>
+            <h3>טעינה חודשית מעל 3,000 ₪</h3>
+            <p class="tier-pct">5%</p>
+            <p>הנחה מתוכננת על כל טעינה</p>
+            <a class="btn-rect" href="#calculator">לחישוב החיסכון</a>
+          </li>
+        </ul>
+        <p class="band-fine">אחוזי ההנחה הסופיים ייקבעו בהסכם עם הרשת.</p>
       </div>
     </section>
 
@@ -185,19 +197,44 @@
     </section>
 
     <!-- 5. למה זה עובד -->
-    <section class="section photo-section" id="why" aria-labelledby="why-title">
-      <div class="container">
-        <div class="glass">
+    <section class="section dots" id="why" aria-labelledby="why-title">
+      <div class="container split">
+        <div class="split-text">
           <h2 id="why-title">למה זה עובד?</h2>
-          <p class="glass-sub">כוח קנייה</p>
+          <p class="split-sub">כוח קנייה של אלפי משפחות</p>
           <p>כשאלפי משפחות מרכזות את הקניות שלהן, הרשת מקבלת לקוחות נאמנים ותשלום מראש – ובתמורה נותנת הנחה קבועה לכל חברי המועדון.</p>
+          <p class="split-label">מה זה אומר בשבילכם:</p>
           <ul>
-            <li>בלי לצבור נקודות ובלי לרדוף אחרי מבצעים שנגמרים.</li>
-            <li>ההנחה קבועה, על כל הקנייה, ברגע טעינת הכרטיס.</li>
-            <li>ככל שיותר משפחות מצטרפות, ההסכם מול הרשת חזק יותר.</li>
+            <li><strong>הנחה על כל הקנייה:</strong> לא על מוצר נבחר ולא במבצע של שבוע.</li>
+            <li><strong>בלי מאמץ:</strong> בלי לצבור נקודות, בלי קופונים ובלי להשוות מחירים.</li>
+            <li><strong>כוח שגדל:</strong> כל משפחה שמצטרפת מחזקת את ההסכם מול הרשת.</li>
           </ul>
-          <a class="btn btn-green" href="#join">הצטרפות חינם <svg class="chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 6-6 6 6 6M18 6l-6 6 6 6"/></svg></a>
+          <a class="btn btn-dark" href="#join">מצטרפים וחוסכים <svg class="chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 6-6 6 6 6M18 6l-6 6 6 6"/></svg></a>
         </div>
+        <figure class="split-media">
+          <img src="img/fruit-display.webp" width="1100" height="733" alt="דוכן פירות וירקות טריים בסופר" loading="lazy">
+        </figure>
+      </div>
+    </section>
+
+    <!-- 5ב. פרטיות -->
+    <section class="section dots" id="privacy-promise" aria-labelledby="privacy-title">
+      <div class="container split split-reverse">
+        <div class="split-text">
+          <h2 id="privacy-title">הפרטים שלכם לא למכירה</h2>
+          <p>אנחנו אוספים רק את מה שצריך כדי לעדכן אתכם ולהראות לרשת כמה משפחות מחכות למועדון.</p>
+          <p class="split-label">ההתחייבות שלנו:</p>
+          <ol>
+            <li><strong>מינימום פרטים:</strong> בלי תעודת זהות, בלי פרטי אשראי ובלי כתובת מלאה.</li>
+            <li><strong>לא נמכרים ולא מועברים:</strong> הפרטים משמשים רק לעדכונים על המועדון.</li>
+            <li><strong>רק מספרים מצטברים:</strong> לרשת נציג כמה משפחות נרשמו, בלי שמות ובלי טלפונים.</li>
+            <li><strong>ביטול בכל עת:</strong> פונים אלינו ואנחנו מוחקים את הפרטים.</li>
+          </ol>
+          <a class="btn btn-dark" href="#join">להצטרפות חינם <svg class="chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 6-6 6 6 6M18 6l-6 6 6 6"/></svg></a>
+        </div>
+        <figure class="split-media">
+          <img src="img/shelf.webp" width="1100" height="825" alt="מדף ירקות אורגניים בסופר" loading="lazy">
+        </figure>
       </div>
     </section>
 
