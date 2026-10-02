@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { byRating, inCategory, useAllVideos, useStore } from './store';
+import { byRating, inCategory, useAllRecipes, useAllVideos, useStore } from './store';
 import { isHeading, matchScore, parseDescription } from './text';
 import type { Chef, CollectionKey, Recipe, Video } from './types';
+import { IS_ARTIFACT } from './env';
 import { fetchSnippet, fetchTitle, thumbUrl, watchUrl, youtubeId } from './youtube';
 import { CollectionButtons, Empty, Header, Modal, SearchBar, Stars, Thumb, confirmDelete, useUi } from './ui';
 
@@ -200,7 +201,7 @@ function CollectionTiles() {
 
 function useSearch(mode: Mode, q: string) {
   const videos = useAllVideos();
-  const recipes = useStore((s) => s.recipes);
+  const recipes = useAllRecipes();
   const chefs = useStore((s) => s.chefs);
   return useMemo(() => {
     if (!q.trim()) return null;
@@ -224,7 +225,7 @@ function useSearch(mode: Mode, q: string) {
 export function ChefsScreen({ mode }: { mode: Mode }) {
   const chefs = useStore((s) => s.chefs);
   const videos = useAllVideos();
-  const recipes = useStore((s) => s.recipes);
+  const recipes = useAllRecipes();
   const [q, setQ] = useState('');
   const [modal, setModal] = useState<Chef | 'new' | null>(null);
   const [shown, setShown] = useState(PAGE);
@@ -354,7 +355,7 @@ export function CategoriesScreen({ mode }: { mode: Mode }) {
   const chef = useStore((s) => s.chefs.find((c) => c.id === chefId));
   const categories = useStore((s) => s.categories);
   const videos = useAllVideos();
-  const recipes = useStore((s) => s.recipes);
+  const recipes = useAllRecipes();
   const [modal, setModal] = useState<string | 'new' | null>(null);
   const counts = useMemo(() => {
     const m = new Map<string, number>();
@@ -471,7 +472,7 @@ export function CategoryScreen({ mode }: { mode: Mode }) {
   const chef = useStore((s) => s.chefs.find((c) => c.id === chefId));
   const cat = useStore((s) => s.categories.find((c) => c.id === catId));
   const videos = useAllVideos();
-  const recipes = useStore((s) => s.recipes);
+  const recipes = useAllRecipes();
   const nav = useNavigate();
   const [adding, setAdding] = useState(false);
   const [shown, setShown] = useState(PAGE);
@@ -515,8 +516,9 @@ export function CategoryScreen({ mode }: { mode: Mode }) {
 
 export function RecipeScreen() {
   const { id = '' } = useParams();
-  const r = useStore((s) => s.recipes.find((x) => x.id === id));
+  const r = useAllRecipes().find((x) => x.id === id);
   const chef = useStore((s) => s.chefs.find((c) => c.id === r?.chefId));
+  const catIcon = useStore((s) => s.categories.find((c) => c.id === r?.categoryId)?.icon);
   const update = useStore((s) => s.updateRecipe);
   const remove = useStore((s) => s.deleteRecipe);
   const nav = useNavigate();
@@ -529,7 +531,14 @@ export function RecipeScreen() {
           ✎
         </Link>
       </Header>
-      {r.youtubeId && <img className="hero" src={thumbUrl(r.youtubeId, 'hq')} alt={r.title} />}
+      {r.youtubeId &&
+        (IS_ARTIFACT ? (
+          <div className="hero">
+            <Thumb id={r.youtubeId} alt={r.title} icon={catIcon} />
+          </div>
+        ) : (
+          <img className="hero" src={thumbUrl(r.youtubeId, 'hq')} alt={r.title} />
+        ))}
       <h1 className="recipe-title">{r.title}</h1>
       <div className="row between wrap gap">
         <span className="muted">{chef?.name}</span>
@@ -595,7 +604,7 @@ const toLines = (s: string) =>
 export function RecipeEditScreen() {
   const { id, chefId: pChef, catId: pCat } = useParams();
   const [params] = useSearchParams();
-  const existing = useStore((s) => s.recipes.find((r) => r.id === id));
+  const existing = useAllRecipes().find((r) => r.id === id);
   const apiKey = useStore((s) => s.settings.ytApiKey);
   const chefs = useStore((s) => s.chefs);
   const categories = useStore((s) => s.categories);
@@ -745,7 +754,7 @@ export function CollectionScreen() {
   const key: CollectionKey = which === 'chag' ? 'chag' : 'shabbat';
   const entries = useStore((s) => s.collections[key]);
   const videos = useAllVideos();
-  const recipes = useStore((s) => s.recipes);
+  const recipes = useAllRecipes();
   const chefs = useStore((s) => s.chefs);
   const setNote = useStore((s) => s.setCollectionNote);
   const toggle = useStore((s) => s.toggleCollection);

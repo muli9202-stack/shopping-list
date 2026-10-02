@@ -44,6 +44,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2,webmanifest}'],
         // Offline navigation inside /kitchen/ must not fall back to the shopping list page.
         navigateFallbackDenylist: [/\/kitchen\//],
+        // The kitchen app bundles its built-in videos and recipes (~5 MB).
+        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
       },
     }),
   ],

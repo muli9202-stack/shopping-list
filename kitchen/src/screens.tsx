@@ -3,7 +3,7 @@ import { IS_ARTIFACT, claudeUse } from './env';
 import { cloudAvailable } from './storage';
 import { Link } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
-import { allMeals, allVideos, countMeals, exportData, useStore } from './store';
+import { allMeals, allRecipes, allVideos, countMeals, exportData, useStore } from './store';
 import { Counter, MealCard } from './planner';
 import { Header, ask } from './ui';
 import type { KitchenData } from './types';
@@ -169,7 +169,7 @@ export function SettingsScreen() {
   const key = useStore((s) => s.settings.ytApiKey);
   const setKey = useStore((s) => s.setYtApiKey);
   const replaceAll = useStore((s) => s.replaceAll);
-  const counts = useStore(useShallow((s) => ({ v: allVideos(s).length, r: s.recipes.length, c: s.chefs.length, m: allMeals(s).length })));
+  const counts = useStore(useShallow((s) => ({ v: allVideos(s).length, r: allRecipes(s).length, c: s.chefs.length, m: allMeals(s).length })));
   const file = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState('');
 

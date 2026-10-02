@@ -18,6 +18,7 @@ import type {
 } from './types';
 import { SEED_CATEGORIES, SEED_CHEFS } from './seed';
 import { isSeedVideo, seedVideos } from './seedVideos';
+import { isSeedRecipe, seedRecipes } from './seedRecipes';
 
 export const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
@@ -196,7 +197,7 @@ export const useStore = create<Store>()(
         set((s) => {
           const gone = new Set([
             ...allVideos(s).filter((v) => v.chefId === id).map((v) => v.id),
-            ...s.recipes.filter((r) => r.chefId === id).map((r) => r.id),
+            ...allRecipes(s).filter((r) => r.chefId === id).map((r) => r.id),
           ]);
           return {
             chefs: s.chefs.filter((c) => c.id !== id),
@@ -218,7 +219,7 @@ export const useStore = create<Store>()(
         set((s) => {
           const gone = new Set([
             ...allVideos(s).filter((v) => v.categoryId === id).map((v) => v.id),
-            ...s.recipes.filter((r) => r.categoryId === id).map((r) => r.id),
+            ...allRecipes(s).filter((r) => r.categoryId === id).map((r) => r.id),
           ]);
           return {
             categories: s.categories.filter((c) => c.id !== id),
@@ -260,10 +261,17 @@ export const useStore = create<Store>()(
         set((s) => ({ recipes: [...s.recipes, { ...r, id, rating: 0, createdAt: Date.now() }] }));
         return id;
       },
-      updateRecipe: (id, patch) => set((s) => ({ recipes: s.recipes.map((r) => (r.id === id ? { ...r, ...patch } : r)) })),
+      updateRecipe: (id, patch) =>
+        set((s) => {
+          if (s.recipes.some((r) => r.id === id)) return { recipes: s.recipes.map((r) => (r.id === id ? { ...r, ...patch } : r)) };
+          // First change to a built-in recipe: keep the user's own copy under the same id.
+          const seed = allRecipes(s).find((r) => r.id === id);
+          return seed ? { recipes: [...s.recipes, { ...seed, ...patch }] } : {};
+        }),
       deleteRecipe: (id) =>
         set((s) => ({
           recipes: s.recipes.filter((r) => r.id !== id),
+          seedEdits: isSeedRecipe(id) ? { ...s.seedEdits, [id]: { ...s.seedEdits[id], deleted: true } } : s.seedEdits,
           collections: {
             shabbat: s.collections.shabbat.filter((e) => e.id !== id),
             chag: s.collections.chag.filter((e) => e.id !== id),
@@ -296,13 +304,17 @@ export const useStore = create<Store>()(
     }),
     {
       name: 'kitchen-data',
-      version: 2,
+      version: 3,
       migrate: (persisted, version) => {
         const d = persisted as KitchenData;
         // v2 adds the built-in channel videos, which need the "שונות" category.
         if (version < 2) {
           d.seedEdits ??= {};
-          if (!d.categories.some((c) => c.id === 'other')) d.categories = [...d.categories, SEED_CATEGORIES.find((c) => c.id === 'other')!];
+        }
+        // v3: make sure every built-in category exists, so no built-in video or recipe is hidden.
+        if (version < 3) {
+          const have = new Set(d.categories.map((c) => c.id));
+          d.categories = [...d.categories, ...SEED_CATEGORIES.filter((c) => !have.has(c.id))];
         }
         return d;
       },
@@ -368,6 +380,32 @@ export function allVideos(s: VideoSource): Video[] {
 }
 
 export const useAllVideos = () => useStore(allVideos);
+
+type RecipeSource = Pick<KitchenData, 'recipes' | 'seedEdits' | 'chefs' | 'categories'>;
+let rmemo: { src: RecipeSource; out: Recipe[] } | null = null;
+
+/** The user's recipes plus the built-in ones taken from video descriptions. */
+export function allRecipes(s: RecipeSource): Recipe[] {
+  if (
+    rmemo &&
+    rmemo.src.recipes === s.recipes &&
+    rmemo.src.seedEdits === s.seedEdits &&
+    rmemo.src.chefs === s.chefs &&
+    rmemo.src.categories === s.categories
+  )
+    return rmemo.out;
+  const chefs = new Set(s.chefs.map((c) => c.id));
+  const cats = new Set(s.categories.map((c) => c.id));
+  const own = new Set(s.recipes.map((r) => r.id));
+  const seeded = seedRecipes().filter(
+    (r) => !own.has(r.id) && !s.seedEdits[r.id]?.deleted && chefs.has(r.chefId) && cats.has(r.categoryId),
+  );
+  const out = [...s.recipes, ...seeded];
+  rmemo = { src: { recipes: s.recipes, seedEdits: s.seedEdits, chefs: s.chefs, categories: s.categories }, out };
+  return out;
+}
+
+export const useAllRecipes = () => useStore(allRecipes);
 
 /** Whether a video belongs in a category (its main one or an extra one). */
 export const inCategory = (v: Video, catId: string) => v.categoryId === catId || !!v.extraCategoryIds?.includes(catId);

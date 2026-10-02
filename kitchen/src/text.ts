@@ -66,7 +66,7 @@ const STEP_HEAD =
   /^(?:אופן\s+ה?הכנה|דרך\s+ה?הכנה|הוראות(?:\s+ה?הכנה)?|שלבי\s+ה?הכנה|ה?הכנה|instructions?|directions?|method|preparation|how to make)(?=$|[\s:：\-–])/i;
 /** Lines that mark the end of the recipe part: links, hashtags, social plugs, chapters. */
 const END =
-  /^(?:#|https?:|www\.|לעוד|עקבו|הירשמו|הרשמו|תירשמו|instagram|facebook|tiktok|subscribe|follow|music|מוזיקה|לפרטים|לקבוצת|לרכישת|קוד קופון|\d{1,2}:\d{2})/i;
+  /^(?:#|https?:|www\.|לעוד|עקבו|הירשמו|הרשמו|תירשמו|instagram|facebook|tiktok|subscribe|follow|music|מוזיקה|לפרטים|לקבוצת|לרכישת|קוד קופון|הספר שלי|לספר שלי|הספר החדש|my book|my cookbook|get my|shop my|equipment|ציוד|מצטרפים לערוץ|join this channel|\d{1,2}:\d{2})/i;
 
 const BULLET = /^\s*(?:[-–—•*·▪►✔✅☑️🔸🔹]+|\d+\s*[.)]|[א-ת]\s*[.)])\s*/u;
 

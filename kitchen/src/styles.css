@@ -1212,3 +1212,10 @@ textarea.input {
 :root[data-theme='dark'] .thumb.thumb-empty {
   background: linear-gradient(135deg, hsl(var(--hue) 45% 26%), hsl(calc(var(--hue) + 30) 45% 20%));
 }
+div.hero {
+  overflow: hidden;
+}
+div.hero .thumb {
+  height: 100%;
+  font-size: 4rem;
+}

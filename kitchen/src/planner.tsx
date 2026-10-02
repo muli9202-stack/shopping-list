@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { allVideos, countMeals, useAllVideos, useStore } from './store';
+import { allRecipes, allVideos, countMeals, useAllRecipes, useAllVideos, useStore } from './store';
 import { findMatches, matchScore, type Candidate } from './text';
 import type { Course, ItemLink, Meal, PlanItem } from './types';
 import { Modal, Thumb, confirmDelete, useUi } from './ui';
@@ -10,7 +10,7 @@ function useOpenLink() {
   const nav = useNavigate();
   const play = useUi((s) => s.play);
   const videos = useAllVideos();
-  const recipes = useStore((s) => s.recipes);
+  const recipes = useAllRecipes();
   return (link: ItemLink | undefined): boolean => {
     if (!link) return false;
     if (link.kind === 'video') {
@@ -54,7 +54,7 @@ function CandidateRow({ c, onPick }: { c: Candidate; onPick: () => void }) {
 
 function LinkPicker({ item, onPick, onClose }: { item: PlanItem; onPick: (l: ItemLink) => void; onClose: () => void }) {
   const videos = useAllVideos();
-  const recipes = useStore((s) => s.recipes);
+  const recipes = useAllRecipes();
   const matches = useMemo(() => findMatches(item.name, videos, recipes), [item.name, videos, recipes]);
   const [manual, setManual] = useState(matches.length === 0);
   const [q, setQ] = useState('');
@@ -112,7 +112,7 @@ function ItemRow({ mealId, courseId, item }: { mealId: string; courseId: string;
     if (open(item.link)) return;
     // A single match opens straight away and is remembered; otherwise let the user choose.
     const st = useStore.getState();
-    const matches = findMatches(item.name, allVideos(st), st.recipes);
+    const matches = findMatches(item.name, allVideos(st), allRecipes(st));
     if (matches.length === 1) {
       const link = { kind: matches[0].kind, id: matches[0].item.id };
       update(mealId, courseId, item.id, { link });
