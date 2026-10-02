@@ -17,5 +17,5 @@
     "noFallthroughCasesInSwitch": true,
     "types": ["vite/client", "vite-plugin-pwa/client"]
   },
-  "include": ["src", "kitchen/src", "vite.config.ts"]
+  "include": ["src", "kitchen/src", "vite.config.ts", "kitchen/vite.artifact.config.ts"]
 }

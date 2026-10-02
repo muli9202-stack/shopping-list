@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { HashRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { HashRouter, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { IS_ARTIFACT } from './env';
 import { useStore } from './store';
-import { Player } from './ui';
+import { ConfirmDialog, Player } from './ui';
 import { ChagScreen, HomeScreen, SettingsScreen, ShabbatScreen, TableChooseScreen } from './screens';
 import {
   CategoriesScreen,
@@ -29,8 +30,10 @@ export default function App() {
   }, [ready]);
   if (!ready) return <div className="loading">טוען…</div>;
 
+  // Inside the chat the page can't own the URL, so routing stays in memory.
+  const Router = IS_ARTIFACT ? MemoryRouter : HashRouter;
   return (
-    <HashRouter>
+    <Router>
       <ScrollTop />
       <Routes>
         <Route path="/" element={<HomeScreen />} />
@@ -51,6 +54,7 @@ export default function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Player />
-    </HashRouter>
+      <ConfirmDialog />
+    </Router>
   );
 }

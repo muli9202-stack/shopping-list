@@ -1,9 +1,11 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { IS_ARTIFACT, claudeUse } from './env';
+import { cloudAvailable } from './storage';
 import { Link } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
 import { allMeals, countMeals, exportData, useStore } from './store';
 import { Counter, MealCard } from './planner';
-import { Header } from './ui';
+import { Header, ask } from './ui';
 import type { KitchenData } from './types';
 
 export function HomeScreen() {
@@ -60,10 +62,10 @@ export function TableChooseScreen() {
 function PlanToolbar({ onReset, onClear }: { onReset: () => void; onClear: () => void }) {
   return (
     <div className="row gap wrap toolbar">
-      <button className="btn small ghost" onClick={() => window.confirm('לבטל את כל הסימונים?') && onReset()}>
+      <button className="btn small ghost" onClick={() => void ask('לבטל את כל הסימונים?').then((ok) => ok && onReset())}>
         ↺ ביטול כל הסימונים
       </button>
-      <button className="btn small ghost danger-text" onClick={() => window.confirm('למחוק את כל התכנון ולהתחיל מחדש?') && onClear()}>
+      <button className="btn small ghost danger-text" onClick={() => void ask('למחוק את כל התכנון ולהתחיל מחדש?').then((ok) => ok && onClear())}>
         🗑 ניקוי הכול
       </button>
     </div>
@@ -143,7 +145,7 @@ export function ChagScreen() {
             <div className="part-title row gap">
               <input className="title-input big" value={day.name} onChange={(e) => renameDay(day.id, e.target.value)} aria-label="שם היום" />
               <Counter left={c.left} total={c.total} />
-              <button className="icon-btn" aria-label="מחיקת יום" onClick={() => window.confirm(`למחוק את "${day.name}"?`) && deleteDay(day.id)}>
+              <button className="icon-btn" aria-label="מחיקת יום" onClick={() => void ask(`למחוק את "${day.name}"?`).then((ok) => ok && deleteDay(day.id))}>
                 🗑
               </button>
             </div>
@@ -171,11 +173,29 @@ export function SettingsScreen() {
   const file = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState('');
 
-  const download = () => {
-    const blob = new Blob([JSON.stringify(exportData(), null, 1)], { type: 'application/json' });
+  const [cloud, setCloud] = useState(false);
+  useEffect(() => {
+    void cloudAvailable().then(setCloud);
+  }, []);
+
+  const download = async () => {
+    const json = JSON.stringify(exportData(), null, 1);
+    const filename = `kitchen-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    if (IS_ARTIFACT) {
+      const dl = await claudeUse('downloads');
+      if (!dl) return setMsg('ההורדה לא זמינה בתצוגה הזאת');
+      try {
+        await dl.save({ filename, data: json });
+        setMsg('✓ הגיבוי נשמר');
+      } catch {
+        /* the viewer declined */
+      }
+      return;
+    }
+    const blob = new Blob([json], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `kitchen-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = filename;
     a.click();
     URL.revokeObjectURL(a.href);
   };
@@ -184,7 +204,7 @@ export function SettingsScreen() {
     try {
       const data = JSON.parse(await f.text()) as KitchenData;
       if (data.version !== 1 || !Array.isArray(data.chefs) || !data.shabbat) throw new Error();
-      if (!window.confirm('השחזור יחליף את כל הנתונים הנוכחיים. להמשיך?')) return;
+      if (!(await ask('השחזור יחליף את כל הנתונים הנוכחיים. להמשיך?'))) return;
       replaceAll(data);
       setMsg('✓ הנתונים שוחזרו');
     } catch {
@@ -198,7 +218,9 @@ export function SettingsScreen() {
       <section className="card">
         <h2>שמירת נתונים</h2>
         <p className="muted">
-          כל מה שמוסיפים נשמר אוטומטית במכשיר הזה, גם אחרי סגירת האפליקציה. כרגע שמורים {counts.c} שפים, {counts.v} סרטונים,{' '}
+          {cloud
+            ? 'כל מה שמוסיפים נשמר אוטומטית בחשבון שלך, גם אחרי סגירת הצ׳אט, ורק לך יש גישה אליו.'
+            : 'כל מה שמוסיפים נשמר אוטומטית במכשיר הזה, גם אחרי סגירת האפליקציה.'} כרגע שמורים {counts.c} שפים, {counts.v} סרטונים,{' '}
           {counts.r} מתכונים ו-{counts.m} סעודות.
         </p>
         <p className="muted">לגיבוי או להעברה למכשיר אחר:</p>

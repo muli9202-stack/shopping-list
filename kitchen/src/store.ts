@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware';
-import { get as idbGet, set as idbSet, del as idbDel } from 'idb-keyval';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { storage } from './storage';
 import type {
   Category,
   ChagDay,
@@ -18,12 +18,6 @@ import type {
 import { SEED_CATEGORIES, SEED_CHEFS } from './seed';
 
 export const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-
-const idbStorage: StateStorage = {
-  getItem: async (name) => (await idbGet<string>(name)) ?? null,
-  setItem: (name, value) => idbSet(name, value),
-  removeItem: (name) => idbDel(name),
-};
 
 const ORDINAL_F = ['ראשונה', 'שנייה', 'שלישית', 'רביעית', 'חמישית', 'שישית', 'שביעית', 'שמינית', 'תשיעית', 'עשירית'];
 const DAY_LETTERS = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ז׳', 'ח׳', 'ט׳', 'י׳'];
@@ -290,7 +284,7 @@ export const useStore = create<Store>()(
     {
       name: 'kitchen-data',
       version: 1,
-      storage: createJSONStorage(() => idbStorage),
+      storage: createJSONStorage(() => storage),
       partialize: (s): KitchenData => ({
         version: 1,
         shabbat: s.shabbat,

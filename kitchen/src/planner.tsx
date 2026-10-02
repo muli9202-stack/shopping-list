@@ -146,7 +146,7 @@ function ItemRow({ mealId, courseId, item }: { mealId: string; courseId: string;
           <button
             type="button"
             className="btn small danger"
-            onClick={() => confirmDelete(`"${item.name}"`) && remove(mealId, courseId, item.id)}
+            onClick={() => void confirmDelete(`"${item.name}"`).then((ok) => ok && remove(mealId, courseId, item.id))}
           >
             מחיקה
           </button>
@@ -229,7 +229,7 @@ function CourseCard({ mealId, course }: { mealId: string; course: Course }) {
       <div className="course-head">
         <input className="title-input" value={course.name} onChange={(e) => rename(mealId, course.id, e.target.value)} aria-label="שם המנה" />
         <Counter left={left} total={course.items.length} />
-        <button className="icon-btn" aria-label="מחיקת מנה" onClick={() => confirmDelete(`"${course.name}" וכל הפריטים שבה`) && remove(mealId, course.id)}>
+        <button className="icon-btn" aria-label="מחיקת מנה" onClick={() => void confirmDelete(`"${course.name}" וכל הפריטים שבה`).then((ok) => ok && remove(mealId, course.id))}>
           🗑
         </button>
       </div>
@@ -253,7 +253,7 @@ export function MealCard({ meal, onDelete }: { meal: Meal; onDelete?: () => void
         <input className="title-input big" value={meal.name} onChange={(e) => rename(meal.id, e.target.value)} aria-label="שם הסעודה" />
         <Counter left={left} total={total} />
         {onDelete && (
-          <button className="icon-btn" aria-label="מחיקת סעודה" onClick={() => confirmDelete(`"${meal.name}"`) && onDelete()}>
+          <button className="icon-btn" aria-label="מחיקת סעודה" onClick={() => void confirmDelete(`"${meal.name}"`).then((ok) => ok && onDelete())}>
             🗑
           </button>
         )}

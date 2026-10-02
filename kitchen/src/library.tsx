@@ -91,7 +91,7 @@ function EditVideoModal({ v, onClose }: { v: Video; onClose: () => void }) {
           <button type="button" className="btn ghost" onClick={() => nav(`/recipes/${v.chefId}/${v.categoryId}/new?yt=${v.youtubeId}`)}>
             📖 יצירת מתכון מהסרטון
           </button>
-          <button type="button" className="btn danger" onClick={() => confirmDelete(`הסרטון "${v.title}"`) && (remove(v.id), onClose())}>
+          <button type="button" className="btn danger" onClick={() => void confirmDelete(`הסרטון "${v.title}"`).then((ok) => ok && (remove(v.id), onClose()))}>
             מחיקה
           </button>
         </div>
@@ -157,7 +157,7 @@ function ChefModal({ chef, onClose }: { chef?: Chef; onClose: () => void }) {
             <button
               type="button"
               className="btn danger"
-              onClick={() => confirmDelete(`השף "${chef.name}" וכל הסרטונים והמתכונים שלו`) && (remove(chef.id), onClose())}
+              onClick={() => void confirmDelete(`השף "${chef.name}" וכל הסרטונים והמתכונים שלו`).then((ok) => ok && (remove(chef.id), onClose()))}
             >
               מחיקת שף
             </button>
@@ -320,7 +320,7 @@ function CategoryModal({ id, onClose }: { id?: string; onClose: () => void }) {
             <button
               type="button"
               className="btn danger"
-              onClick={() => confirmDelete(`הקטגוריה "${cat.name}" וכל הסרטונים והמתכונים שבה (אצל כל השפים)`) && (remove(cat.id), onClose())}
+              onClick={() => void confirmDelete(`הקטגוריה "${cat.name}" וכל הסרטונים והמתכונים שבה (אצל כל השפים)`).then((ok) => ok && (remove(cat.id), onClose()))}
             >
               מחיקה
             </button>
@@ -386,6 +386,7 @@ function AddVideosModal({ chefId, categoryId, onClose }: { chefId: string; categ
   const addVideo = useStore((s) => s.addVideo);
   const existing = useStore((s) => s.videos);
   const [text, setText] = useState('');
+  const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [report, setReport] = useState<string[]>([]);
 
@@ -405,13 +406,15 @@ function AddVideosModal({ chefId, categoryId, onClose }: { chefId: string; categ
         out.push(`• כבר קיים: ${line}`);
         continue;
       }
-      const title = (await fetchTitle(id)) ?? 'סרטון ללא שם';
+      const typed = lines.length === 1 ? name.trim() : '';
+      const title = typed || (await fetchTitle(id)) || 'סרטון ללא שם';
       addVideo({ chefId, categoryId, youtubeId: id, url: watchUrl(id), title });
       out.push(`✓ ${title}`);
     }
     setBusy(false);
     setReport(out);
     setText('');
+    setName('');
     if (out.every((l) => l.startsWith('✓'))) onClose();
   };
 
@@ -422,7 +425,10 @@ function AddVideosModal({ chefId, categoryId, onClose }: { chefId: string; categ
           הדביקו קישור ליוטיוב (אפשר כמה קישורים, אחד בכל שורה)
           <textarea className="input" dir="ltr" rows={4} value={text} onChange={(e) => setText(e.target.value)} placeholder="https://www.youtube.com/watch?v=…" autoFocus />
         </label>
-        <p className="muted small">תמונת הכותרת ושם הסרטון נמשכים אוטומטית.</p>
+        <label>
+          שם המנה (לא חובה — אם ריק, השם נמשך מיוטיוב)
+          <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="למשל בשר מתוק" />
+        </label>
         <button className="btn" disabled={busy || !text.trim()}>
           {busy ? 'מוסיף…' : 'הוספה'}
         </button>
@@ -548,7 +554,7 @@ export function RecipeScreen() {
             מקור: תיאור הסרטון ביוטיוב ↗
           </a>
         )}
-        <button className="btn small danger" onClick={() => confirmDelete(`המתכון "${r.title}"`) && (remove(r.id), nav(-1))}>
+        <button className="btn small danger" onClick={() => void confirmDelete(`המתכון "${r.title}"`).then((ok) => ok && (remove(r.id), nav(-1)))}>
           מחיקת מתכון
         </button>
       </div>
