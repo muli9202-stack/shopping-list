@@ -60,12 +60,17 @@ export interface Video {
   id: string;
   chefId: string;
   categoryId: string;
+  /** Further categories the video also shows in (e.g. "מנות לשבת"). */
+  extraCategoryIds?: string[];
   youtubeId: string;
   url: string;
   title: string;
   rating: number;
   createdAt: number;
 }
+
+/** The user's changes to a built-in channel video. */
+export type SeedEdit = Partial<Pick<Video, 'rating' | 'title' | 'categoryId' | 'extraCategoryIds'>> & { deleted?: boolean };
 
 export interface Recipe {
   id: string;
@@ -94,12 +99,14 @@ export interface CollectionEntry {
 }
 
 export interface KitchenData {
-  version: 1;
+  version: 2;
   shabbat: ShabbatPlan;
   chag: ChagPlan;
   chefs: Chef[];
   categories: Category[];
+  /** Videos the user added. Built-in channel videos live in seedVideos.ts. */
   videos: Video[];
+  seedEdits: Record<string, SeedEdit>;
   recipes: Recipe[];
   collections: Record<CollectionKey, CollectionEntry[]>;
   settings: { ytApiKey: string };

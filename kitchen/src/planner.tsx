@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { countMeals, useStore } from './store';
+import { allVideos, countMeals, useAllVideos, useStore } from './store';
 import { findMatches, matchScore, type Candidate } from './text';
 import type { Course, ItemLink, Meal, PlanItem } from './types';
 import { Modal, Thumb, confirmDelete, useUi } from './ui';
@@ -9,7 +9,7 @@ import { Modal, Thumb, confirmDelete, useUi } from './ui';
 function useOpenLink() {
   const nav = useNavigate();
   const play = useUi((s) => s.play);
-  const videos = useStore((s) => s.videos);
+  const videos = useAllVideos();
   const recipes = useStore((s) => s.recipes);
   return (link: ItemLink | undefined): boolean => {
     if (!link) return false;
@@ -53,7 +53,7 @@ function CandidateRow({ c, onPick }: { c: Candidate; onPick: () => void }) {
 }
 
 function LinkPicker({ item, onPick, onClose }: { item: PlanItem; onPick: (l: ItemLink) => void; onClose: () => void }) {
-  const videos = useStore((s) => s.videos);
+  const videos = useAllVideos();
   const recipes = useStore((s) => s.recipes);
   const matches = useMemo(() => findMatches(item.name, videos, recipes), [item.name, videos, recipes]);
   const [manual, setManual] = useState(matches.length === 0);
@@ -72,7 +72,7 @@ function LinkPicker({ item, onPick, onClose }: { item: PlanItem; onPick: (l: Ite
         <>
           <p className="muted">נמצאו {matches.length} התאמות. בחרו אחת:</p>
           <div className="pick-list">
-            {matches.map((c) => (
+            {matches.slice(0, 50).map((c) => (
               <CandidateRow key={c.kind + c.item.id} c={c} onPick={() => onPick({ kind: c.kind, id: c.item.id })} />
             ))}
           </div>
@@ -111,8 +111,8 @@ function ItemRow({ mealId, courseId, item }: { mealId: string; courseId: string;
   const onOpen = () => {
     if (open(item.link)) return;
     // A single match opens straight away and is remembered; otherwise let the user choose.
-    const { videos, recipes } = useStore.getState();
-    const matches = findMatches(item.name, videos, recipes);
+    const st = useStore.getState();
+    const matches = findMatches(item.name, allVideos(st), st.recipes);
     if (matches.length === 1) {
       const link = { kind: matches[0].kind, id: matches[0].item.id };
       update(mealId, courseId, item.id, { link });

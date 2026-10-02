@@ -1,6 +1,6 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { byRating, useStore } from './store';
+import { byRating, inCategory, useAllVideos, useStore } from './store';
 import { isHeading, matchScore, parseDescription } from './text';
 import type { Chef, CollectionKey, Recipe, Video } from './types';
 import { fetchSnippet, fetchTitle, thumbUrl, watchUrl, youtubeId } from './youtube';
@@ -24,6 +24,17 @@ const initials = (name: string) =>
 
 const PLATFORM_LABEL = { youtube: 'YouTube', tiktok: 'TikTok', other: 'קישור' } as const;
 
+const PAGE = 60;
+
+function MoreButton({ shown, total, onMore }: { shown: number; total: number; onMore: () => void }) {
+  if (shown >= total) return null;
+  return (
+    <button className="btn ghost full" onClick={onMore}>
+      הצג עוד ({total - shown} נוספים)
+    </button>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* Cards                                                                */
 /* ------------------------------------------------------------------ */
@@ -32,11 +43,12 @@ function VideoCard({ v, showChef }: { v: Video; showChef?: boolean }) {
   const play = useUi((s) => s.play);
   const update = useStore((s) => s.updateVideo);
   const chef = useStore((s) => s.chefs.find((c) => c.id === v.chefId));
+  const icon = useStore((s) => s.categories.find((c) => c.id === v.categoryId)?.icon);
   const [editing, setEditing] = useState(false);
   return (
     <article className="card media-card">
       <button className="media-thumb" onClick={() => play(v)} aria-label={`ניגון ${v.title}`}>
-        <Thumb id={v.youtubeId} alt={v.title} />
+        <Thumb id={v.youtubeId} alt={v.title} icon={icon} />
         <span className="play-badge">▶</span>
       </button>
       <div className="media-body">
@@ -68,7 +80,7 @@ function EditVideoModal({ v, onClose }: { v: Video; onClose: () => void }) {
         className="form"
         onSubmit={(e) => {
           e.preventDefault();
-          update(v.id, { title: title.trim() || v.title, categoryId: cat });
+          update(v.id, { title: title.trim() || v.title, categoryId: cat, ...(cat !== v.categoryId ? { extraCategoryIds: [] } : {}) });
           onClose();
         }}
       >
@@ -187,7 +199,7 @@ function CollectionTiles() {
 }
 
 function useSearch(mode: Mode, q: string) {
-  const videos = useStore((s) => s.videos);
+  const videos = useAllVideos();
   const recipes = useStore((s) => s.recipes);
   const chefs = useStore((s) => s.chefs);
   return useMemo(() => {
@@ -211,11 +223,13 @@ function useSearch(mode: Mode, q: string) {
 
 export function ChefsScreen({ mode }: { mode: Mode }) {
   const chefs = useStore((s) => s.chefs);
-  const videos = useStore((s) => s.videos);
+  const videos = useAllVideos();
   const recipes = useStore((s) => s.recipes);
   const [q, setQ] = useState('');
   const [modal, setModal] = useState<Chef | 'new' | null>(null);
+  const [shown, setShown] = useState(PAGE);
   const results = useSearch(mode, q);
+  useEffect(() => setShown(PAGE), [q]);
   const counts = useMemo(() => {
     const m = new Map<string, number>();
     for (const x of mode === 'videos' ? videos : recipes) m.set(x.chefId, (m.get(x.chefId) ?? 0) + 1);
@@ -228,11 +242,15 @@ export function ChefsScreen({ mode }: { mode: Mode }) {
       <SearchBar value={q} onChange={setQ} placeholder="חיפוש לפי שם מנה, שף או מצרך" />
       {results ? (
         results.length ? (
-          <div className="media-grid">
-            {results.map((x) =>
-              x.kind === 'video' ? <VideoCard key={x.item.id} v={x.item} showChef /> : <RecipeCard key={x.item.id} r={x.item} showChef />,
-            )}
-          </div>
+          <>
+            <p className="muted small">{results.length} תוצאות</p>
+            <div className="media-grid">
+              {results.slice(0, shown).map((x) =>
+                x.kind === 'video' ? <VideoCard key={x.item.id} v={x.item} showChef /> : <RecipeCard key={x.item.id} r={x.item} showChef />,
+              )}
+            </div>
+            <MoreButton shown={shown} total={results.length} onMore={() => setShown((n) => n + PAGE)} />
+          </>
         ) : (
           <Empty>לא נמצאו תוצאות ל"{q}"</Empty>
         )
@@ -335,12 +353,16 @@ export function CategoriesScreen({ mode }: { mode: Mode }) {
   const { chefId = '' } = useParams();
   const chef = useStore((s) => s.chefs.find((c) => c.id === chefId));
   const categories = useStore((s) => s.categories);
-  const videos = useStore((s) => s.videos);
+  const videos = useAllVideos();
   const recipes = useStore((s) => s.recipes);
   const [modal, setModal] = useState<string | 'new' | null>(null);
   const counts = useMemo(() => {
     const m = new Map<string, number>();
-    for (const x of mode === 'videos' ? videos : recipes) if (x.chefId === chefId) m.set(x.categoryId, (m.get(x.categoryId) ?? 0) + 1);
+    for (const x of mode === 'videos' ? videos : recipes) {
+      if (x.chefId !== chefId) continue;
+      const cats = 'extraCategoryIds' in x && x.extraCategoryIds ? [x.categoryId, ...x.extraCategoryIds] : [x.categoryId];
+      for (const c of cats) m.set(c, (m.get(c) ?? 0) + 1);
+    }
     return m;
   }, [mode, videos, recipes, chefId]);
   if (!chef) return <NotFound />;
@@ -384,7 +406,7 @@ export function CategoriesScreen({ mode }: { mode: Mode }) {
 
 function AddVideosModal({ chefId, categoryId, onClose }: { chefId: string; categoryId: string; onClose: () => void }) {
   const addVideo = useStore((s) => s.addVideo);
-  const existing = useStore((s) => s.videos);
+  const existing = useAllVideos();
   const [text, setText] = useState('');
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
@@ -448,14 +470,15 @@ export function CategoryScreen({ mode }: { mode: Mode }) {
   const { chefId = '', catId = '' } = useParams();
   const chef = useStore((s) => s.chefs.find((c) => c.id === chefId));
   const cat = useStore((s) => s.categories.find((c) => c.id === catId));
-  const videos = useStore((s) => s.videos);
+  const videos = useAllVideos();
   const recipes = useStore((s) => s.recipes);
   const nav = useNavigate();
   const [adding, setAdding] = useState(false);
+  const [shown, setShown] = useState(PAGE);
   const list = useMemo(
     () =>
       mode === 'videos'
-        ? videos.filter((v) => v.chefId === chefId && v.categoryId === catId).sort(byRating)
+        ? videos.filter((v) => v.chefId === chefId && inCategory(v, catId)).sort(byRating)
         : recipes.filter((r) => r.chefId === chefId && r.categoryId === catId).sort(byRating),
     [mode, videos, recipes, chefId, catId],
   );
@@ -476,10 +499,11 @@ export function CategoryScreen({ mode }: { mode: Mode }) {
       ) : (
         <div className="media-grid">
           {mode === 'videos'
-            ? (list as Video[]).map((v) => <VideoCard key={v.id} v={v} />)
-            : (list as Recipe[]).map((r) => <RecipeCard key={r.id} r={r} />)}
+            ? (list as Video[]).slice(0, shown).map((v) => <VideoCard key={v.id} v={v} />)
+            : (list as Recipe[]).slice(0, shown).map((r) => <RecipeCard key={r.id} r={r} />)}
         </div>
       )}
+      <MoreButton shown={shown} total={list.length} onMore={() => setShown((n) => n + PAGE)} />
       {adding && <AddVideosModal chefId={chefId} categoryId={catId} onClose={() => setAdding(false)} />}
     </div>
   );
@@ -575,7 +599,7 @@ export function RecipeEditScreen() {
   const apiKey = useStore((s) => s.settings.ytApiKey);
   const chefs = useStore((s) => s.chefs);
   const categories = useStore((s) => s.categories);
-  const videoTitle = useStore((s) => s.videos.find((v) => v.youtubeId === params.get('yt'))?.title);
+  const videoTitle = useAllVideos().find((v) => v.youtubeId === params.get('yt'))?.title;
   const add = useStore((s) => s.addRecipe);
   const update = useStore((s) => s.updateRecipe);
   const nav = useNavigate();
@@ -720,7 +744,7 @@ export function CollectionScreen() {
   const { which } = useParams();
   const key: CollectionKey = which === 'chag' ? 'chag' : 'shabbat';
   const entries = useStore((s) => s.collections[key]);
-  const videos = useStore((s) => s.videos);
+  const videos = useAllVideos();
   const recipes = useStore((s) => s.recipes);
   const chefs = useStore((s) => s.chefs);
   const setNote = useStore((s) => s.setCollectionNote);

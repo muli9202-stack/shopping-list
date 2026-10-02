@@ -3,7 +3,7 @@ import { IS_ARTIFACT, claudeUse } from './env';
 import { cloudAvailable } from './storage';
 import { Link } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
-import { allMeals, countMeals, exportData, useStore } from './store';
+import { allMeals, allVideos, countMeals, exportData, useStore } from './store';
 import { Counter, MealCard } from './planner';
 import { Header, ask } from './ui';
 import type { KitchenData } from './types';
@@ -169,7 +169,7 @@ export function SettingsScreen() {
   const key = useStore((s) => s.settings.ytApiKey);
   const setKey = useStore((s) => s.setYtApiKey);
   const replaceAll = useStore((s) => s.replaceAll);
-  const counts = useStore(useShallow((s) => ({ v: s.videos.length, r: s.recipes.length, c: s.chefs.length, m: allMeals(s).length })));
+  const counts = useStore(useShallow((s) => ({ v: allVideos(s).length, r: s.recipes.length, c: s.chefs.length, m: allMeals(s).length })));
   const file = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState('');
 
@@ -203,7 +203,9 @@ export function SettingsScreen() {
   const restore = async (f: File) => {
     try {
       const data = JSON.parse(await f.text()) as KitchenData;
-      if (data.version !== 1 || !Array.isArray(data.chefs) || !data.shabbat) throw new Error();
+      if (![1, 2].includes(data.version) || !Array.isArray(data.chefs) || !data.shabbat) throw new Error();
+      data.seedEdits ??= {};
+      if (!data.categories.some((c) => c.id === 'other')) data.categories.push({ id: 'other', name: 'שונות', icon: '🍽️' });
       if (!(await ask('השחזור יחליף את כל הנתונים הנוכחיים. להמשיך?'))) return;
       replaceAll(data);
       setMsg('✓ הנתונים שוחזרו');

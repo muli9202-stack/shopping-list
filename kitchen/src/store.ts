@@ -12,10 +12,12 @@ import type {
   Meal,
   PlanItem,
   Recipe,
+  SeedEdit,
   ShabbatPlan,
   Video,
 } from './types';
 import { SEED_CATEGORIES, SEED_CHEFS } from './seed';
+import { isSeedVideo, seedVideos } from './seedVideos';
 
 export const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
@@ -38,12 +40,13 @@ export const emptyShabbat = (): ShabbatPlan => ({
 export const emptyChag = (): ChagPlan => ({ name: 'חג', days: [] });
 
 export const emptyData = (): KitchenData => ({
-  version: 1,
+  version: 2,
   shabbat: emptyShabbat(),
   chag: emptyChag(),
   chefs: SEED_CHEFS,
   categories: SEED_CATEGORIES,
   videos: [],
+  seedEdits: {},
   recipes: [],
   collections: { shabbat: [], chag: [] },
   settings: { ytApiKey: '' },
@@ -192,7 +195,7 @@ export const useStore = create<Store>()(
       deleteChef: (id) =>
         set((s) => {
           const gone = new Set([
-            ...s.videos.filter((v) => v.chefId === id).map((v) => v.id),
+            ...allVideos(s).filter((v) => v.chefId === id).map((v) => v.id),
             ...s.recipes.filter((r) => r.chefId === id).map((r) => r.id),
           ]);
           return {
@@ -214,7 +217,7 @@ export const useStore = create<Store>()(
       deleteCategory: (id) =>
         set((s) => {
           const gone = new Set([
-            ...s.videos.filter((v) => v.categoryId === id).map((v) => v.id),
+            ...allVideos(s).filter((v) => v.categoryId === id).map((v) => v.id),
             ...s.recipes.filter((r) => r.categoryId === id).map((r) => r.id),
           ]);
           return {
@@ -233,10 +236,20 @@ export const useStore = create<Store>()(
         set((s) => ({ videos: [...s.videos, { ...v, id, rating: 0, createdAt: Date.now() }] }));
         return id;
       },
-      updateVideo: (id, patch) => set((s) => ({ videos: s.videos.map((v) => (v.id === id ? { ...v, ...patch } : v)) })),
+      updateVideo: (id, patch) =>
+        set((s) => {
+          if (!isSeedVideo(id)) return { videos: s.videos.map((v) => (v.id === id ? { ...v, ...patch } : v)) };
+          const edit: SeedEdit = { ...s.seedEdits[id] };
+          if (patch.rating !== undefined) edit.rating = patch.rating;
+          if (patch.title !== undefined) edit.title = patch.title;
+          if (patch.categoryId !== undefined) edit.categoryId = patch.categoryId;
+          if (patch.extraCategoryIds !== undefined) edit.extraCategoryIds = patch.extraCategoryIds;
+          return { seedEdits: { ...s.seedEdits, [id]: edit } };
+        }),
       deleteVideo: (id) =>
         set((s) => ({
           videos: s.videos.filter((v) => v.id !== id),
+          seedEdits: isSeedVideo(id) ? { ...s.seedEdits, [id]: { ...s.seedEdits[id], deleted: true } } : s.seedEdits,
           collections: {
             shabbat: s.collections.shabbat.filter((e) => e.id !== id),
             chag: s.collections.chag.filter((e) => e.id !== id),
@@ -283,15 +296,25 @@ export const useStore = create<Store>()(
     }),
     {
       name: 'kitchen-data',
-      version: 1,
+      version: 2,
+      migrate: (persisted, version) => {
+        const d = persisted as KitchenData;
+        // v2 adds the built-in channel videos, which need the "שונות" category.
+        if (version < 2) {
+          d.seedEdits ??= {};
+          if (!d.categories.some((c) => c.id === 'other')) d.categories = [...d.categories, SEED_CATEGORIES.find((c) => c.id === 'other')!];
+        }
+        return d;
+      },
       storage: createJSONStorage(() => storage),
       partialize: (s): KitchenData => ({
-        version: 1,
+        version: 2,
         shabbat: s.shabbat,
         chag: s.chag,
         chefs: s.chefs,
         categories: s.categories,
         videos: s.videos,
+        seedEdits: s.seedEdits,
         recipes: s.recipes,
         collections: s.collections,
         settings: s.settings,
@@ -303,17 +326,51 @@ export const useStore = create<Store>()(
 export const exportData = (): KitchenData => {
   const s = useStore.getState();
   return {
-    version: 1,
+    version: 2,
     shabbat: s.shabbat,
     chag: s.chag,
     chefs: s.chefs,
     categories: s.categories,
     videos: s.videos,
+    seedEdits: s.seedEdits,
     recipes: s.recipes,
     collections: s.collections,
     settings: s.settings,
   };
 };
+
+type VideoSource = Pick<KitchenData, 'videos' | 'seedEdits' | 'chefs' | 'categories'>;
+let memo: { src: VideoSource; out: Video[] } | null = null;
+
+/** The user's videos plus the built-in channel videos, with the user's edits applied. */
+export function allVideos(s: VideoSource): Video[] {
+  if (
+    memo &&
+    memo.src.videos === s.videos &&
+    memo.src.seedEdits === s.seedEdits &&
+    memo.src.chefs === s.chefs &&
+    memo.src.categories === s.categories
+  )
+    return memo.out;
+  const chefs = new Set(s.chefs.map((c) => c.id));
+  const cats = new Set(s.categories.map((c) => c.id));
+  const seen = new Set(s.videos.map((v) => `${v.chefId}/${v.youtubeId}`));
+  const seeded: Video[] = [];
+  for (const v of seedVideos()) {
+    const e = s.seedEdits[v.id];
+    if (e?.deleted || !chefs.has(v.chefId) || seen.has(`${v.chefId}/${v.youtubeId}`)) continue;
+    const merged = e ? { ...v, ...e } : v;
+    if (cats.has(merged.categoryId)) seeded.push(merged);
+  }
+  const out = [...s.videos, ...seeded];
+  memo = { src: { videos: s.videos, seedEdits: s.seedEdits, chefs: s.chefs, categories: s.categories }, out };
+  return out;
+}
+
+export const useAllVideos = () => useStore(allVideos);
+
+/** Whether a video belongs in a category (its main one or an extra one). */
+export const inCategory = (v: Video, catId: string) => v.categoryId === catId || !!v.extraCategoryIds?.includes(catId);
 
 /** Counts for the "כמה נשאר" badges. */
 export function countMeals(meals: Meal[]) {

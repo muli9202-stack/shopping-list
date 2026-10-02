@@ -82,9 +82,19 @@ export function Stars({ value, onChange, small }: { value: number; onChange?: (v
   );
 }
 
-export function Thumb({ id, alt }: { id: string; alt: string }) {
+const TILE_HUES = [350, 20, 40, 145, 190, 220, 265, 320];
+
+export function Thumb({ id, alt, icon }: { id: string; alt: string; icon?: string }) {
   const [broken, setBroken] = useState(false);
-  if (!id || broken) return <div className="thumb thumb-empty">🍽️</div>;
+  // The chat view blocks images from other sites, so it gets a colored tile instead.
+  if (!id || broken || IS_ARTIFACT) {
+    const hue = TILE_HUES[[...(id || alt)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % TILE_HUES.length];
+    return (
+      <div className="thumb thumb-empty" style={{ '--hue': hue } as React.CSSProperties} aria-hidden>
+        {icon ?? '🍽️'}
+      </div>
+    );
+  }
   return <img className="thumb" src={thumbUrl(id)} alt={alt} loading="lazy" onError={() => setBroken(true)} />;
 }
 
