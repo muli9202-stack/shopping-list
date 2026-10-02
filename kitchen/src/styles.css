@@ -1219,3 +1219,38 @@ div.hero .thumb {
   height: 100%;
   font-size: 4rem;
 }
+
+.boot {
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  min-height: 60vh;
+  padding: 16px;
+  text-align: center;
+  color: var(--muted);
+}
+.boot button {
+  margin-inline-start: 8px;
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+}
+.crash {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.crash pre {
+  margin: 0;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+}

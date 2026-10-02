@@ -9,6 +9,12 @@ import App from './App';
 // Ask the browser not to evict our IndexedDB data under storage pressure.
 navigator.storage?.persist?.().catch(() => {});
 
+try {
+  sessionStorage.removeItem('kitchen-reloaded');
+} catch {
+  /* storage blocked */
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

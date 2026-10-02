@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Component, useEffect, useState, type ReactNode } from 'react';
 import { HashRouter, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { IS_ARTIFACT } from './env';
 import { useStore } from './store';
@@ -20,7 +20,38 @@ function ScrollTop() {
   return null;
 }
 
+/** Shows what went wrong instead of a blank page if a screen crashes. */
+class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  render() {
+    if (!this.state.error) return this.props.children;
+    return (
+      <div className="page">
+        <div className="card crash">
+          <h2>משהו השתבש בתצוגה</h2>
+          <p className="muted">הנתונים שלך שמורים. נסו לחזור לדף הבית. אם זה חוזר, שלחו צילום מסך של ההודעה הזאת.</p>
+          <pre dir="ltr">{String(this.state.error.message || this.state.error)}</pre>
+          <button className="btn" onClick={() => location.reload()}>
+            חזרה לדף הבית
+          </button>
+        </div>
+      </div>
+    );
+  }
+}
+
 export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppInner />
+    </ErrorBoundary>
+  );
+}
+
+function AppInner() {
   // IndexedDB loads asynchronously; render only once saved data is in, so
   // nothing typed in the first instant can overwrite it.
   const [ready, setReady] = useState(useStore.persist.hasHydrated());

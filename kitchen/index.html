@@ -13,7 +13,35 @@
     <title>המטבח שלי</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="boot" id="boot">טוען…</div></div>
+    <script>
+      // After an app update an open window can still ask for files the update replaced.
+      // Reload once to pick up the new version, and never leave a blank page.
+      (function () {
+        var KEY = 'kitchen-reloaded';
+        function reloadOnce() {
+          try {
+            if (sessionStorage.getItem(KEY)) return false;
+            sessionStorage.setItem(KEY, '1');
+          } catch (e) {}
+          location.reload();
+          return true;
+        }
+        addEventListener('error', function (e) {
+          var t = e.target;
+          if (t && (t.tagName === 'SCRIPT' || t.tagName === 'LINK')) reloadOnce();
+        }, true);
+        setTimeout(function () {
+          var boot = document.getElementById('boot');
+          if (!boot) return;
+          boot.innerHTML = 'הטעינה לוקחת יותר מדי זמן. <button type="button" id="boot-retry">רענון</button>';
+          document.getElementById('boot-retry').onclick = function () {
+            try { sessionStorage.removeItem(KEY); } catch (e) {}
+            location.reload();
+          };
+        }, 15000);
+      })();
+    </script>
     <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>
