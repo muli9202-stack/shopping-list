@@ -1,0 +1,60 @@
+import type { Category, Chef } from './types';
+
+/**
+ * Real food creators only. Every link below was checked to resolve to the
+ * creator's own YouTube channel (October 2026).
+ */
+export const SEED_CHEFS: Chef[] = [
+  { id: 'chen-bamitbach', name: 'חן במטבח', url: 'https://www.youtube.com/channel/UCc0zfbjbWVBsjeMCp4ZRh6Q', platform: 'youtube', note: 'חן מזרחי' },
+  { id: 'carine-goren', name: 'קרין גורן', url: 'https://www.youtube.com/@carinegoren', platform: 'youtube', note: 'קונדיטורית' },
+  { id: 'iditush', name: 'עידיתוש', url: 'https://www.youtube.com/@iditushcom', platform: 'youtube', note: 'עידית פייזק' },
+  { id: 'sivan-food', name: 'פינת האוכל של סיון', url: 'https://www.youtube.com/channel/UCnR3T6_yRxYwtPYvrCtlXmQ', platform: 'youtube' },
+  { id: 'cooking-foodie-il', name: 'The Cooking Foodie ישראל', url: 'https://www.youtube.com/c/thecookingfoodieisrael', platform: 'youtube' },
+  { id: 'food-channel-il', name: 'ערוץ האוכל', url: 'https://www.youtube.com/channel/UCN3K5RheRJekWOeVBH_81VQ', platform: 'youtube' },
+  { id: 'jamie-geller', name: "ג'יימי גלר", url: 'https://www.youtube.com/@JamieGeller', platform: 'youtube', note: 'אוכל כשר' },
+  { id: 'kosher-com', name: 'Kosher.com', url: 'https://www.youtube.com/@kosherdotcom', platform: 'youtube', note: 'אוכל כשר' },
+  { id: 'busy-in-brooklyn', name: 'Busy in Brooklyn', url: 'https://www.youtube.com/@BusyInBrooklyn', platform: 'youtube', note: 'חני אפלבאום' },
+  { id: 'gordon-ramsay', name: 'גורדון רמזי', url: 'https://www.youtube.com/@gordonramsay', platform: 'youtube' },
+  { id: 'jamie-oliver', name: "ג'יימי אוליבר", url: 'https://www.youtube.com/@JamieOliver', platform: 'youtube' },
+  { id: 'joshua-weissman', name: "ג'ושוע וייסמן", url: 'https://www.youtube.com/@JoshuaWeissman', platform: 'youtube' },
+  { id: 'babish', name: 'Binging with Babish', url: 'https://www.youtube.com/@BingingWithBabish', platform: 'youtube' },
+  { id: 'preppy-kitchen', name: 'Preppy Kitchen', url: 'https://www.youtube.com/@PreppyKitchen', platform: 'youtube', note: "ג'ון קאנל" },
+  { id: 'food-wishes', name: 'Food Wishes', url: 'https://www.youtube.com/@foodwishes', platform: 'youtube', note: "שף ג'ון" },
+  { id: 'maangchi', name: "מאנגצ'י", url: 'https://www.youtube.com/@Maangchi', platform: 'youtube', note: 'מטבח קוריאני' },
+  { id: 'adam-ragusea', name: 'אדם רגוזיאה', url: 'https://www.youtube.com/@aragusea', platform: 'youtube' },
+  { id: 'nick-digiovanni', name: "ניק דיג'ובאני", url: 'https://www.youtube.com/@NickDiGiovanni', platform: 'youtube' },
+  { id: 'kenji', name: "קנג'י לופז-אלט", url: 'https://www.youtube.com/@JKenjiLopezAlt', platform: 'youtube' },
+  { id: 'tasty', name: 'Tasty', url: 'https://www.youtube.com/@Buzzfeedtasty', platform: 'youtube' },
+  { id: 'bon-appetit', name: 'Bon Appétit', url: 'https://www.youtube.com/@bonappetit', platform: 'youtube' },
+  { id: 'nyt-cooking', name: 'NYT Cooking', url: 'https://www.youtube.com/@nytcooking', platform: 'youtube' },
+  { id: 'sorted-food', name: 'Sorted Food', url: 'https://www.youtube.com/@SortedFood', platform: 'youtube' },
+  { id: 'pasta-grannies', name: 'Pasta Grannies', url: 'https://www.youtube.com/@pastagrannies', platform: 'youtube' },
+  { id: 'ethan-chlebowski', name: 'איתן חלבובסקי', url: 'https://www.youtube.com/@ethanchlebowski', platform: 'youtube' },
+  { id: 'sam-cooking-guy', name: 'Sam the Cooking Guy', url: 'https://www.youtube.com/@samthecookingguy', platform: 'youtube' },
+  { id: 'andy-cooks', name: 'Andy Cooks', url: 'https://www.youtube.com/@andy_cooks', platform: 'youtube' },
+  { id: 'chef-jean-pierre', name: "שף ז'אן-פייר", url: 'https://www.youtube.com/@ChefJeanPierre', platform: 'youtube' },
+  { id: 'cooking-foodie', name: 'The Cooking Foodie', url: 'https://www.youtube.com/@TheCookingFoodie', platform: 'youtube' },
+];
+
+export const SEED_CATEGORIES: Category[] = [
+  { id: 'desserts', name: 'קינוחים', icon: '🍮' },
+  { id: 'fish', name: 'דגים', icon: '🐟' },
+  { id: 'meat', name: 'בשרים', icon: '🥩' },
+  { id: 'stews', name: 'תבשילים', icon: '🍲' },
+  { id: 'chicken', name: 'עופות', icon: '🍗' },
+  { id: 'salads', name: 'סלטים', icon: '🥗' },
+  { id: 'soups', name: 'מרקים', icon: '🥣' },
+  { id: 'sides', name: 'תוספות', icon: '🍚' },
+  { id: 'breads', name: 'מאפים ולחמים', icon: '🥖' },
+  { id: 'cakes', name: 'עוגות', icon: '🎂' },
+  { id: 'pasta', name: 'פסטות', icon: '🍝' },
+  { id: 'breakfast', name: 'ארוחות בוקר', icon: '🍳' },
+  { id: 'veggie', name: 'צמחוני / טבעוני', icon: '🥦' },
+  { id: 'shabbat', name: 'מנות לשבת', icon: '🕯️' },
+  { id: 'holiday', name: 'מנות לחג', icon: '🍷' },
+  { id: 'quick', name: 'מתכונים מהירים', icon: '⏱️' },
+  { id: 'challah', name: 'חלות', icon: '🍞' },
+  { id: 'cookies', name: 'עוגיות', icon: '🍪' },
+  { id: 'dips', name: 'רטבים וממרחים', icon: '🫙' },
+  { id: 'kids', name: 'לילדים', icon: '🧒' },
+];

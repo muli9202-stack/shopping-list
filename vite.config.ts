@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -6,6 +7,16 @@ import { VitePWA } from 'vite-plugin-pwa';
 // GitHub Pages (served from /<repo>/) and on any other static host.
 export default defineConfig({
   base: './',
+  build: {
+    // Two apps from one build: the shopping list at the root and the
+    // kitchen app (videos, recipes, Shabbat/holiday table) under /kitchen/.
+    rolldownOptions: {
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        kitchen: fileURLToPath(new URL('./kitchen/index.html', import.meta.url)),
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
@@ -30,7 +41,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2,webmanifest}'],
+        // Offline navigation inside /kitchen/ must not fall back to the shopping list page.
+        navigateFallbackDenylist: [/\/kitchen\//],
       },
     }),
   ],
