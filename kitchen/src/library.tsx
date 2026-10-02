@@ -48,12 +48,29 @@ function VideoCard({ v, showChef }: { v: Video; showChef?: boolean }) {
   const [editing, setEditing] = useState(false);
   return (
     <article className="card media-card">
-      <button className="media-thumb" onClick={() => play(v)} aria-label={`ניגון ${v.title}`}>
-        <Thumb id={v.youtubeId} alt={v.title} icon={icon} />
-        <span className="play-badge">▶</span>
-      </button>
+      {IS_ARTIFACT ? (
+        // Inside the chat other sites can't be embedded: one tap opens the video on YouTube.
+        <a className="media-thumb" href={watchUrl(v.youtubeId)} target="_blank" rel="noreferrer" aria-label={`צפייה ב${v.title} ביוטיוב`}>
+          <Thumb id={v.youtubeId} alt={v.title} icon={icon} />
+          <span className="play-badge">▶</span>
+          <span className="yt-tag">צפייה ביוטיוב ↗</span>
+        </a>
+      ) : (
+        <button className="media-thumb" onClick={() => play(v)} aria-label={`ניגון ${v.title}`}>
+          <Thumb id={v.youtubeId} alt={v.title} icon={icon} />
+          <span className="play-badge">▶</span>
+        </button>
+      )}
       <div className="media-body">
-        <h3 onClick={() => play(v)}>{v.title}</h3>
+        {IS_ARTIFACT ? (
+          <h3>
+            <a href={watchUrl(v.youtubeId)} target="_blank" rel="noreferrer">
+              {v.title}
+            </a>
+          </h3>
+        ) : (
+          <h3 onClick={() => play(v)}>{v.title}</h3>
+        )}
         {showChef && <span className="muted small">{chef?.name}</span>}
         <div className="row between">
           <Stars value={v.rating} onChange={(rating) => update(v.id, { rating })} />
@@ -582,10 +599,16 @@ export function RecipeScreen() {
         )}
       </section>
       <div className="row gap wrap between">
-        {r.url && (
-          <a className="muted small" href={r.url} target="_blank" rel="noreferrer">
-            מקור: תיאור הסרטון ביוטיוב ↗
+        {r.source ? (
+          <a className="muted small" href={r.source} target="_blank" rel="noreferrer">
+            מקור: המתכון באתר של השף ↗
           </a>
+        ) : (
+          r.url && (
+            <a className="muted small" href={r.url} target="_blank" rel="noreferrer">
+              מקור: תיאור הסרטון ביוטיוב ↗
+            </a>
+          )
         )}
         <button className="btn small danger" onClick={() => void confirmDelete(`המתכון "${r.title}"`).then((ok) => ok && (remove(r.id), nav(-1)))}>
           מחיקת מתכון

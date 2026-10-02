@@ -85,6 +85,8 @@ export interface Recipe {
   /** The description had no complete recipe — nothing is invented to fill the gap. */
   missing: boolean;
   description: string;
+  /** The chef's own recipe page the lines were copied from, when not the video description. */
+  source?: string;
   rating: number;
   createdAt: number;
 }

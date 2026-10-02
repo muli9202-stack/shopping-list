@@ -8,6 +8,8 @@ import { Counter, MealCard } from './planner';
 import { Header, ask } from './ui';
 import type { KitchenData } from './types';
 
+const SITE_URL = 'https://muli9202-stack.github.io/shopping-list/kitchen/';
+
 export function HomeScreen() {
   return (
     <div className="page home">
@@ -17,6 +19,12 @@ export function HomeScreen() {
           ⚙
         </Link>
       </div>
+      {IS_ARTIFACT && (
+        <a className="full-app" href={SITE_URL} target="_blank" rel="noreferrer">
+          <strong>לגרסה המלאה עם תמונות ונגן סרטונים ↗</strong>
+          <span>בתוך הצ׳אט הסרטונים נפתחים ביוטיוב בלשונית חדשה</span>
+        </a>
+      )}
       <div className="home-grid">
         <Link to="/videos" className="home-tile t-videos">
           <span className="emoji">🎬</span>
