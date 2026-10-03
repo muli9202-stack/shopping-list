@@ -27,3 +27,16 @@ ${js}
 const out = path.join(dir, 'omega.html');
 fs.writeFileSync(out, page);
 console.log(`${out} ${(page.length / 1024).toFixed(0)} KiB`);
+
+// The same page as a complete document: download it and open it in any browser, offline.
+const standalone = `<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+${page}</head>
+</html>
+`.replace('</title>\n<style>', '</title>\n<style>').replace(/<\/style>\n([\s\S]*)<\/head>/, '</style>\n</head>\n<body>\n$1</body>');
+const out2 = path.join(dir, 'omega-game.html');
+fs.writeFileSync(out2, standalone);
+console.log(`${out2} ${(standalone.length / 1024).toFixed(0)} KiB`);
