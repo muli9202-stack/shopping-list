@@ -41,7 +41,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2,webmanifest,json}'],
         // Offline navigation inside /kitchen/ must not fall back to the shopping list page.
         navigateFallbackDenylist: [/\/kitchen\//],
         // The kitchen app bundles its built-in videos and recipes (~5 MB).

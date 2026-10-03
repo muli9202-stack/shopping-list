@@ -17,13 +17,17 @@ const page = `<title>המטבח שלי</title>
 <style>
 ${css}
 </style>
-<div id="root" dir="rtl" lang="he"></div>
+<div id="root" dir="rtl" lang="he"><div class="boot">טוען…</div></div>
 <script type="module">
 document.documentElement.lang = 'he';
 document.documentElement.dir = 'rtl';
 ${js}
 </script>
 `;
+// The built-in videos and recipes are published next to the page and fetched at run time.
+for (const f of ['seed-videos.json', 'seed-recipes.json']) {
+  fs.copyFileSync(new URL(`../../public/kitchen/${f}`, import.meta.url), path.join(dir, f));
+}
 const out = path.join(dir, 'kitchen.html');
 fs.writeFileSync(out, page);
 console.log(`${out} ${(page.length / 1024).toFixed(0)} KiB`);

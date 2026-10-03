@@ -80,30 +80,57 @@ async function flush(name: string) {
 
 let timer: ReturnType<typeof setTimeout> | undefined;
 
+/** Set once the cloud copy has been read (or found empty); until then nothing is written there. */
+let cloudReady = false;
+/** Called if the cloud copy only arrives after the page already started from the local copy. */
+let onLateCloud: ((value: string) => void) | null = null;
+export const setLateCloudHandler = (fn: (value: string) => void) => {
+  onLateCloud = fn;
+};
+
+async function readCloud(name: string): Promise<string | null> {
+  const c = await getCloud();
+  if (!c) return null;
+  const meta = await c.db.doc(`${c.base}/${name}-meta`).get();
+  const n = meta.exists ? Number(meta.data()?.n ?? 0) : 0;
+  if (n <= 0) return null;
+  const docs = await Promise.all(Array.from({ length: n }, (_, i) => c.db.doc(`${c.base}/${name}-${i}`).get()));
+  const parts = docs.map((d) => String(d.data()?.s ?? ''));
+  parts.forEach((p, i) => written.set(`${c.base}/${name}-${i}`, p));
+  return parts.join('');
+}
+
 const artifactStorage: StateStorage = {
+  // Never block the first screen on the cloud: it may be waiting for the viewer's permission.
   getItem: async (name) => {
-    try {
-      const c = await getCloud();
-      if (c) {
-        const meta = await c.db.doc(`${c.base}/${name}-meta`).get();
-        const n = meta.exists ? Number(meta.data()?.n ?? 0) : 0;
-        if (n > 0) {
-          const docs = await Promise.all(Array.from({ length: n }, (_, i) => c.db.doc(`${c.base}/${name}-${i}`).get()));
-          const parts = docs.map((d) => String(d.data()?.s ?? ''));
-          parts.forEach((p, i) => written.set(`${c.base}/${name}-${i}`, p));
-          return parts.join('');
-        }
-      }
-    } catch (e) {
-      console.warn('cloud load failed', e);
+    const cloudRead = readCloud(name).then(
+      (v) => ({ ok: true as const, v }),
+      (e) => {
+        console.warn('cloud load failed', e);
+        return { ok: false as const, v: null };
+      },
+    );
+    const first = await Promise.race([cloudRead, new Promise<null>((r) => setTimeout(() => r(null), 2500))]);
+    if (first) {
+      cloudReady = first.ok;
+      if (first.v) return first.v;
+      return idbStorage.getItem(name);
     }
+    // Cloud is slow: start from this device's copy, then adopt the cloud copy when it arrives.
+    void cloudRead.then((res) => {
+      cloudReady = res.ok;
+      if (res.v) onLateCloud?.(res.v);
+      else if (pending !== null) void flush(name);
+    });
     return idbStorage.getItem(name);
   },
   setItem: (name, value) => {
     void idbStorage.setItem(name, value);
     pending = value;
     clearTimeout(timer);
-    timer = setTimeout(() => void flush(name), 1200);
+    timer = setTimeout(() => {
+      if (cloudReady) void flush(name);
+    }, 1200);
   },
   removeItem: (name) => idbStorage.removeItem(name),
 };

@@ -1,5 +1,5 @@
 import type { Recipe } from './types';
-import raw from './seedRecipes.json';
+import { useSeeds } from './seedData';
 
 /**
  * Recipes taken from the descriptions of the built-in channel videos.
@@ -9,12 +9,13 @@ import raw from './seedRecipes.json';
  */
 type Row = [string, string, string, string, string[], string[], string?];
 
-let cache: Recipe[] | null = null;
+let cache: { raw: unknown; out: Recipe[] } | null = null;
 
 export function seedRecipes(): Recipe[] {
-  if (cache) return cache;
+  const raw = useSeeds.getState().recipes;
+  if (cache?.raw === raw) return cache.out;
   let i = 0;
-  cache = (raw as unknown as Row[]).map(([youtubeId, chefId, categoryId, title, ingredients, steps, source]) => ({
+  const out = (raw as unknown as Row[]).map(([youtubeId, chefId, categoryId, title, ingredients, steps, source]) => ({
     id: `sr_${youtubeId}`,
     chefId,
     categoryId,
@@ -29,7 +30,8 @@ export function seedRecipes(): Recipe[] {
     rating: 0,
     createdAt: -i++,
   }));
-  return cache;
+  cache = { raw, out };
+  return out;
 }
 
 export const isSeedRecipe = (id: string) => id.startsWith('sr_');

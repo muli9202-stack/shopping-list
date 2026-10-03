@@ -1,5 +1,5 @@
 import type { Video } from './types';
-import raw from './seedVideos.json';
+import { useSeeds } from './seedData';
 
 /**
  * Real videos from each seeded chef's YouTube channel (titles as published),
@@ -8,10 +8,11 @@ import raw from './seedVideos.json';
  */
 type Row = [string, string, string, string[]?];
 
-let cache: Video[] | null = null;
+let cache: { raw: unknown; out: Video[] } | null = null;
 
 export function seedVideos(): Video[] {
-  if (cache) return cache;
+  const raw = useSeeds.getState().videos;
+  if (cache?.raw === raw) return cache.out;
   const out: Video[] = [];
   let i = 0;
   for (const [chefId, rows] of Object.entries(raw as unknown as Record<string, Row[]>)) {
@@ -30,7 +31,7 @@ export function seedVideos(): Video[] {
       });
     }
   }
-  cache = out;
+  cache = { raw, out };
   return out;
 }
 

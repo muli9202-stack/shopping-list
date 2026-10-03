@@ -4,6 +4,7 @@ import { byRating, inCategory, useAllRecipes, useAllVideos, useStore } from './s
 import { isHeading, matchScore, parseDescription } from './text';
 import type { Chef, CollectionKey, Recipe, Video } from './types';
 import { IS_ARTIFACT } from './env';
+import { useSeeds } from './seedData';
 import { fetchSnippet, fetchTitle, thumbUrl, watchUrl, youtubeId } from './youtube';
 import { CollectionButtons, Empty, Header, Modal, SearchBar, Stars, Thumb, confirmDelete, useUi } from './ui';
 
@@ -26,6 +27,14 @@ const initials = (name: string) =>
 const PLATFORM_LABEL = { youtube: 'YouTube', tiktok: 'TikTok', other: 'קישור' } as const;
 
 const PAGE = 60;
+
+/** While the built-in videos and recipes are still arriving (or if they failed to). */
+function SeedStatus() {
+  const { rev, failed } = useSeeds();
+  if (failed) return <div className="notice warn">לא הצלחתי לטעון את הסרטונים והמתכונים המובנים. בדקו את החיבור ופתחו שוב.</div>;
+  if (rev >= 2) return null;
+  return <div className="notice">טוען את הסרטונים והמתכונים…</div>;
+}
 
 function MoreButton({ shown, total, onMore }: { shown: number; total: number; onMore: () => void }) {
   if (shown >= total) return null;
@@ -257,6 +266,7 @@ export function ChefsScreen({ mode }: { mode: Mode }) {
   return (
     <div className="page" style={{ '--tone': MODE_TONE[mode] } as React.CSSProperties}>
       <Header title={MODE_TITLE[mode]} back="/" tone={MODE_TONE[mode]} />
+      <SeedStatus />
       <SearchBar value={q} onChange={setQ} placeholder="חיפוש לפי שם מנה, שף או מצרך" />
       {results ? (
         results.length ? (
@@ -395,6 +405,7 @@ export function CategoriesScreen({ mode }: { mode: Mode }) {
           </a>
         )}
       </div>
+      <SeedStatus />
       <div className="cat-grid">
         {categories.map((c) => (
           <div key={c.id} className="cat-tile">

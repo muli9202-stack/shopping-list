@@ -2,6 +2,7 @@ import { Component, useEffect, useState, type ReactNode } from 'react';
 import { HashRouter, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { IS_ARTIFACT } from './env';
 import { useStore } from './store';
+import { loadSeeds } from './seedData';
 import { ConfirmDialog, Player } from './ui';
 import { ChagScreen, HomeScreen, SettingsScreen, ShabbatScreen, TableChooseScreen } from './screens';
 import {
@@ -52,6 +53,7 @@ export default function App() {
 }
 
 function AppInner() {
+  useEffect(loadSeeds, []);
   // IndexedDB loads asynchronously; render only once saved data is in, so
   // nothing typed in the first instant can overwrite it.
   const [ready, setReady] = useState(useStore.persist.hasHydrated());

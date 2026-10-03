@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { storage } from './storage';
+import { setLateCloudHandler, storage } from './storage';
 import type {
   Category,
   ChagDay,
@@ -19,6 +19,7 @@ import type {
 import { SEED_CATEGORIES, SEED_CHEFS } from './seed';
 import { isSeedVideo, seedVideos } from './seedVideos';
 import { isSeedRecipe, seedRecipes } from './seedRecipes';
+import { useSeeds } from './seedData';
 
 export const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
@@ -352,12 +353,14 @@ export const exportData = (): KitchenData => {
 };
 
 type VideoSource = Pick<KitchenData, 'videos' | 'seedEdits' | 'chefs' | 'categories'>;
-let memo: { src: VideoSource; out: Video[] } | null = null;
+let memo: { src: VideoSource; out: Video[]; rev: number } | null = null;
 
 /** The user's videos plus the built-in channel videos, with the user's edits applied. */
 export function allVideos(s: VideoSource): Video[] {
+  const rev = useSeeds.getState().rev;
   if (
     memo &&
+    memo.rev === rev &&
     memo.src.videos === s.videos &&
     memo.src.seedEdits === s.seedEdits &&
     memo.src.chefs === s.chefs &&
@@ -375,19 +378,24 @@ export function allVideos(s: VideoSource): Video[] {
     if (cats.has(merged.categoryId)) seeded.push(merged);
   }
   const out = [...s.videos, ...seeded];
-  memo = { src: { videos: s.videos, seedEdits: s.seedEdits, chefs: s.chefs, categories: s.categories }, out };
+  memo = { src: { videos: s.videos, seedEdits: s.seedEdits, chefs: s.chefs, categories: s.categories }, out, rev };
   return out;
 }
 
-export const useAllVideos = () => useStore(allVideos);
+export const useAllVideos = () => {
+  useSeeds((x) => x.rev);
+  return useStore(allVideos);
+};
 
 type RecipeSource = Pick<KitchenData, 'recipes' | 'seedEdits' | 'chefs' | 'categories'>;
-let rmemo: { src: RecipeSource; out: Recipe[] } | null = null;
+let rmemo: { src: RecipeSource; out: Recipe[]; rev: number } | null = null;
 
 /** The user's recipes plus the built-in ones taken from video descriptions. */
 export function allRecipes(s: RecipeSource): Recipe[] {
+  const rev = useSeeds.getState().rev;
   if (
     rmemo &&
+    rmemo.rev === rev &&
     rmemo.src.recipes === s.recipes &&
     rmemo.src.seedEdits === s.seedEdits &&
     rmemo.src.chefs === s.chefs &&
@@ -401,11 +409,14 @@ export function allRecipes(s: RecipeSource): Recipe[] {
     (r) => !own.has(r.id) && !s.seedEdits[r.id]?.deleted && chefs.has(r.chefId) && cats.has(r.categoryId),
   );
   const out = [...s.recipes, ...seeded];
-  rmemo = { src: { recipes: s.recipes, seedEdits: s.seedEdits, chefs: s.chefs, categories: s.categories }, out };
+  rmemo = { src: { recipes: s.recipes, seedEdits: s.seedEdits, chefs: s.chefs, categories: s.categories }, out, rev };
   return out;
 }
 
-export const useAllRecipes = () => useStore(allRecipes);
+export const useAllRecipes = () => {
+  useSeeds((x) => x.rev);
+  return useStore(allRecipes);
+};
 
 /** Whether a video belongs in a category (its main one or an extra one). */
 export const inCategory = (v: Video, catId: string) => v.categoryId === catId || !!v.extraCategoryIds?.includes(catId);
@@ -424,3 +435,13 @@ export function countMeals(meals: Meal[]) {
 /** Highest rated first; unrated keep newest first. */
 export const byRating = <T extends { rating: number; createdAt: number }>(a: T, b: T) =>
   b.rating - a.rating || b.createdAt - a.createdAt;
+
+// The account copy arrived after the page started from this device's copy: switch to it.
+setLateCloudHandler((value) => {
+  try {
+    const parsed = JSON.parse(value) as { state?: KitchenData };
+    if (parsed.state) useStore.setState({ ...parsed.state });
+  } catch {
+    /* ignore a broken copy */
+  }
+});
