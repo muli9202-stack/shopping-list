@@ -8,12 +8,14 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig({
   base: './',
   build: {
-    // Two apps from one build: the shopping list at the root and the
-    // kitchen app (videos, recipes, Shabbat/holiday table) under /kitchen/.
+    // Three apps from one build: the shopping list at the root, the kitchen
+    // app (videos, recipes, Shabbat/holiday table) under /kitchen/ and the
+    // Omega open-world game prototype under /omega/.
     rolldownOptions: {
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         kitchen: fileURLToPath(new URL('./kitchen/index.html', import.meta.url)),
+        omega: fileURLToPath(new URL('./omega/index.html', import.meta.url)),
       },
     },
   },
@@ -43,7 +45,7 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2,webmanifest}'],
         // Offline navigation inside /kitchen/ must not fall back to the shopping list page.
-        navigateFallbackDenylist: [/\/kitchen\//],
+        navigateFallbackDenylist: [/\/kitchen\//, /\/omega\//],
         // The kitchen app bundles its built-in videos and recipes (~5 MB).
         maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
       },

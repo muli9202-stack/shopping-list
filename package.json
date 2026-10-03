@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b",
-    "build:artifact": "vite build -c kitchen/vite.artifact.config.ts && node kitchen/scripts/build-artifact.mjs"
+    "build:artifact": "vite build -c kitchen/vite.artifact.config.ts && node kitchen/scripts/build-artifact.mjs",
+    "build:omega-artifact": "vite build -c omega/vite.artifact.config.ts && node omega/scripts/build-artifact.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",
