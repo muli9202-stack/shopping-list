@@ -5,8 +5,13 @@
 //  3. otherwise, for channels whose descriptions were read, a "חסר" entry.
 import fs from 'node:fs';
 import { parseDescription } from '/home/user/shopping-list/kitchen/src/text.ts';
-const videos = JSON.parse(fs.readFileSync('/home/user/shopping-list/kitchen/src/seedVideos.json', 'utf8')) as Record<string, [string, string, string, string[]?][]>;
+const videos = JSON.parse(fs.readFileSync('/home/user/shopping-list/public/kitchen/seed-videos.json', 'utf8')) as Record<string, [string, string, string, (string[] | null)?, 1?][]>;
 const descs = JSON.parse(fs.readFileSync('/tmp/claude-0/yt/descs.json', 'utf8')) as Record<string, string>;
+// Descriptions fetched for the Israeli channels added later (with their links).
+if (fs.existsSync('/tmp/claude-0/yt2/descs2.json')) {
+  const d2 = JSON.parse(fs.readFileSync('/tmp/claude-0/yt2/descs2.json', 'utf8')) as Record<string, { d: string }>;
+  for (const [k, v] of Object.entries(d2)) descs[k] ??= v.d;
+}
 const site = fs.existsSync('/tmp/claude-0/yt/site.json')
   ? (JSON.parse(fs.readFileSync('/tmp/claude-0/yt/site.json', 'utf8')) as Record<string, { ing: string[]; steps: string[]; url: string } | null>)
   : {};
@@ -30,7 +35,7 @@ const missing: unknown[] = [];
 const stat: Record<string, { desc: number; site: number; missing: number }> = {};
 for (const [chef, list] of Object.entries(videos)) {
   stat[chef] = { desc: 0, site: 0, missing: 0 };
-  for (const [id, title, cat] of list) {
+  for (const [id, title, cat, , short] of list) {
     const d = descs[id];
     const p = d !== undefined ? parseDescription(d.replace(/ /g, ' ')) : null;
     if (p && !p.missing) {
@@ -40,7 +45,7 @@ for (const [chef, list] of Object.entries(videos)) {
       const s = site[id]!;
       full.push([id, chef, cat, title, s.ing, splitNumbered(s.steps), s.url]);
       stat[chef].site++;
-    } else if (d !== undefined) {
+    } else if (d !== undefined && short !== 1) {
       missing.push([id, chef, cat, title, [], []]);
       stat[chef].missing++;
     }

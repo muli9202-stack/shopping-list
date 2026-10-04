@@ -123,7 +123,6 @@ export const SEED_CATEGORIES: Category[] = [
   { id: 'cookies', name: 'עוגיות', icon: '🍪' },
   { id: 'dips', name: 'רטבים וממרחים', icon: '🫙' },
   { id: 'kids', name: 'לילדים', icon: '🧒' },
-  { id: 'shorts', name: 'שורטס', icon: '📱' },
   { id: 'other', name: 'שונות', icon: '🍽️' },
 ];
 

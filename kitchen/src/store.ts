@@ -313,7 +313,7 @@ export const useStore = create<Store>()(
     }),
     {
       name: 'kitchen-data',
-      version: 4,
+      version: 5,
       migrate: (persisted, version) => {
         const d = persisted as KitchenData;
         // v2 adds the built-in channel videos, which need the "שונות" category.
@@ -329,6 +329,8 @@ export const useStore = create<Store>()(
           const have = new Set(d.categories.map((c) => c.id));
           d.categories = [...d.categories, ...SEED_CATEGORIES.filter((c) => !have.has(c.id))];
         }
+        // v5: Shorts live in their dish categories; the separate "שורטס" category is gone.
+        if (version < 5) d.categories = d.categories.filter((c) => c.id !== 'shorts');
         return d;
       },
       storage: createJSONStorage(() => storage),

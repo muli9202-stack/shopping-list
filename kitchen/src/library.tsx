@@ -28,6 +28,35 @@ const PLATFORM_LABEL = { youtube: 'YouTube', tiktok: 'TikTok', other: 'קישו�
 
 const PAGE = 60;
 
+/** "רק מתכונים מלאים" — remembered on this device. */
+function useFullOnly(): [boolean, (v: boolean) => void] {
+  const [on, setOn] = useState(() => {
+    try {
+      return localStorage.getItem('kitchen-full-only') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const set = (v: boolean) => {
+    setOn(v);
+    try {
+      localStorage.setItem('kitchen-full-only', v ? '1' : '0');
+    } catch {
+      /* storage blocked */
+    }
+  };
+  return [on, set];
+}
+
+function FullOnlyToggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="toggle">
+      <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked)} />
+      רק מתכונים מלאים (בלי "חסר")
+    </label>
+  );
+}
+
 /** While the built-in videos and recipes are still arriving (or if they failed to). */
 function SeedStatus() {
   const { rev, failed } = useSeeds();
@@ -244,7 +273,7 @@ function useSearch(mode: Mode, q: string) {
     return recipes
       .map((r) => ({ r, score: matchScore(q, `${r.title} ${chefName.get(r.chefId) ?? ''} ${r.ingredients.join(' ')}`) }))
       .filter((x) => x.score)
-      .sort((a, b) => b.r.rating - a.r.rating || b.score - a.score)
+      .sort((a, b) => Number(a.r.missing) - Number(b.r.missing) || b.r.rating - a.r.rating || b.score - a.score)
       .map((x) => ({ kind: 'recipe' as const, item: x.r }));
   }, [mode, q, videos, recipes, chefs]);
 }
@@ -507,12 +536,15 @@ export function CategoryScreen({ mode }: { mode: Mode }) {
   const nav = useNavigate();
   const [adding, setAdding] = useState(false);
   const [shown, setShown] = useState(PAGE);
+  const [fullOnly, setFullOnly] = useFullOnly();
   const list = useMemo(
     () =>
       mode === 'videos'
         ? videos.filter((v) => v.chefId === chefId && inCategory(v, catId)).sort(byRating)
-        : recipes.filter((r) => r.chefId === chefId && r.categoryId === catId).sort(byRating),
-    [mode, videos, recipes, chefId, catId],
+        : recipes
+            .filter((r) => r.chefId === chefId && r.categoryId === catId && (!fullOnly || !r.missing))
+            .sort((a, b) => Number(a.missing) - Number(b.missing) || byRating(a, b)),
+    [mode, videos, recipes, chefId, catId, fullOnly],
   );
   if (!chef || !cat) return <NotFound />;
   return (
@@ -526,6 +558,7 @@ export function CategoryScreen({ mode }: { mode: Mode }) {
           {mode === 'videos' ? '+ הוספת סרטון' : '+ הוספת מתכון'}
         </button>
       </div>
+      {mode === 'recipes' && <FullOnlyToggle on={fullOnly} onChange={setFullOnly} />}
       {list.length === 0 ? (
         <Empty>{mode === 'videos' ? 'אין עדיין סרטונים בקטגוריה הזאת.' : 'אין עדיין מתכונים בקטגוריה הזאת.'}</Empty>
       ) : (

@@ -47,8 +47,17 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2,webmanifest,json}'],
         // Offline navigation inside /kitchen/ must not fall back to the shopping list page.
         navigateFallbackDenylist: [/\/kitchen\//],
-        // The kitchen app bundles its built-in videos and recipes (~5 MB).
         maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
+        // The kitchen app's built-in videos and recipes (~15 MB) are cached on first
+        // use and refreshed in the background, instead of with every install.
+        globIgnores: ['**/seed-*.json'],
+        runtimeCaching: [
+          {
+            urlPattern: /\/kitchen\/seed-(videos|recipes)\.json$/,
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'kitchen-seeds' },
+          },
+        ],
       },
     }),
   ],
