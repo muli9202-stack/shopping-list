@@ -52,6 +52,7 @@ for (const [chef, list] of Object.entries(videos)) {
   }
 }
 const rows = [...full, ...missing];
-fs.writeFileSync(process.argv[2] ?? '/tmp/claude-0/yt/recipes.json', JSON.stringify(rows));
+// Some descriptions carry broken characters (U+FFFD); drop them.
+fs.writeFileSync(process.argv[2] ?? '/tmp/claude-0/yt/recipes.json', JSON.stringify(rows).replace(/\uFFFD/g, ''));
 console.table(stat);
 console.log('full', full.length, 'missing', missing.length, (JSON.stringify(rows).length / 1024).toFixed(0), 'KiB');
