@@ -256,7 +256,9 @@ export function ChefsScreen({ mode }: { mode: Mode }) {
   const [modal, setModal] = useState<Chef | 'new' | null>(null);
   const [shown, setShown] = useState(PAGE);
   const results = useSearch(mode, q);
-  useEffect(() => setShown(PAGE), [q]);
+  useEffect(() => {
+    setShown(PAGE);
+  }, [q]);
   const counts = useMemo(() => {
     const m = new Map<string, number>();
     for (const x of mode === 'videos' ? videos : recipes) m.set(x.chefId, (m.get(x.chefId) ?? 0) + 1);

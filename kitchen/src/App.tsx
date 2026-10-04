@@ -17,7 +17,11 @@ import {
 
 function ScrollTop() {
   const { pathname } = useLocation();
-  useEffect(() => window.scrollTo(0, 0), [pathname]);
+  // Braces matter: an effect may only return a cleanup function, and some browser
+  // extensions make window.scrollTo return a value.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
   return null;
 }
 
@@ -67,7 +71,9 @@ declare const __BUILD__: string;
 const BUILD = typeof __BUILD__ === 'string' ? __BUILD__ : 'dev';
 
 function AppInner() {
-  useEffect(loadSeeds, []);
+  useEffect(() => {
+    loadSeeds();
+  }, []);
   // IndexedDB loads asynchronously; render only once saved data is in, so
   // nothing typed in the first instant can overwrite it.
   const [ready, setReady] = useState(useStore.persist.hasHydrated());
