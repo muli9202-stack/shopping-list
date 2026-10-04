@@ -4,9 +4,9 @@ import { useSeeds } from './seedData';
 /**
  * Real videos from each seeded chef's YouTube channel (titles as published),
  * sorted into categories by keywords in the title. Rows are
- * [youtubeId, title, mainCategory, extraCategories?].
+ * [youtubeId, title, mainCategory, extraCategories?, isShort?].
  */
-type Row = [string, string, string, string[]?];
+type Row = [string, string, string, (string[] | null)?, 1?];
 
 let cache: { raw: unknown; out: Video[] } | null = null;
 
@@ -16,15 +16,16 @@ export function seedVideos(): Video[] {
   const out: Video[] = [];
   let i = 0;
   for (const [chefId, rows] of Object.entries(raw as unknown as Record<string, Row[]>)) {
-    for (const [youtubeId, title, categoryId, extra] of rows) {
+    for (const [youtubeId, title, categoryId, extra, short] of rows) {
       out.push({
         id: `s_${youtubeId}`,
         chefId,
         categoryId,
-        extraCategoryIds: extra,
+        extraCategoryIds: extra ?? undefined,
         youtubeId,
-        url: `https://www.youtube.com/watch?v=${youtubeId}`,
+        url: short ? `https://www.youtube.com/shorts/${youtubeId}` : `https://www.youtube.com/watch?v=${youtubeId}`,
         title,
+        short: short === 1,
         rating: 0,
         // Keeps each channel's newest-first order among unrated videos.
         createdAt: -i++,

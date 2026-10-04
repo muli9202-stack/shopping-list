@@ -5,6 +5,7 @@ import { useStore } from './store';
 import type { CollectionKey, Video } from './types';
 import { embedUrl, thumbUrl, watchUrl } from './youtube';
 import { IS_ARTIFACT } from './env';
+import { HEBREW_CHEF_IDS } from './seed';
 
 /* ---------------- transient UI state (not persisted) ---------------- */
 
@@ -153,15 +154,15 @@ export function Player() {
     <Modal title={playing.title} onClose={() => play(null)} wide>
       {IS_ARTIFACT ? (
         // The chat view can't embed other sites, so the video opens in YouTube.
-        <a className="player player-link" href={watchUrl(playing.youtubeId)} target="_blank" rel="noreferrer">
+        <a className="player player-link" href={playing.url || watchUrl(playing.youtubeId)} target="_blank" rel="noreferrer">
           <Thumb id={playing.youtubeId} alt={playing.title} />
           <span className="play-badge">▶</span>
           <span className="player-cta">צפייה ביוטיוב</span>
         </a>
       ) : (
-        <div className="player">
+        <div className={`player${playing.short ? ' vertical' : ''}`}>
           <iframe
-            src={embedUrl(playing.youtubeId)}
+            src={embedUrl(playing.youtubeId, !HEBREW_CHEF_IDS.has(playing.chefId))}
             title={playing.title}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen

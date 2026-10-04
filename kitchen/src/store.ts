@@ -16,7 +16,7 @@ import type {
   ShabbatPlan,
   Video,
 } from './types';
-import { SEED_CATEGORIES, SEED_CHEFS } from './seed';
+import { SEED_CATEGORIES, SEED_CHEFS, SEED_CHEFS_HE } from './seed';
 import { isSeedVideo, seedVideos } from './seedVideos';
 import { isSeedRecipe, seedRecipes } from './seedRecipes';
 import { useSeeds } from './seedData';
@@ -41,11 +41,19 @@ export const emptyShabbat = (): ShabbatPlan => ({
 
 export const emptyChag = (): ChagPlan => ({ name: 'חג', days: [] });
 
+/** Adds the Israeli channels after the Israeli/kosher ones already in the list (before the foreign chefs). */
+function withHebrewChefs(chefs: Chef[]): Chef[] {
+  const have = new Set(chefs.map((c) => c.id));
+  const add = SEED_CHEFS_HE.filter((c) => !have.has(c.id));
+  const at = chefs.findIndex((c) => c.id === 'busy-in-brooklyn');
+  return at < 0 ? [...chefs, ...add] : [...chefs.slice(0, at + 1), ...add, ...chefs.slice(at + 1)];
+}
+
 export const emptyData = (): KitchenData => ({
   version: 2,
   shabbat: emptyShabbat(),
   chag: emptyChag(),
-  chefs: SEED_CHEFS,
+  chefs: withHebrewChefs(SEED_CHEFS),
   categories: SEED_CATEGORIES,
   videos: [],
   seedEdits: {},
@@ -305,7 +313,7 @@ export const useStore = create<Store>()(
     }),
     {
       name: 'kitchen-data',
-      version: 3,
+      version: 4,
       migrate: (persisted, version) => {
         const d = persisted as KitchenData;
         // v2 adds the built-in channel videos, which need the "שונות" category.
@@ -313,7 +321,11 @@ export const useStore = create<Store>()(
           d.seedEdits ??= {};
         }
         // v3: make sure every built-in category exists, so no built-in video or recipe is hidden.
-        if (version < 3) {
+        // v4: the Israeli channels join the chef list (the user's own chefs stay as they are).
+        if (version < 4) {
+          d.chefs = withHebrewChefs(d.chefs);
+        }
+        if (version < 4) {
           const have = new Set(d.categories.map((c) => c.id));
           d.categories = [...d.categories, ...SEED_CATEGORIES.filter((c) => !have.has(c.id))];
         }

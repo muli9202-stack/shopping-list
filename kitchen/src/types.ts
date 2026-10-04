@@ -65,6 +65,8 @@ export interface Video {
   youtubeId: string;
   url: string;
   title: string;
+  /** A vertical YouTube Short. */
+  short?: boolean;
   rating: number;
   createdAt: number;
 }

@@ -4,7 +4,7 @@ import { create } from 'zustand';
  * The built-in channel videos and recipes are large (several MB), so they
  * are fetched as separate files after the page is already on screen.
  */
-type VideoRows = Record<string, [string, string, string, string[]?][]>;
+type VideoRows = Record<string, [string, string, string, (string[] | null)?, 1?][]>;
 type RecipeRows = [string, string, string, string, string[], string[], string?][];
 
 export const useSeeds = create<{ rev: number; videos: VideoRows; recipes: RecipeRows; failed: boolean }>(() => ({

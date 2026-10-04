@@ -59,21 +59,22 @@ function VideoCard({ v, showChef }: { v: Video; showChef?: boolean }) {
     <article className="card media-card">
       {IS_ARTIFACT ? (
         // Inside the chat other sites can't be embedded: one tap opens the video on YouTube.
-        <a className="media-thumb" href={watchUrl(v.youtubeId)} target="_blank" rel="noreferrer" aria-label={`צפייה ב${v.title} ביוטיוב`}>
+        <a className={`media-thumb${v.short ? ' is-short' : ''}`} href={v.url || watchUrl(v.youtubeId)} target="_blank" rel="noreferrer" aria-label={`צפייה ב${v.title} ביוטיוב`}>
           <Thumb id={v.youtubeId} alt={v.title} icon={icon} />
           <span className="play-badge">▶</span>
           <span className="yt-tag">צפייה ביוטיוב ↗</span>
         </a>
       ) : (
-        <button className="media-thumb" onClick={() => play(v)} aria-label={`ניגון ${v.title}`}>
+        <button className={`media-thumb${v.short ? ' is-short' : ''}`} onClick={() => play(v)} aria-label={`ניגון ${v.title}`}>
           <Thumb id={v.youtubeId} alt={v.title} icon={icon} />
           <span className="play-badge">▶</span>
+          {v.short && <span className="short-tag">שורט</span>}
         </button>
       )}
       <div className="media-body">
         {IS_ARTIFACT ? (
           <h3>
-            <a href={watchUrl(v.youtubeId)} target="_blank" rel="noreferrer">
+            <a href={v.url || watchUrl(v.youtubeId)} target="_blank" rel="noreferrer">
               {v.title}
             </a>
           </h3>

@@ -23,7 +23,12 @@ export function youtubeId(input: string): string | null {
 
 export const thumbUrl = (id: string, size: 'mq' | 'hq' | 'sd' = 'hq') => `https://i.ytimg.com/vi/${id}/${size}default.jpg`;
 export const watchUrl = (id: string) => `https://www.youtube.com/watch?v=${id}`;
-export const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&playsinline=1`;
+/**
+ * For videos not in Hebrew, ask the player to open with Hebrew subtitles
+ * (YouTube's auto-translation, where the video has subtitles to translate).
+ */
+export const embedUrl = (id: string, hebrewSubs = false) =>
+  `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&playsinline=1&hl=iw${hebrewSubs ? '&cc_load_policy=1&cc_lang_pref=iw' : ''}`;
 
 /** Title via YouTube's public oEmbed endpoint (CORS-enabled, no key needed). */
 export async function fetchTitle(id: string): Promise<string | null> {

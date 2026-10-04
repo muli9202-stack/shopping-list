@@ -36,6 +36,72 @@ export const SEED_CHEFS: Chef[] = [
   { id: 'cooking-foodie', name: 'The Cooking Foodie', url: 'https://www.youtube.com/@TheCookingFoodie', platform: 'youtube' },
 ];
 
+/**
+ * Israeli cooking channels added in v4, found through YouTube's own channel
+ * search and checked by hand to be real cooking channels (October 2026).
+ */
+export const SEED_CHEFS_HE: Chef[] = [
+  { id: 'ten-min-recipes', name: 'מתכונים ב-10 דקות', url: 'https://www.youtube.com/channel/UCOU3SslVbk3EL1XdR72KiKg', platform: 'youtube' },
+  { id: 'lihi-kroitz', name: 'בקלי קלות - ליהי קרויץ', url: 'https://www.youtube.com/channel/UCYRjRbFiLOyKr89dryIDobw', platform: 'youtube' },
+  { id: 'elia-pastry', name: 'הקונדיטורית אליה', url: 'https://www.youtube.com/channel/UCz-QgIrEOueT-MXbsrDIQ6g', platform: 'youtube', note: 'קונדיטורית' },
+  { id: 'israel-yosef', name: 'מתכונים בקלי קלות - ישראל יוסף', url: 'https://www.youtube.com/channel/UCAp77G4PqOXvYDTYUXTjWLA', platform: 'youtube' },
+  { id: 'revital-federbush', name: 'רויטל פדרבוש - מטבח קל', url: 'https://www.youtube.com/channel/UCjyKYXVrUwSk4ObrIapxtOA', platform: 'youtube' },
+  { id: 'matkonit', name: 'מתכונית', url: 'https://www.youtube.com/channel/UCf05oCFheATV07EAetRBmuQ', platform: 'youtube' },
+  { id: 'tomer-tomas', name: 'תומר תומס', url: 'https://www.youtube.com/channel/UC3dszMQN0EMI54j58rA4YMA', platform: 'youtube' },
+  { id: 'esty-bar', name: 'אסתי בר', url: 'https://www.youtube.com/channel/UCxnLAYVu0XzrjHhEUbdbOtA', platform: 'youtube' },
+  { id: 'coral-hota', name: 'קורל חוטה', url: 'https://www.youtube.com/channel/UC3e3v-BQixdL5j-kmLNR9Vg', platform: 'youtube', note: 'עוגות גבינה' },
+  { id: 'shiran-matetyahu', name: 'שירן מתתיהו', url: 'https://www.youtube.com/channel/UCRgcsgzlb2j8a1LefW7TRsQ', platform: 'youtube', note: 'אפייה' },
+  { id: 'foody', name: 'פודי - Foody', url: 'https://www.youtube.com/channel/UCy_lqFqTpf7HTiv3nNT2SxQ', platform: 'youtube' },
+  { id: 'noam-zigdon', name: 'נועם זיגדון', url: 'https://www.youtube.com/channel/UCigf3LCe_lKjZEcpEsfapdg', platform: 'youtube' },
+  { id: 'bigden', name: 'BigDen', url: 'https://www.youtube.com/channel/UCLmJy4v0T9qNX2W7Gw5sTUg', platform: 'youtube', note: 'מטבח יפני' },
+  { id: 'toni-mashiah', name: 'טוני משיח - מפלצת העוגיות', url: 'https://www.youtube.com/channel/UC-Ace2cJTSi5wiUOZcaWchw', platform: 'youtube' },
+  { id: 'osem', name: 'אסם בישולים', url: 'https://www.youtube.com/channel/UCDLnFrUET5bJ3X0Bl5-HvZg', platform: 'youtube' },
+  { id: 'chef-refael', name: 'כפיר רפאל - שף רפאל', url: 'https://www.youtube.com/channel/UCQEHcOvjiaptd3m2NOrK9zw', platform: 'youtube' },
+  { id: 'avi-levy', name: 'אבי לוי שף', url: 'https://www.youtube.com/channel/UCN5V7L-kyYI79Vjqy14Jlug', platform: 'youtube' },
+  { id: 'angry-chef', name: 'השף העצבני', url: 'https://www.youtube.com/channel/UCoIvCSseQaMLeLwr9oMzEiw', platform: 'youtube', note: 'ניר' },
+  { id: 'igor-vainberg', name: 'שף איגור ואינברג', url: 'https://www.youtube.com/channel/UC2ZjGYvmLsWuSJqFkGp_e4g', platform: 'youtube' },
+  { id: 'david-guedj', name: 'דוד גדג׳ שף', url: 'https://www.youtube.com/channel/UCBUnDd41rlJv4SWppKKQMTg', platform: 'youtube' },
+  { id: 'eli-elimelech', name: 'שף אלי אלימלך', url: 'https://www.youtube.com/channel/UCwwLhfUiDvAvt-QYIP9MvlQ', platform: 'youtube' },
+  { id: 'neta-chocolate', name: 'נטע בשביל השוקולד', url: 'https://www.youtube.com/channel/UCZiLY1LNETx52d9Nn7-qXGA', platform: 'youtube', note: 'שוקולטיירית' },
+  { id: 'guy-peretz', name: 'השף גיא פרץ', url: 'https://www.youtube.com/channel/UCS-zSYCaSZjaYBLwHiYZiuw', platform: 'youtube' },
+  { id: 'itay-aricha', name: 'איתי אריכא', url: 'https://www.youtube.com/channel/UCjFeoSNDIZc91YL0fTLRVng', platform: 'youtube' },
+  { id: 'adi-marom', name: 'עדי מרום', url: 'https://www.youtube.com/channel/UChyDxdAA2AiIwJfMTCqMY7Q', platform: 'youtube', note: 'עוגות מעוצבות' },
+  { id: 'vardit-haviv', name: 'ורדית חביב', url: 'https://www.youtube.com/channel/UC0CXSMXspDmGrtJ876QU6QA', platform: 'youtube', note: 'ערוץ התבשילים הטובים' },
+  { id: 'foodik', name: 'שחר חן - פודיק', url: 'https://www.youtube.com/channel/UCboRgkGd3lVVfH4TEy0S9Ug', platform: 'youtube' },
+  { id: 'ron-yohananov', name: 'רון יוחננוב', url: 'https://www.youtube.com/channel/UCh86xe8TEPv5BjZ5npMbP7A', platform: 'youtube', note: 'מבשלים ואופים' },
+  { id: 'dalia-levy', name: 'דליה לוי - תבשילים עיראקים', url: 'https://www.youtube.com/channel/UCZpLjd1nUa5XJJGNqwu4gPg', platform: 'youtube' },
+  { id: 'smadar-yifrah', name: 'סמדר יפרח', url: 'https://www.youtube.com/channel/UCBwtdR_PRik0SeWU-r_NW7Q', platform: 'youtube', note: 'מהמטבח שלי באהבה' },
+  { id: 'master-recipes', name: 'מאסטר מתכונים', url: 'https://www.youtube.com/channel/UCdgt8cA4vth_zuOpyE5raDw', platform: 'youtube' },
+  { id: 'matanot-ktanot', name: 'מתנות קטנות', url: 'https://www.youtube.com/channel/UCezk9A7g6el-t4gP582xWgw', platform: 'youtube', note: 'בלוג אוכל ואפייה' },
+  { id: 'orit-levi', name: 'אורית לוי - הפשטות שבאוכל', url: 'https://www.youtube.com/channel/UCiIG6BGw9EiB6YFk5ANfoTw', platform: 'youtube' },
+  { id: 'foodisgood', name: 'FoodisGood', url: 'https://www.youtube.com/channel/UC04cY8-r3AsGz0F-r-3CznA', platform: 'youtube' },
+  { id: 'rona-shimon', name: 'רונה שמעון', url: 'https://www.youtube.com/channel/UC7xywmWSXNkrUy6H9insxzA', platform: 'youtube' },
+  { id: 'nelly-yampolski', name: 'נלי ימפולסקי', url: 'https://www.youtube.com/channel/UC_FT2QK2J7YRGzOZIvRKgnA', platform: 'youtube', note: 'מחמצת' },
+  { id: 'hagit-elkabetz', name: 'חגית אלקבץ', url: 'https://www.youtube.com/channel/UCu56v8x0NeSzQlzlj8xOdgA', platform: 'youtube' },
+  { id: 'shifra-nahum', name: 'תבשילים וחלומות', url: 'https://www.youtube.com/channel/UCYD_r_91Bo1DKSsDBYOO5xg', platform: 'youtube' },
+  { id: 'magical-kitchen', name: 'המטבח הקסום', url: 'https://www.youtube.com/channel/UCTB4VSHaYdjQB-1Qtupun-w', platform: 'youtube' },
+  { id: 'ortal-katz', name: 'אורטל כץ - פשוט לבשל בבית', url: 'https://www.youtube.com/channel/UCuix92R7PWg4Rsf78zavd1Q', platform: 'youtube' },
+  { id: 'kal-lehachana', name: 'קל להכנה', url: 'https://www.youtube.com/channel/UC-n8XjOhO3b5m1JDrGw-HZA', platform: 'youtube' },
+  { id: 'carnivores', name: 'קרניבורים', url: 'https://www.youtube.com/channel/UCaRVhkzPRbZ4ldszesSYP-w', platform: 'youtube', note: 'בשרים' },
+  { id: 'smadi-bomba', name: 'סמדי בומבה', url: 'https://www.youtube.com/channel/UCaxlbfuK5LN43g3ucq7-8mA', platform: 'youtube' },
+  { id: 'sara-ben-nisan', name: 'לבשל עם שרה', url: 'https://www.youtube.com/channel/UCb1kyb-5hXmc2cBN51ShltA', platform: 'youtube' },
+  { id: 'yiska-aton', name: 'יסכה עטון', url: 'https://www.youtube.com/channel/UCmXxvlbcwvy3aVz8d-oRsNQ', platform: 'youtube' },
+  { id: 'shimrit-bake', name: 'שמרית - הבית של האפייה', url: 'https://www.youtube.com/channel/UCYps56t_TJnCl719miat5iw', platform: 'youtube' },
+  { id: 'yehudit-aviv', name: 'יהודית אביב - הלוחשת לאוכל', url: 'https://www.youtube.com/channel/UCEI8DrRd_CXAQ99rt_o1wIA', platform: 'youtube' },
+  { id: 'keto-il', name: 'KetoIL - מתכונים קטוגניים', url: 'https://www.youtube.com/channel/UC_vTBvpeVPE3JevlpOZB_Yw', platform: 'youtube' },
+  { id: 'druze-kitchen', name: 'סודות המטבח הדרוזי', url: 'https://www.youtube.com/channel/UCIW-4yn4o8M92sZCm5YFBHw', platform: 'youtube' },
+  { id: 'roshel-patisserie', name: 'רושל פטיסייר', url: 'https://www.youtube.com/channel/UCHbsb5P1g9z5lOLHqFMdykw', platform: 'youtube' },
+  { id: 'keren-agam', name: 'קרן אגם', url: 'https://www.youtube.com/channel/UCAaGhvq9H0eHztFAGvpkNhQ', platform: 'youtube', note: 'קליעת חלות' },
+  { id: 'shlomi-cohen', name: 'שלומי כהן - בית ספר לאפייה', url: 'https://www.youtube.com/channel/UCCBv-WrJJB3HAg2nIC54vkw', platform: 'youtube' },
+  { id: 'mayas-cakes', name: 'העוגות של מאיה', url: 'https://www.youtube.com/channel/UC5qiO0JTIfsnXfKB4pCRoRw', platform: 'youtube' },
+  { id: 'estella', name: 'אסטלה - כיתת אומן לקונדיטוריה', url: 'https://www.youtube.com/channel/UC-Fq_EedNv0pwavy8QZ8t9w', platform: 'youtube' },
+  { id: 'chinese-dan', name: 'אוכל סיני עם דן', url: 'https://www.youtube.com/channel/UCy9pmkFc8P1H3w13S_l0oTQ', platform: 'youtube' },
+  { id: 'meir-maman', name: 'מאיר ממן מבשל', url: 'https://www.youtube.com/channel/UCbkHIHGKq-SLgX-bYms3g2Q', platform: 'youtube' },
+  { id: 'itayush-cakes', name: 'איתיו׳ש קייקס', url: 'https://www.youtube.com/channel/UCzO_udtRVUcZgOVTkZk14Qw', platform: 'youtube' },
+  { id: 'daniel-rigbi', name: 'דניאל רגבי', url: 'https://www.youtube.com/channel/UCQEnRH4kwpYul3Y8SUVdx9w', platform: 'youtube' },
+  { id: 'master-chef-il', name: 'מאסטר-שף', url: 'https://www.youtube.com/channel/UCefLax7FnZ3qVG0HrLKd20w', platform: 'youtube' },
+];
+
 export const SEED_CATEGORIES: Category[] = [
   { id: 'desserts', name: 'קינוחים', icon: '🍮' },
   { id: 'fish', name: 'דגים', icon: '🐟' },
@@ -57,5 +123,12 @@ export const SEED_CATEGORIES: Category[] = [
   { id: 'cookies', name: 'עוגיות', icon: '🍪' },
   { id: 'dips', name: 'רטבים וממרחים', icon: '🫙' },
   { id: 'kids', name: 'לילדים', icon: '🧒' },
+  { id: 'shorts', name: 'שורטס', icon: '📱' },
   { id: 'other', name: 'שונות', icon: '🍽️' },
 ];
+
+/** Channels whose videos are in Hebrew; everything else opens with Hebrew subtitles. */
+export const HEBREW_CHEF_IDS = new Set([
+  'chen-bamitbach', 'carine-goren', 'iditush', 'sivan-food', 'cooking-foodie-il', 'food-channel-il',
+  ...SEED_CHEFS_HE.map((c) => c.id),
+]);
