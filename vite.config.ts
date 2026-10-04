@@ -7,7 +7,10 @@ import { VitePWA } from 'vite-plugin-pwa';
 // GitHub Pages (served from /<repo>/) and on any other static host.
 export default defineConfig({
   base: './',
+  define: { __BUILD__: JSON.stringify(new Date().toISOString().slice(0, 16)) },
   build: {
+    // Kept out of the deployed files (no sourceMappingURL); used to read error reports.
+    sourcemap: 'hidden',
     // Two apps from one build: the shopping list at the root and the
     // kitchen app (videos, recipes, Shabbat/holiday table) under /kitchen/.
     rolldownOptions: {

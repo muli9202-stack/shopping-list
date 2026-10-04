@@ -22,10 +22,13 @@ function ScrollTop() {
 }
 
 /** Shows what went wrong instead of a blank page if a screen crashes. */
-class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
-  state = { error: null as Error | null };
+class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null; where: string }> {
+  state = { error: null as Error | null, where: '' };
   static getDerivedStateFromError(error: Error) {
     return { error };
+  }
+  componentDidCatch(_error: Error, info: { componentStack?: string | null }) {
+    this.setState({ where: (info.componentStack ?? '').trim().split('\n').slice(0, 6).join('\n') });
   }
   render() {
     if (!this.state.error) return this.props.children;
@@ -34,7 +37,15 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
         <div className="card crash">
           <h2>משהו השתבש בתצוגה</h2>
           <p className="muted">הנתונים שלך שמורים. נסו לחזור לדף הבית. אם זה חוזר, שלחו צילום מסך של ההודעה הזאת.</p>
-          <pre dir="ltr">{String(this.state.error.message || this.state.error)}</pre>
+          <pre dir="ltr">
+            {String(this.state.error.message || this.state.error)}
+            {'\n'}
+            {(this.state.error.stack ?? '').split('\n').slice(1, 7).join('\n')}
+            {'\n'}
+            {this.state.where}
+            {'\n'}
+            {`build ${BUILD}`}
+          </pre>
           <button className="btn" onClick={() => location.reload()}>
             חזרה לדף הבית
           </button>
@@ -51,6 +62,9 @@ export default function App() {
     </ErrorBoundary>
   );
 }
+
+declare const __BUILD__: string;
+const BUILD = typeof __BUILD__ === 'string' ? __BUILD__ : 'dev';
 
 function AppInner() {
   useEffect(loadSeeds, []);

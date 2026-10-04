@@ -9,7 +9,7 @@ export default defineConfig({
   base: './',
   publicDir: false,
   plugins: [react()],
-  define: { 'import.meta.env.VITE_ARTIFACT': JSON.stringify('1') },
+  define: { 'import.meta.env.VITE_ARTIFACT': JSON.stringify('1'), __BUILD__: JSON.stringify(new Date().toISOString().slice(0, 16)) },
   build: {
     outDir: fileURLToPath(new URL('../dist-artifact', import.meta.url)),
     emptyOutDir: true,
