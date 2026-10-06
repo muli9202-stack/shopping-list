@@ -77,6 +77,13 @@ export function aiThink(m: Match, dt: number) {
       p.ai.role = 'hold';
       p.ai.sprint = false;
       p.ai.speed = 0.35;
+      // players who crowd the referee after a whistle
+      const arg = m.arguers.find((a) => a.p === p && a.until > m.time);
+      if (arg) {
+        p.ai.target.copy(arg.spot);
+        p.ai.speed = 0.7;
+        continue;
+      }
       p.ai.target.copy(m.formationSpot(p, false, ball));
     }
     return;

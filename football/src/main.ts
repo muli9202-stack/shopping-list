@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { allTeams, derbyName, FORMATIONS, LEAGUES, NATION_FLAGS, NATIONS, pickEleven, TACTICS, teamById, BOOT_COLORS, HAIR_COLORS, SKIN_TONES, type Kit, type PlayerData, type Pos, type TacticId, type TeamData } from './data';
 import { Match, type MatchResult, type MatchSetup } from './match';
 import { Hud } from './hud';
-import { Input, CONTROL_HELP } from './input';
+import { Input, CONTROL_HELP, FOUL_HELP } from './input';
 import { GameAudio } from './audio';
 import { Stadium, type TimeOfDay, type Weather } from './stadium';
 import { PlayerModel, type PoseState } from './playerModel';
@@ -33,6 +33,13 @@ const input = new Input();
 const audio = new GameAudio();
 audio.setVolume(settings.volume);
 audio.speech = settings.commentary;
+
+// Retro broadcast: washed-out colours, soft picture, scanlines.
+function applyRetro() {
+  canvas.style.filter = settings.retro ? 'sepia(0.35) saturate(0.7) contrast(1.1) blur(0.6px)' : '';
+  document.body.classList.toggle('retro', settings.retro);
+}
+applyRetro();
 
 function resize() {
   const w = innerWidth;
@@ -151,7 +158,7 @@ function baseSetup(home: TeamData, away: TeamData, over: Partial<MatchSetup> = {
     halfSeconds: settings.halfMinutes * 60,
     difficulty: settings.difficulty,
     weather: 'clear', time: 'night', knockout: false, quality: settings.quality,
-    cameraZoom: settings.zoom, title: 'משחק ידידות', commentary: settings.commentary,
+    cameraZoom: settings.zoom, title: 'משחק ידידות', commentary: settings.commentary, guide: settings.guide,
     ...over,
   };
 }
@@ -354,7 +361,7 @@ function teamGrid(selected: string, attr: string, filter?: (t: TeamData) => bool
 }
 
 const qs = M.load('fb-quick', {
-  home: 'gal', away: 'koc', control: 'home' as 'home' | 'away' | 'both' | 'none', formation: '', tactic: '' as TacticId | '',
+  home: 'gal', away: 'koc', control: 'home' as 'home' | 'away' | 'both' | 'none', formation: '', formationDef: '', tactic: '' as TacticId | '',
   weather: 'clear' as Weather, time: 'night' as TimeOfDay,
 });
 
@@ -384,6 +391,8 @@ function quickSetup() {
             </select></label>
           <label class="field">מערך
             <select data-k="formation"><option value="">ברירת מחדל</option>${Object.keys(FORMATIONS).map((f) => `<option ${qs.formation === f ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
+          <label class="field">מערך בלי כדור
+            <select data-k="formationDef"><option value="">אותו מערך</option>${Object.keys(FORMATIONS).map((f) => `<option ${qs.formationDef === f ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
           <label class="field">סגנון משחק
             <select data-k="tactic"><option value="">ברירת מחדל</option>${Object.values(TACTICS).map((t) => `<option value="${t.id}" ${qs.tactic === t.id ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select></label>
           <label class="field">מזג אוויר
@@ -421,6 +430,10 @@ function quickSetup() {
         if (qs.tactic) mine.tactic = qs.tactic;
         const pads: [number | null, number | null] = qs.control === 'home' ? [0, null] : qs.control === 'away' ? [null, 0] : qs.control === 'both' ? [0, 1] : [null, null];
         const setup = baseSetup(H, A, { pads, weather: qs.weather, time: qs.time, title: 'משחק ידידות' });
+        if (qs.formationDef) {
+          if (qs.control === 'away') setup.awayFormationDef = qs.formationDef;
+          else setup.homeFormationDef = qs.formationDef;
+        }
         const r = await preMatch(setup);
         void r;
         quickSetup();
@@ -529,11 +542,12 @@ function career() {
     } else if (tab === 'table') body = fullTable(cc.table, cc.teamId);
     else if (tab === 'squad') {
       const xi = pickEleven(team.players, cc.formation).map((p) => p.id);
-      body = `<div class="opts"><label class="field">מערך<select data-f>${Object.keys(FORMATIONS).map((f) => `<option ${f === cc.formation ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
+      body = `<div class="opts"><label class="field">מערך עם כדור<select data-f>${Object.keys(FORMATIONS).map((f) => `<option ${f === cc.formation ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
+        <label class="field">מערך בלי כדור<select data-fd><option value="">אותו מערך</option>${Object.keys(FORMATIONS).map((f) => `<option ${f === cc.formationDef ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
         <label class="field">סגנון<select data-tac>${Object.values(TACTICS).map((t) => `<option value="${t.id}" ${t.id === cc.tactic ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select></label></div>
         <p class="tdesc">${esc(TACTICS[cc.tactic].desc)}</p>
         <table class="list"><tr><th></th><th>שם</th><th>עמדה</th><th>גיל</th><th>כללי</th><th>פוטנציאל</th><th>מורל</th><th>כושר</th><th>שכר</th><th>שווי</th><th></th></tr>
-        ${[...cc.squad].sort((a, b) => b.ovr - a.ovr).map((p) => `<tr class="${xi.includes(p.id) ? 'xi' : ''}"><td>${xi.includes(p.id) ? '●' : ''}</td><td>${face(p, 26)} ${esc(p.name)} ${NATION_FLAGS[p.nation] ?? ''}</td><td>${p.role}</td><td>${p.age}</td><td><b>${p.ovr}</b></td><td>${p.scouted || p.age < 23 ? p.potential : '?'}</td><td>${moraleIcon(p.morale)}</td><td>${p.injuredRounds ? `🤕 ${p.injuredRounds} מחז'` : `${Math.round(p.fitness ?? 100)}%`}</td><td>${p.wage}K</td><td>${p.value}K</td><td><button class="btn tiny" data-sell="${p.id}">מכירה</button></td></tr>`).join('')}</table>`;
+        ${[...cc.squad].sort((a, b) => b.ovr - a.ovr).map((p) => `<tr class="${xi.includes(p.id) ? 'xi' : ''}"><td>${xi.includes(p.id) ? '●' : ''}</td><td>${face(p, 26)} ${esc(p.name)} ${NATION_FLAGS[p.nation] ?? ''}</td><td>${p.role}</td><td>${p.age}</td><td><b>${p.ovr}</b></td><td>${p.scouted || p.age < 23 ? p.potential : '?'}</td><td>${moraleIcon(p.morale)}</td><td>${p.injuredRounds ? `🤕 ${p.injuredRounds} מחז'` : p.suspended ? '🟥 מורחק' : `${Math.round(p.fitness ?? 100)}%`}</td><td>${p.wage}K</td><td>${p.value}K</td><td><button class="btn tiny" data-sell="${p.id}">מכירה</button></td></tr>`).join('')}</table>`;
     } else if (tab === 'transfers') {
       const list = M.transferList(cc).filter((p) => !filterPos || p.pos === filterPos).slice(0, 60);
       body = `<div class="opts"><label class="field">עמדה<select data-pos><option value="">הכל</option>${['GK', 'DEF', 'MID', 'FWD'].map((p) => `<option ${filterPos === p ? 'selected' : ''}>${p}</option>`).join('')}</select></label><span class="pill">תקציב: ${cc.budget.toLocaleString()}K</span></div>
@@ -558,6 +572,7 @@ function career() {
       root.querySelector('[data-reset]')!.addEventListener('click', () => { if (confirm('למחוק את הקריירה ולהתחיל מחדש?')) { c = null; persist(); render(); } });
       root.querySelectorAll<HTMLElement>('[data-tab]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab!; render(); }));
       root.querySelector<HTMLSelectElement>('[data-f]')?.addEventListener('change', (e) => { cc.formation = (e.target as HTMLSelectElement).value; persist(); render(); });
+      root.querySelector<HTMLSelectElement>('[data-fd]')?.addEventListener('change', (e) => { cc.formationDef = (e.target as HTMLSelectElement).value || undefined; persist(); render(); });
       root.querySelector<HTMLSelectElement>('[data-tac]')?.addEventListener('change', (e) => { cc.tactic = (e.target as HTMLSelectElement).value as TacticId; persist(); render(); });
       root.querySelector<HTMLSelectElement>('[data-pos]')?.addEventListener('change', (e) => { filterPos = (e.target as HTMLSelectElement).value; render(); });
       root.querySelectorAll<HTMLElement>('[data-sell]').forEach((b) => b.addEventListener('click', () => { const fee = M.sellPlayer(cc, b.dataset.sell!); toast(fee ? `נמכר ב-${fee}K` : 'לא ניתן למכור – מינימום 16 שחקנים'); persist(); render(); }));
@@ -616,22 +631,45 @@ function career() {
           return;
         }
         persist();
-        // press conference
-        const qi = Math.floor(Math.random() * M.PRESS_QUESTIONS.length);
-        const q = M.PRESS_QUESTIONS[qi];
-        const md = modal(`<h2>מסיבת עיתונאים</h2><p class="q">🎤 "${esc(q.q)}"</p><div class="menu-col">${q.answers.map((a, i) => `<button class="btn" data-ans="${i}">${esc(a.t)}</button>`).join('')}</div>`);
-        md.el.querySelectorAll<HTMLElement>('[data-ans]').forEach((b) => b.addEventListener('click', () => { M.pressConference(cc, +b.dataset.ans!, qi); persist(); md.close(); render(); }));
+        const press = () => {
+          const qi = Math.floor(Math.random() * M.PRESS_QUESTIONS.length);
+          const q = M.PRESS_QUESTIONS[qi];
+          const md = modal(`<h2>מסיבת עיתונאים</h2><p class="q">🎤 "${esc(q.q)}"</p><div class="menu-col">${q.answers.map((a, i) => `<button class="btn" data-ans="${i}">${esc(a.t)}</button>`).join('')}</div>`);
+          md.el.querySelectorAll<HTMLElement>('[data-ans]').forEach((b) => b.addEventListener('click', () => { M.pressConference(cc, +b.dataset.ans!, qi); persist(); md.close(); render(); }));
+        };
+        const scandal = () => {
+          const sc = M.rollScandal(cc);
+          if (!sc) return press();
+          const md = modal(`<h2>בעיה מחוץ למגרש</h2><p class="q">📰 ${esc(sc.text)}</p><div class="menu-col">
+            <button class="btn" data-c="fine">קנס כספי</button><button class="btn" data-c="suspend">השעיה למשחק</button><button class="btn" data-c="ignore">להתעלם</button></div>`);
+          md.el.querySelectorAll<HTMLElement>('[data-c]').forEach((b) => b.addEventListener('click', () => { M.resolveScandal(cc, sc.id, b.dataset.c as 'fine' | 'suspend' | 'ignore'); persist(); md.close(); press(); }));
+        };
+        if (cc.appeal) {
+          const ap = cc.appeal;
+          const md = modal(`<h2>כרטיס אדום</h2><p>${esc(ap.name)} הורחק ויחמיץ את המשחק הבא. להגיש ערעור לבית הדין המשמעתי? (סיכוי של כשליש; אם נדחה – קנס 20K)</p><div class="row-btns"><button class="btn primary" data-y>הגש ערעור</button><button class="btn" data-n>וותר</button></div>`);
+          md.el.querySelector('[data-y]')!.addEventListener('click', () => { const msg = M.appealRed(cc); persist(); md.close(); toast(msg); scandal(); });
+          md.el.querySelector('[data-n]')!.addEventListener('click', () => { cc.appeal = null; persist(); md.close(); scandal(); });
+        } else scandal();
       };
       root.querySelector('[data-sim]')?.addEventListener('click', () => {
         const [g1, g2] = M.simulate(team.rating, opp!.rating);
         after(fx![0] === cc.teamId ? g1 : g2, fx![0] === cc.teamId ? g2 : g1, pickEleven(team.players, cc.formation).map((p) => p.id), null);
       });
       root.querySelector('[data-play]')?.addEventListener('click', async () => {
+        // the rival manager plays mind games before big matches
+        if (opp!.rating >= team.rating && Math.random() < 0.4) {
+          const qi = Math.floor(Math.random() * M.MIND_GAMES.length);
+          const q = M.MIND_GAMES[qi];
+          await new Promise<void>((res) => {
+            const md = modal(`<h2>מלחמה פסיכולוגית</h2><p class="q">🎤 ${esc(q.q)}</p><p class="tdesc">איך אתה מגיב? התשובה משפיעה על המורל של השחקנים.</p><div class="menu-col">${q.answers.map((a, i) => `<button class="btn" data-ans="${i}">${esc(a.t)}</button>`).join('')}</div>`);
+            md.el.querySelectorAll<HTMLElement>('[data-ans]').forEach((b) => b.addEventListener('click', () => { M.applyMindGame(cc, qi, +b.dataset.ans!); persist(); md.close(); res(); }));
+          });
+        }
         const isHome = fx![0] === cc.teamId;
         const H = isHome ? team : opp!;
         const A = isHome ? opp! : team;
         const weathers: Weather[] = ['clear', 'clear', 'cloudy', 'rain', 'snow'];
-        const setup = baseSetup(H, A, { pads: isHome ? [0, null] : [null, 0], fitness: M.careerFitness(cc), title: `${cc.league} – מחזור ${cc.round + 1}`, weather: weathers[Math.floor(Math.random() * weathers.length)], time: (['day', 'dusk', 'night'] as TimeOfDay[])[cc.round % 3] });
+        const setup = baseSetup(H, A, { pads: isHome ? [0, null] : [null, 0], fitness: M.careerFitness(cc), [isHome ? 'homeFormationDef' : 'awayFormationDef']: cc.formationDef, title: `${cc.league} – מחזור ${cc.round + 1}`, weather: weathers[Math.floor(Math.random() * weathers.length)], time: (['day', 'dusk', 'night'] as TimeOfDay[])[cc.round % 3] });
         const r = await preMatch(setup);
         if (!r) return render();
         const gf = isHome ? r.goals[0] : r.goals[1];
@@ -986,6 +1024,8 @@ function settingsScreen() {
       <label class="field">עוצמת שמע <input type="range" min="0" max="1" step="0.05" value="${settings.volume}" data-k="volume"></label>
       <label class="check"><input type="checkbox" data-k="commentary" ${settings.commentary ? 'checked' : ''}> קריינות קולית בעברית${audio.hasHebrewVoice ? '' : ' (לא נמצא קול עברי בדפדפן – יוצגו כתוביות)'}</label>
       <label class="check"><input type="checkbox" data-k="radar" ${settings.radar ? 'checked' : ''}> מכ"ם</label>
+      <label class="check"><input type="checkbox" data-k="guide" ${settings.guide ? 'checked' : ''}> קו עזר למסלול הבעיטה וההגבהה</label>
+      <label class="check"><input type="checkbox" data-k="retro" ${settings.retro ? 'checked' : ''}> שידור רטרו (מראה טלוויזיה של שנות ה-80/90)</label>
       <label class="field">זום מצלמה <input type="range" min="0.6" max="1.6" step="0.05" value="${settings.zoom}" data-k="zoom"></label>
       <label class="field">כפתורי מגע<select data-k="touch"><option value="auto" ${settings.touch === 'auto' ? 'selected' : ''}>אוטומטי</option><option value="on" ${settings.touch === 'on' ? 'selected' : ''}>תמיד</option><option value="off" ${settings.touch === 'off' ? 'selected' : ''}>כבוי</option></select></label>
       <p class="tdesc">שינוי איכות הגרפיקה נכנס לתוקף אחרי רענון הדף.</p>
@@ -999,6 +1039,7 @@ function settingsScreen() {
         saveSettings();
         audio.setVolume(settings.volume);
         audio.speech = settings.commentary;
+        applyRetro();
       }),
     );
   });
@@ -1008,6 +1049,8 @@ function controlsModal() {
   const md = modal(`<h2>מקשים ושליטה</h2>
     <table class="list keys"><tr><th>מקלדת</th><th>שלט</th><th>בהתקפה</th><th>בהגנה</th></tr>
     ${CONTROL_HELP.map((r) => `<tr><td><kbd>${esc(r.keys)}</kbd></td><td>${esc(r.pad)}</td><td>${esc(r.attack)}</td><td>${esc(r.defend)}</td></tr>`).join('')}</table>
+    <h3>עבירות (בהגנה)</h3>
+    <table class="list keys">${FOUL_HELP.map(([k, d]) => `<tr><td><kbd>${esc(k)}</kbd></td><td>${esc(d)}</td></tr>`).join('')}</table>
     <h3>מצבים נייחים</h3>
     <ul class="news">
       <li><b>בעיטה חופשית ישירה:</b> WASD מזיז את הכוונת על השער, החצים קובעים סיבוב (שמאל/ימין = עקמומיות, למעלה = טופ-ספין, למטה = דרייב נמוך), החזק ף לעוצמה ושחרר (ל = הרמה, ך = מסירה). קו העזר מראה את תחילת המסלול – ארוך יותר לבועטים טובים.</li>
@@ -1016,7 +1059,10 @@ function controlsModal() {
       <li><b>שוער בפנדל נגדך:</b> בחר צד עם A/D לפני הבעיטה.</li>
       <li><b>חומה:</b> ל מחליף קפיצה/עמידה, החזק C + כיוון כדי להזיז את החומה.</li>
     </ul>
-    <p class="tdesc">כפתורי הפעולה מסודרים כמו בשלט נינטנדו סוויץ': ם למעלה, ל משמאל, ף מימין, ך למטה (במקלדת אנגלית: O, K, ;, L). החיצים הם הסטיק הימני – מהלכי כדרור. שלט סוויץ' / Xbox / פלייסטיישן מתחבר לפי מיקום הכפתורים.</p>
+    <pre class="diamond">        [ ל ] הגבהה
+[ ם ] מגן        [ ף ] בעיטה
+        [ ך ] מסירה</pre>
+    <p class="tdesc">כפתורי הפעולה מסודרים כמו בשלט נינטנדו סוויץ' (במקלדת אנגלית: K, O, ;, L). מסירת עומק: ן (I). שלט סוויץ' / Xbox / פלייסטיישן מתחבר לפי מיקום הכפתורים.</p>
     <p class="tdesc">שני שחקנים מקומיים: בחר "שני שחקנים" במשחק מהיר – שחקן 1 במקלדת, שחקן 2 בשלט.</p>
     <div class="row-btns"><button class="btn primary">סגור</button></div>`);
   md.el.querySelector('.row-btns button')!.addEventListener('click', md.close);

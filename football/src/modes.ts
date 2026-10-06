@@ -30,6 +30,8 @@ export interface Settings {
   touch: 'auto' | 'on' | 'off';
   difficulty: number;
   halfMinutes: number;
+  guide: boolean;
+  retro: boolean;
 }
 export const defaultSettings = (): Settings => ({
   quality: matchMedia('(pointer: coarse)').matches || (navigator.hardwareConcurrency ?? 8) <= 4 ? 'low' : 'high',
@@ -40,6 +42,8 @@ export const defaultSettings = (): Settings => ({
   touch: 'auto',
   difficulty: 1,
   halfMinutes: 3,
+  guide: true,
+  retro: false,
 });
 
 export const DIFFICULTIES = ['מתחיל', 'מקצוען', 'כוכב-על', 'אגדה'];
@@ -206,6 +210,7 @@ export interface CareerPlayer extends PlayerData {
   fitness?: number; // 0..100 carried between matches
   injuredRounds?: number;
   injuryName?: string;
+  suspended?: number;
   contract?: { releaseClause: number; sellOn: number; bonus: number };
 }
 export type BoardKind = 'title' | 'budget' | 'youth';
@@ -244,6 +249,10 @@ export interface Career {
   boardHappy: number;
   board: BoardKind;
   fired?: boolean;
+  transferBan?: boolean;
+  ffpSeason?: number;
+  formationDef?: string;
+  appeal?: { id: string; name: string } | null;
   others: Record<string, PlayerData[]>; // AI rosters (transfers move players)
 }
 export function newCareer(teamId: string): Career {
@@ -279,7 +288,7 @@ export function newCareer(teamId: string): Career {
 }
 export function careerTeamData(c: Career): TeamData {
   const base = teamById(c.teamId)!;
-  const fit = c.squad.filter((p) => !(p.injuredRounds && p.injuredRounds > 0));
+  const fit = c.squad.filter((p) => !(p.injuredRounds && p.injuredRounds > 0) && !(p.suspended && p.suspended > 0));
   const t: TeamData = { ...base, players: (fit.length >= 14 ? fit : c.squad).map((p) => moraleAdjusted(p)), formation: c.formation, tactic: c.tactic };
   t.rating = teamRating(t);
   return t;
@@ -342,6 +351,7 @@ export function transferList(c: Career): (PlayerData & { askClub: string })[] {
   return out.sort((a, b) => b.ovr - a.ovr);
 }
 export function buyPlayer(c: Career, p: PlayerData & { askClub: string }, fee: number): string | null {
+  if (c.transferBan) return 'המועדון תחת איסור רכש (פייר-פליי פיננסי) עד שהתקציב יחזור לאיזון';
   if (fee > c.budget) return 'אין מספיק תקציב העברות';
   if (wageBill(c) + p.wage > c.wageBudget) return 'חריגה מתקציב השכר';
   if (c.squad.length >= 28) return 'הסגל מלא (28 שחקנים)';
@@ -401,6 +411,59 @@ export function advanceScouts(c: Career) {
   }
   c.scouts = c.scouts.filter((s) => s.left > 0);
 }
+// Appeal a red card at the disciplinary committee.
+export function appealRed(c: Career): string {
+  const a = c.appeal;
+  if (!a) return '';
+  c.appeal = null;
+  const p = c.squad.find((x) => x.id === a.id);
+  if (!p) return '';
+  if (Math.random() < 0.35) {
+    p.suspended = 0;
+    c.news.unshift(`הערעור התקבל! ההרחקה של ${p.name} בוטלה.`);
+    return 'הערעור התקבל – השחקן כשיר למשחק הבא.';
+  }
+  c.budget -= 20;
+  c.news.unshift(`הערעור על הכרטיס של ${p.name} נדחה (קנס 20K).`);
+  return 'הערעור נדחה, וגם קיבלתם קנס של 20K.';
+}
+
+// Off-pitch trouble: a player turns up late after a night out.
+export function rollScandal(c: Career): { id: string; text: string } | null {
+  if (Math.random() > 0.08) return null;
+  const stars = [...c.squad].sort((a, b) => b.ovr - a.ovr).slice(0, 8);
+  const p = stars[Math.floor(Math.random() * stars.length)];
+  const texts = [`${p.name} צולם במועדון לילה בשלוש בבוקר ואיחר לאימון.`, `${p.name} לא הופיע לאימון הבוקר וכבה את הטלפון.`, `${p.name} התווכח בפומבי עם הקפטן על בעיטות חופשיות.`];
+  return { id: p.id, text: texts[Math.floor(Math.random() * texts.length)] };
+}
+export function resolveScandal(c: Career, id: string, choice: 'fine' | 'suspend' | 'ignore') {
+  const p = c.squad.find((x) => x.id === id);
+  if (!p) return;
+  if (choice === 'fine') {
+    p.morale = Math.max(20, p.morale - 8);
+    c.boardHappy = Math.min(100, c.boardHappy + 2);
+    c.budget += 30;
+    c.news.unshift(`${p.name} נקנס. ההנהלה מרוצה מהמשמעת.`);
+  } else if (choice === 'suspend') {
+    p.morale = Math.max(20, p.morale - 15);
+    p.suspended = Math.max(p.suspended ?? 0, 1);
+    c.news.unshift(`${p.name} הושעה למשחק אחד.`);
+  } else {
+    for (const q of c.squad) q.morale = Math.max(20, q.morale - 3);
+    c.news.unshift(`התעלמת מהמקרה של ${p.name} – בחדר ההלבשה לא מרוצים.`);
+  }
+}
+
+// Mind games: the rival manager tries to get under your skin before a big game.
+export const MIND_GAMES = [
+  { q: 'מאמן היריבה: "הם עוד לא מוכנים לרמה הזאת. נראה אותם מתמודדים עם הלחץ."', answers: [{ t: 'נענה על המגרש.', morale: 4 }, { t: 'אנחנו מכבדים אותם, נלך משחק-משחק.', morale: 1 }, { t: 'הוא כנראה מפחד מאיתנו.', morale: -2 }] },
+  { q: 'מאמן היריבה: "השופט צריך לשים לב לכל הצלילות של השחקנים שלכם."', answers: [{ t: 'לא נגרר לזה. נתמקד בכדורגל.', morale: 3 }, { t: 'הוא מחפש תירוצים מראש.', morale: 2 }, { t: 'אנחנו נגיש תלונה להתאחדות!', morale: -3 }] },
+];
+export function applyMindGame(c: Career, qi: number, ai: number) {
+  const m = MIND_GAMES[qi].answers[ai].morale;
+  for (const p of c.squad) p.morale = Math.max(20, Math.min(100, p.morale + m));
+}
+
 export const PRESS_QUESTIONS: { q: string; answers: { t: string; morale: number; board: number }[] }[] = [
   { q: 'איך אתה מסכם את המשחק היום?', answers: [{ t: 'אני גאה בשחקנים, הם נתנו הכול.', morale: 4, board: 0 }, { t: 'זה לא מספיק טוב, נצטרך להשתפר.', morale: -3, board: 2 }, { t: 'אין לי מה להוסיף.', morale: 0, board: -1 }] },
   { q: 'יש שמועות על החתמה גדולה בחלון הקרוב. תגובה?', answers: [{ t: 'אנחנו תמיד מחפשים לחזק את הסגל.', morale: -1, board: 2 }, { t: 'אני סומך לגמרי על השחקנים שלי.', morale: 4, board: -1 }, { t: 'לא מתייחס לשמועות.', morale: 0, board: 0 }] },
@@ -440,6 +503,27 @@ export function afterCareerMatch(c: Career, myGoals: number, oppGoals: number, p
     p.fitness = clamp100((p.fitness ?? 100) - (mins / 90) * 26 + (played ? 6 : 18));
   }
   for (const p of c.squad) if (p.injuredRounds && p.injuredRounds > 0 && !r?.playerStats[p.id]?.injury) p.injuredRounds--;
+  // suspensions: served by sitting this one out; a red card today means a ban for the next match
+  c.appeal = null;
+  for (const p of c.squad) {
+    const st = r?.playerStats[p.id];
+    if (p.suspended && p.suspended > 0 && !st?.red) p.suspended--;
+    if (st?.red) {
+      p.suspended = 1;
+      c.appeal = { id: p.id, name: p.name };
+      notes.push(`${p.name} מורחק למשחק הבא בעקבות הכרטיס האדום.`);
+    }
+  }
+  // financial fair play: overspending brings a transfer ban and a points deduction
+  if (c.budget < 0) {
+    c.transferBan = true;
+    if (c.ffpSeason !== c.season) {
+      c.ffpSeason = c.season;
+      const row = c.table.find((x) => x.id === c.teamId);
+      if (row) row.pts -= 3;
+      notes.push('הפרת כללי הפייר-פליי הפיננסי: הורדת 3 נקודות ואיסור רכש.');
+    }
+  } else c.transferBan = false;
   let delta = win ? 3 : draw ? 0 : -4;
   if (c.board === 'title') delta += win ? 0 : draw ? -2 : -3;
   if (c.board === 'budget' && (wageBill(c) > c.wageBudget || c.budget < 0)) delta -= 4;

@@ -58,6 +58,11 @@ export class Stadium {
         return 0;
       },
     };
+    // wind for the evening: stronger in bad weather
+    const windMax = opts.weather === 'rain' ? 9 : opts.weather === 'cloudy' ? 7 : opts.weather === 'snow' ? 5 : 4;
+    const wa = Math.random() * Math.PI * 2;
+    const ws = Math.random() * windMax;
+    this.env.wind = new THREE.Vector3(Math.cos(wa) * ws, 0, Math.sin(wa) * ws);
     if (wet) {
       const r = mulberry(77);
       for (let i = 0; i < 9; i++) {
@@ -348,9 +353,20 @@ export class Stadium {
   }
 
   // Scuffs the turf where players sprint, turn and slide (or clears snow).
+  // coarse record of how cut-up each patch of grass is (for mud and slipping)
+  private wearGrid = new Float32Array(30 * 20);
+  wearAt(x: number, z: number) {
+    const i = Math.floor(((x + AREA_L / 2) / AREA_L) * 30);
+    const j = Math.floor(((z + AREA_W / 2) / AREA_W) * 20);
+    if (i < 0 || j < 0 || i >= 30 || j >= 20) return 0;
+    return this.wearGrid[j * 30 + i];
+  }
   wear(x: number, z: number, r: number, amount: number) {
     const turf = this.opts.turf ?? 'normal';
     amount *= turf === 'old' ? 1.7 : turf === 'hybrid' ? 0.45 : 1;
+    const gi = Math.floor(((x + AREA_L / 2) / AREA_L) * 30);
+    const gj = Math.floor(((z + AREA_W / 2) / AREA_W) * 20);
+    if (gi >= 0 && gj >= 0 && gi < 30 && gj < 20) this.wearGrid[gj * 30 + gi] = Math.min(10, this.wearGrid[gj * 30 + gi] + amount);
     const ctx = this.wearCtx;
     const sx = this.wearCanvas.width / AREA_L;
     const cx = (x + AREA_L / 2) * sx;

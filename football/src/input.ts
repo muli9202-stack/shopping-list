@@ -3,8 +3,8 @@
 // RB teammate press / finesse, LT jockey, RT sprint, START pause; the right stick
 // (arrow keys) does skill moves, player switching and set-piece spin.
 
-export type Btn = 'A' | 'B' | 'X' | 'Y' | 'LB' | 'RB' | 'LT' | 'RT' | 'START' | 'R3' | 'RUP' | 'RDOWN' | 'RLEFT' | 'RRIGHT';
-const BTNS: Btn[] = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'START', 'R3', 'RUP', 'RDOWN', 'RLEFT', 'RRIGHT'];
+export type Btn = 'A' | 'B' | 'X' | 'Y' | 'LB' | 'RB' | 'LT' | 'RT' | 'START' | 'R3' | 'RUP' | 'RDOWN' | 'RLEFT' | 'RRIGHT' | 'SUB';
+const BTNS: Btn[] = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'START', 'R3', 'RUP', 'RDOWN', 'RLEFT', 'RRIGHT', 'SUB'];
 
 export interface Pad {
   // left stick in screen space: x right, y up (away from the camera)
@@ -27,31 +27,41 @@ const newPad = (): Pad => ({
 });
 
 export const KEYMAP: Record<string, Btn> = {
-  // Face buttons sit on the keyboard like the Nintendo Switch diamond (Hebrew layout):
-  // ך (L) bottom = pass, ף (;) right = shoot, ל (K) left = lob, ם (O) top = through ball.
-  KeyL: 'A', Semicolon: 'B', KeyK: 'X', KeyO: 'Y',
+  // Face buttons as a Switch-style diamond on the Hebrew layout:
+  // ל (K) top = lob / switch, ם (O) left = shield / jockey, ף (;) right = shoot / tackle,
+  // ך (L) bottom = pass / teammate press. ן (I) = through ball.
+  KeyL: 'A', Semicolon: 'B', KeyK: 'X', KeyO: 'LT', KeyI: 'Y',
   KeyQ: 'LB', KeyE: 'RB', KeyC: 'LT', ShiftLeft: 'RT', ShiftRight: 'RT',
-  Escape: 'START', KeyP: 'START', KeyR: 'R3',
+  Escape: 'START', KeyP: 'START', KeyR: 'R3', KeyT: 'SUB',
   ArrowUp: 'RUP', ArrowDown: 'RDOWN', ArrowLeft: 'RLEFT', ArrowRight: 'RRIGHT',
   Space: 'B', Enter: 'A',
 };
 
 // On-screen key names for the face buttons (Hebrew letter + the Latin key under it).
-export const KEY_LABEL: Record<'A' | 'B' | 'X' | 'Y', string> = { A: 'ך', B: 'ף', X: 'ל', Y: 'ם' };
+export const KEY_LABEL: Record<'A' | 'B' | 'X' | 'Y', string> = { A: 'ך', B: 'ף', X: 'ל', Y: 'ן' };
 export const kbd = (b: 'A' | 'B' | 'X' | 'Y') => `<kbd>${KEY_LABEL[b]}</kbd>`;
 
 export const CONTROL_HELP: { keys: string; pad: string; attack: string; defend: string }[] = [
   { keys: 'W A S D', pad: 'סטיק שמאלי', attack: 'תנועה (עוצמת ההטיה: הליכה/ריצה)', defend: 'תנועה' },
-  { keys: 'Shift', pad: 'RT / R2', attack: 'ספרינט (פחות שליטה בכדור)', defend: 'ספרינט' },
-  { keys: 'ך (L)', pad: 'Switch B · Xbox A · ✕', attack: 'מסירה קצרה (החזקה = עוצמה)', defend: 'לחץ על מחזיק הכדור (החזקה)' },
-  { keys: 'ל (K)', pad: 'Switch Y · Xbox X · ▢', attack: 'הגבהה / חילוף אגף / הרמה לרחבה', defend: 'תיקול גלישה' },
-  { keys: 'ם (O)', pad: 'Switch X · Xbox Y · △', attack: 'מסירת עומק', defend: '—' },
-  { keys: 'ף (;) / רווח', pad: 'Switch A · Xbox B · ○', attack: 'בעיטה (החזקה = עוצמה, לחיצה שנייה ברגע הפגיעה = סיום מתוזמן) / נגיחה', defend: 'תיקול עומד' },
-  { keys: 'Q', pad: 'LB / L1', attack: 'כדרור צמוד (החזקה) · Q+ף = צ\'יפ', defend: 'החלפת שחקן' },
-  { keys: 'E', pad: 'RB / R1', attack: 'E+ף = בעיטה מסובבת (Finesse)', defend: 'חבר קבוצה לוחץ (החזקה)' },
-  { keys: 'C', pad: 'LT / L2', attack: 'הגנה על הכדור עם הגב', defend: 'הכלה / ג\'וקי' },
-  { keys: '← ↑ → ↓', pad: 'סטיק ימני', attack: 'מהלכי כדרור: ← → הטעיה, ↑ דחיקה קדימה, ↓ משיכה לאחור, R רולטה', defend: 'החלפה לשחקן בכיוון' },
-  { keys: 'Esc / P', pad: 'Start', attack: 'השהיה, טקטיקה ומצלמה', defend: '' },
+  { keys: 'Shift', pad: 'RT / ZR', attack: 'ספרינט (פחות שליטה בכדור)', defend: 'ספרינט' },
+  { keys: 'ף (;) / רווח', pad: 'ימני (A בסוויץ\')', attack: 'בעיטה: לחיצה קצרה = שטוחה, ארוכה = עוצמה. ↑+ף בננה (טריבלה), ↓+ף פצצה ללא סיבוב. לחיצה שנייה ברגע הפגיעה = סיום מתוזמן', defend: 'תיקול עומד · עם חצים: עבירות (ראה למטה)' },
+  { keys: 'ך (L)', pad: 'תחתון (B בסוויץ\')', attack: 'מסירה שטוחה (החזקה = עוצמה ומרחק)', defend: 'לחץ של חבר קבוצה (החזקה)' },
+  { keys: 'ל (K)', pad: 'עליון (X בסוויץ\')', attack: 'הגבהה / חילוף אגף / הרמה לרחבה', defend: 'החלפת שחקן' },
+  { keys: 'ם (O) / C', pad: 'שמאלי (Y בסוויץ\') / ZL', attack: 'הגנה על הכדור עם הגב · זריקת חוץ מהירה', defend: 'ג\'וקי – שמירה מוכפפת מול התוקף' },
+  { keys: 'ן (I)', pad: 'L3', attack: 'מסירת עומק', defend: '—' },
+  { keys: 'Q / E', pad: 'L / R', attack: 'Q+ף צ\'יפ · E+ף פינס · Q כדרור צמוד', defend: 'Q החלפה · E לחץ חבר' },
+  { keys: '← ↑ → ↓', pad: 'סטיק ימני', attack: 'מהלכי כדרור (בהקשה): ← → הטעיה, ↑ דחיקה, ↓ משיכה לאחור, R רולטה', defend: 'בשילוב ף: עבירות' },
+  { keys: 'עכבר', pad: '', attack: 'תזוזה מהירה = מהלך כדרור · קליק שמאלי = כיוון מדויק לבעיטה/מסירה · קליק ימני = הטעיית בעיטה / הקפצה מעל המגן', defend: 'קליק שמאלי = כיוון' },
+  { keys: 'T', pad: '', attack: 'חילוף מהיר (העייף ביותר יוצא) בעצירה הבאה', defend: '' },
+  { keys: 'Esc / P', pad: 'Start / +', attack: 'השהיה, טקטיקה, חילופים ומצלמה', defend: '' },
+];
+
+export const FOUL_HELP: [string, string][] = [
+  ['← או → + ף', 'משיכה בחולצה – מאט מתפרצת (סיכון לצהוב)'],
+  ['↓ + החזקת ף', 'גלישה מכסחת מאחור – כמעט תמיד אדום'],
+  ['↑ + ←/→ + ף', 'מכת כתף – מפיל את היריב'],
+  ['↓ + ↑ + ף', 'הכשלה – ברחבה זה פנדל, ובמצב של שער בטוח גם אדום'],
+  ['↓ ↓ (פעמיים) + ף', 'גלישת חסימה – נגד בעיטה; מאוחרת מדי = עבירה'],
 ];
 
 export class Input {
@@ -62,6 +72,17 @@ export class Input {
   private touchEl: HTMLElement | null = null;
   splitGamepad = false; // gamepad 1 drives pad 1 (local two-player)
   enabled = true;
+  // mouse (player 1): motion for skill moves, left click to aim, right click to fake / flick
+  mouseDX = 0;
+  mouseDY = 0;
+  mouseSpeed = 0;
+  leftClick: { x: number; y: number } | null = null;
+  rightClick = false;
+  private mdx = 0;
+  private mdy = 0;
+  private lc: { x: number; y: number } | null = null;
+  private rc = false;
+  private lastPoll = performance.now();
 
   constructor() {
     addEventListener('keydown', (e) => {
@@ -72,6 +93,18 @@ export class Input {
       this.keys.add(e.code);
     });
     addEventListener('keyup', (e) => this.keys.delete(e.code));
+    addEventListener('mousemove', (e) => {
+      this.mdx += e.movementX;
+      this.mdy += e.movementY;
+    });
+    addEventListener('mousedown', (e) => {
+      if ((e.target as HTMLElement)?.id !== 'view') return;
+      if (e.button === 0) this.lc = { x: e.clientX, y: e.clientY };
+      if (e.button === 2) this.rc = true;
+    });
+    addEventListener('contextmenu', (e) => {
+      if ((e.target as HTMLElement)?.id === 'view') e.preventDefault();
+    });
     addEventListener('blur', () => this.keys.clear());
   }
 
@@ -81,6 +114,17 @@ export class Input {
 
   // Call once per rendered frame.
   poll() {
+    const now = performance.now();
+    const dt = Math.max(1, now - this.lastPoll) / 1000;
+    this.lastPoll = now;
+    this.mouseDX = this.mdx;
+    this.mouseDY = this.mdy;
+    this.mouseSpeed = Math.hypot(this.mdx, this.mdy) / dt;
+    this.mdx = this.mdy = 0;
+    this.leftClick = this.lc;
+    this.rightClick = this.rc;
+    this.lc = null;
+    this.rc = false;
     for (let i = 0; i < 2; i++) {
       const p = this.pads[i];
       this.prevHeld[i] = { ...p.held };
@@ -130,7 +174,8 @@ export class Input {
         target.rx = rx;
         target.ry = ry;
       }
-      const map: [number, Btn][] = [[0, 'A'], [1, 'B'], [2, 'X'], [3, 'Y'], [4, 'LB'], [5, 'RB'], [6, 'LT'], [7, 'RT'], [9, 'START'], [11, 'R3']];
+      // positional, like the keyboard diamond: bottom pass, right shoot, top lob, left shield
+      const map: [number, Btn][] = [[0, 'A'], [1, 'B'], [3, 'X'], [2, 'LT'], [10, 'Y'], [4, 'LB'], [5, 'RB'], [6, 'LT'], [7, 'RT'], [9, 'START'], [11, 'R3']];
       for (const [n, btn] of map) if (b(n)) target.held[btn] = true;
       if (target.rx > 0.6) target.held.RRIGHT = true;
       if (target.rx < -0.6) target.held.RLEFT = true;
@@ -180,13 +225,13 @@ export class Input {
       <div class="stick"><div class="knob"></div></div>
       <div class="tbtns">
         <button data-b="RT" class="tb rt">ספרינט</button>
-        <button data-b="LT" class="tb lt">ג'וקי</button>
-        <button data-b="LB" class="tb lb">החלף</button>
-        <button data-b="RB" class="tb rb">לחץ/פינס</button>
-        <button data-b="Y" class="tb y">עומק</button>
-        <button data-b="X" class="tb x">הגבהה<br>גלישה</button>
-        <button data-b="B" class="tb b">בעיטה<br>תיקול</button>
-        <button data-b="A" class="tb a">מסירה</button>
+        <button data-b="Y" class="tb lt">עומק</button>
+        <button data-b="LB" class="tb lb">צמוד</button>
+        <button data-b="RB" class="tb rb">פינס</button>
+        <button data-b="X" class="tb y">ל<br>הגבהה</button>
+        <button data-b="LT" class="tb x">ם<br>מגן</button>
+        <button data-b="B" class="tb b">ף<br>בעיטה</button>
+        <button data-b="A" class="tb a">ך<br>מסירה</button>
       </div>
       <button data-b="START" class="tb start">❚❚</button>`;
     document.body.appendChild(el);

@@ -24,6 +24,7 @@ export interface PitchEnv {
   bounce: number; // vertical restitution
   bounceFriction: number; // tangential friction on bounce
   puddle(x: number, z: number): number; // extra deceleration (m/s^2) from standing water
+  wind?: THREE.Vector3; // m/s; airborne drag acts on the velocity relative to the air
 }
 
 export type BallEvent = { type: 'post' | 'bar' | 'net' | 'bounce' | 'splash'; speed: number; x: number; y: number; z: number };
@@ -76,9 +77,14 @@ export class BallBody {
     const p = this.pos;
     const airborne = p.y > BALL_R + 0.005 || v.y > 0.05;
     if (airborne) {
-      const s = v.length();
-      // aerodynamic drag
-      v.addScaledVector(v, -0.0125 * s * h);
+      // aerodynamic drag against the air (wind moves the air)
+      const w = env.wind;
+      const rx = w ? v.x - w.x : v.x;
+      const rz = w ? v.z - w.z : v.z;
+      const s = Math.hypot(rx, v.y, rz);
+      v.x -= 0.0125 * s * rx * h;
+      v.y -= 0.0125 * s * v.y * h;
+      v.z -= 0.0125 * s * rz * h;
       // Magnus effect: spin x velocity bends the flight (curl, dip, float)
       tmp.crossVectors(this.spin, v).multiplyScalar(0.0048 * h);
       v.add(tmp);

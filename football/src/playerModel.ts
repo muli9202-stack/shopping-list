@@ -35,6 +35,8 @@ export interface PoseState {
   gkReady: boolean;
   time: number;
   celebrateStyle: number;
+  touch?: number; // 0..1 progress of a dribble touch, < 0 none
+  touchLeft?: boolean;
 }
 
 const lerpKeys = (u: number, keys: number[][]): number => {
@@ -120,6 +122,14 @@ export function computePose(o: Float32Array, s: PoseState) {
     }
   }
 
+  if (!s.action && s.touch !== undefined && s.touch >= 0) {
+    // a dribble touch: the near foot reaches out and pushes the ball on
+    const k = Math.sin(Math.PI * s.touch);
+    const th = s.touchLeft ? J.lThighX : J.rThighX;
+    const sh = s.touchLeft ? J.lShinX : J.rShinX;
+    o[th] = o[th] * (1 - k) - 0.55 * k;
+    o[sh] = o[sh] * (1 - k) + 0.25 * k;
+  }
   if (!s.action) return;
   const u = Math.min(1, s.actionT / Math.max(0.01, s.actionDur));
   const c = s.contact;
