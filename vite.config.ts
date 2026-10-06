@@ -11,12 +11,14 @@ export default defineConfig({
   build: {
     // Kept out of the deployed files (no sourceMappingURL); used to read error reports.
     sourcemap: 'hidden',
-    // Two apps from one build: the shopping list at the root and the
-    // kitchen app (videos, recipes, Shabbat/holiday table) under /kitchen/.
+    // Three apps from one build: the shopping list at the root, the kitchen
+    // app (videos, recipes, Shabbat/holiday table) under /kitchen/ and the
+    // 3D football game under /football/.
     rolldownOptions: {
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         kitchen: fileURLToPath(new URL('./kitchen/index.html', import.meta.url)),
+        football: fileURLToPath(new URL('./football/index.html', import.meta.url)),
       },
     },
   },
@@ -45,8 +47,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2,webmanifest,json}'],
-        // Offline navigation inside /kitchen/ must not fall back to the shopping list page.
-        navigateFallbackDenylist: [/\/kitchen\//],
+        // Offline navigation inside /kitchen/ or /football/ must not fall back to the shopping list page.
+        navigateFallbackDenylist: [/\/kitchen\//, /\/football\//],
         maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
         // The kitchen app's built-in videos and recipes (~15 MB) are cached on first
         // use and refreshed in the background, instead of with every install.
