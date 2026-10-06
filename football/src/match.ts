@@ -246,7 +246,7 @@ export class Plr {
 
   constructor(public d: PlayerData, public team: Team, public slot: Slot, public idx: number) {
     this.isGK = slot.pos === 'GK';
-    this.model = new PlayerModel(d, this.isGK ? team.data.gkKit : team.kit, this.isGK);
+    this.model = new PlayerModel(d, this.isGK ? team.data.gkKit : team.kit, this.isGK, team.pad !== null);
     this.hs = d.height / 182;
     this.pose = {
       speed: 0, phase: 0, turn: 0, accel: 0, action: null, actionT: 0, actionDur: 1, contact: 0.5,

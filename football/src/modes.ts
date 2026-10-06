@@ -32,6 +32,7 @@ export interface Settings {
   halfMinutes: number;
   guide: boolean;
   retro: boolean;
+  modelScope: 'off' | 'mine' | 'all';
 }
 export const defaultSettings = (): Settings => ({
   quality: matchMedia('(pointer: coarse)').matches || (navigator.hardwareConcurrency ?? 8) <= 4 ? 'low' : 'high',
@@ -44,6 +45,7 @@ export const defaultSettings = (): Settings => ({
   halfMinutes: 3,
   guide: true,
   retro: false,
+  modelScope: 'mine',
 });
 
 export const DIFFICULTIES = ['מתחיל', 'מקצוען', 'כוכב-על', 'אגדה'];

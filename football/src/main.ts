@@ -10,6 +10,7 @@ import { Input, CONTROL_HELP, FOUL_HELP } from './input';
 import { GameAudio } from './audio';
 import { Stadium, type TimeOfDay, type Weather } from './stadium';
 import { PlayerModel, type PoseState } from './playerModel';
+import { clearCustomModel, customRig, loadCustomModel, restoreCustomModel, setCustomScope } from './skinnedModel';
 import * as M from './modes';
 import { setDebugHook } from './ai';
 import { esc, face, futCard, modal, stars, teamBadge, toast } from './ui';
@@ -56,6 +57,7 @@ addEventListener('keydown', () => audio.unlock());
 
 let match: Match | null = null;
 let debugNoRender = false;
+let debugCam: ((c: THREE.PerspectiveCamera) => void) | null = null;
 let menu: MenuStage | null = null;
 let last = performance.now();
 function frame(now: number) {
@@ -63,6 +65,7 @@ function frame(now: number) {
   last = now;
   if (match) match.update(dt);
   else if (menu) menu.update(dt);
+  debugCam?.(camera);
   if (!debugNoRender) renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
@@ -72,6 +75,7 @@ requestAnimationFrame(frame);
 class MenuStage {
   stadium: Stadium;
   models: { m: PlayerModel; pose: PoseState; x: number; z: number; f: number; t: number }[] = [];
+  private teams: TeamData[];
   ball: THREE.Mesh;
   t = 0;
   constructor() {
@@ -80,10 +84,24 @@ class MenuStage {
     const b = teams.find((t) => t !== a)!;
     const times: TimeOfDay[] = ['day', 'dusk', 'night'];
     this.stadium = new Stadium(scene, renderer, { weather: 'clear', time: times[Math.floor(Math.random() * 3)], quality: 'low', homeColors: [a.home.shirt, a.home.shorts], awayColors: [b.home.shirt, b.home.shorts], name: a.stadium });
+    this.teams = [a, b];
+    this.buildPlayers();
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.11, 20, 14), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 }));
+    ball.position.set(0, 0.11, 0);
+    ball.castShadow = true;
+    scene.add(ball);
+    this.ball = ball;
+    renderer.toneMappingExposure = 1;
+  }
+  // (Re)creates the showcase players, e.g. after a custom character was loaded.
+  buildPlayers() {
+    for (const o of this.models) scene.remove(o.m.root);
+    this.models = [];
+    const [a, b] = this.teams;
     const xi = [...pickEleven(a.players, a.formation).slice(5, 10), ...pickEleven(b.players, b.formation).slice(5, 9)];
     xi.forEach((p, i) => {
       const own = i < 5;
-      const m = new PlayerModel(p, own ? a.home : b.home, false);
+      const m = new PlayerModel(p, own ? a.home : b.home, false, own);
       const pose: PoseState = { speed: 0, phase: Math.random() * 6, turn: 0, accel: 0, action: null, actionT: 0, actionDur: 1, contact: 0.6, leftFoot: false, diveSide: 1, diveHigh: 0, jockey: false, isGK: false, gkReady: false, time: 0, celebrateStyle: 0 };
       const x = (i - 4) * 3.2;
       const z = own ? -2 : 2;
@@ -91,12 +109,6 @@ class MenuStage {
       scene.add(m.root);
       this.models.push({ m, pose, x, z, f: 0, t: Math.random() * 10 });
     });
-    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.11, 20, 14), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 }));
-    ball.position.set(0, 0.11, 0);
-    ball.castShadow = true;
-    scene.add(ball);
-    this.ball = ball;
-    renderer.toneMappingExposure = 1;
   }
   update(dt: number) {
     this.t += dt;
@@ -1028,9 +1040,37 @@ function settingsScreen() {
       <label class="check"><input type="checkbox" data-k="retro" ${settings.retro ? 'checked' : ''}> שידור רטרו (מראה טלוויזיה של שנות ה-80/90)</label>
       <label class="field">זום מצלמה <input type="range" min="0.6" max="1.6" step="0.05" value="${settings.zoom}" data-k="zoom"></label>
       <label class="field">כפתורי מגע<select data-k="touch"><option value="auto" ${settings.touch === 'auto' ? 'selected' : ''}>אוטומטי</option><option value="on" ${settings.touch === 'on' ? 'selected' : ''}>תמיד</option><option value="off" ${settings.touch === 'off' ? 'selected' : ''}>כבוי</option></select></label>
+      <div class="field custom-model">דמות תלת-ממדית משלך (קובץ GLB עם שלד)
+        <small class="tdesc" data-model-status>${customRig() ? `טעון: ${esc(customRig()!.name)}` : 'לא נטען מודל – השחקנים המובנים בשימוש.'}</small>
+        <input type="file" accept=".glb,model/gltf-binary" data-model-file>
+        <select data-k="modelScope"><option value="mine" ${settings.modelScope === 'mine' ? 'selected' : ''}>על השחקנים של הקבוצה שלי</option><option value="all" ${settings.modelScope === 'all' ? 'selected' : ''}>על כל השחקנים</option><option value="off" ${settings.modelScope === 'off' ? 'selected' : ''}>כבוי</option></select>
+        <button class="btn" data-model-clear ${customRig() ? '' : 'disabled'}>הסר מודל</button>
+        <small class="tdesc">הקובץ נשמר רק בדפדפן הזה ולא נשלח לשום מקום. שלדים נתמכים: Mixamo, Valve Biped ו-Blender (.L/.R). המדים נצבעים בצבעי הקבוצה.</small>
+      </div>
       <p class="tdesc">שינוי איכות הגרפיקה נכנס לתוקף אחרי רענון הדף.</p>
     </div></div>`, (root) => {
     root.querySelector('[data-back]')!.addEventListener('click', home);
+    const status = root.querySelector<HTMLElement>('[data-model-status]')!;
+    const clearBtn = root.querySelector<HTMLButtonElement>('[data-model-clear]')!;
+    root.querySelector<HTMLInputElement>('[data-model-file]')!.addEventListener('change', async (e) => {
+      const f = (e.target as HTMLInputElement).files?.[0];
+      if (!f) return;
+      status.textContent = 'טוען…';
+      try {
+        const r = await loadCustomModel(f);
+        status.textContent = `טעון: ${r.name}`;
+        clearBtn.disabled = false;
+        menu?.buildPlayers();
+      } catch (err) {
+        status.textContent = `שגיאה: ${(err as Error).message}`;
+      }
+    });
+    clearBtn.addEventListener('click', async () => {
+      await clearCustomModel();
+      status.textContent = 'המודל הוסר.';
+      clearBtn.disabled = true;
+      menu?.buildPlayers();
+    });
     root.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-k]').forEach((el) =>
       el.addEventListener('change', () => {
         const k = el.dataset.k as keyof M.Settings;
@@ -1040,6 +1080,10 @@ function settingsScreen() {
         audio.setVolume(settings.volume);
         audio.speech = settings.commentary;
         applyRetro();
+        if (k === 'modelScope') {
+          setCustomScope(settings.modelScope);
+          menu?.buildPlayers();
+        }
       }),
     );
   });
@@ -1068,8 +1112,11 @@ function controlsModal() {
   md.el.querySelector('.row-btns button')!.addEventListener('click', md.close);
 }
 
-home();
-document.getElementById('boot')?.remove();
+setCustomScope(settings.modelScope);
+restoreCustomModel().finally(() => {
+  home();
+  document.getElementById('boot')?.remove();
+});
 
 // Test hook: /football/?debug exposes the running match so automated tests can fast-forward it.
 if (location.search.includes('debug')) {
@@ -1084,6 +1131,9 @@ if (location.search.includes('debug')) {
     setDebugHook,
     set noRender(v: boolean) {
       debugNoRender = v;
+    },
+    set cam(f: typeof debugCam) {
+      debugCam = f;
     },
   };
 }

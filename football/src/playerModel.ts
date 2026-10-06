@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { BOOT_COLORS, HAIR_COLORS, SKIN_TONES, type Kit, type PlayerData } from './data';
+import { CustomBody, customRig, wantsCustom, type Part } from './skinnedModel';
 
 // A jointed humanoid built from capsules, animated procedurally. Each frame the
 // match computes a target pose (22 joint values) from the player's state; the model
@@ -449,8 +450,12 @@ export class PlayerModel {
   joints = new Float32Array(JOINTS);
   private target = new Float32Array(JOINTS);
   heightScale: number;
+  private custom: CustomBody | null = null;
+  private drivers: Record<Part, THREE.Object3D> | null = null;
+  private offset = new THREE.Vector3();
 
-  constructor(p: PlayerData, kit: Kit, isGK: boolean) {
+  // mine: belongs to a human-controlled team (for the "custom model on my team" option)
+  constructor(p: PlayerData, kit: Kit, isGK: boolean, mine: boolean | null = null) {
     const skin = stdMat(SKIN_TONES[p.skin] ?? SKIN_TONES[1], 0.68);
     const hairM = stdMat(HAIR_COLORS[p.hairColor] ?? HAIR_COLORS[0], 0.9);
     const shirt = shirtMaterial(kit);
@@ -537,6 +542,20 @@ export class PlayerModel {
     };
     leg(this.lThigh, this.lShin, this.lFoot, 1);
     leg(this.rThigh, this.rShin, this.rFoot, -1);
+
+    const rig = customRig();
+    if (mine !== null && rig && wantsCustom(mine)) {
+      // The capsule body stays as the invisible animation driver.
+      this.body.traverse((o) => {
+        if ((o as THREE.Mesh).isMesh) o.visible = false;
+      });
+      this.drivers = {
+        pelvis: this.pelvis, spine: this.torso, head: this.head, lArm: this.lArm, lFore: this.lFore, rArm: this.rArm, rFore: this.rFore,
+        lThigh: this.lThigh, lShin: this.lShin, lFoot: this.lFoot, rThigh: this.rThigh, rShin: this.rShin, rFoot: this.rFoot,
+      };
+      const num = new THREE.Mesh(geo('plane-num', () => new THREE.PlaneGeometry(0.26, 0.32)), numberMaterial(p.num, kit, p.name));
+      this.custom = new CustomBody(rig, kit, BOOT_COLORS[p.boots] ?? '#111', isGK, this.root, num, this.heightScale);
+    }
   }
 
   private addHair(style: number, m: THREE.Material, add: (parent: THREE.Object3D, g: THREE.BufferGeometry, m: THREE.Material, x?: number, y?: number, z?: number, sx?: number, sy?: number, sz?: number) => THREE.Mesh) {
@@ -567,6 +586,7 @@ export class PlayerModel {
   private bandageMesh: THREE.Mesh | null = null;
   // White head bandage after a head knock.
   bandage(on: boolean) {
+    if (this.custom) return;
     if (on && !this.bandageMesh) {
       this.bandageMesh = new THREE.Mesh(geo('bandage', () => new THREE.TorusGeometry(0.108, 0.022, 8, 24)), stdMat('#f4f4f5', 0.9));
       this.bandageMesh.rotation.x = Math.PI / 2;
@@ -615,5 +635,12 @@ export class PlayerModel {
     this.rShin.rotation.x = j[J.rShinX];
     this.lFoot.rotation.x = j[J.lFootX];
     this.rFoot.rotation.x = j[J.rFootX];
+    if (this.custom) {
+      // how far the driver's pelvis moved from its rest spot (crouch, jump, dive, fall)
+      const rest = 0.94 * this.heightScale;
+      this.offset.copy(this.pelvis.position).multiply(this.body.scale).applyQuaternion(this.body.quaternion).add(this.body.position);
+      this.offset.y -= rest;
+      this.custom.update(this.drivers!, this.root, this.offset);
+    }
   }
 }
