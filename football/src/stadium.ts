@@ -12,6 +12,7 @@ export interface StadiumOptions {
   awayColors: string[];
   quality: 'high' | 'low';
   name: string;
+  turf?: 'hybrid' | 'old' | 'normal'; // old pitches cut up quickly, hybrid grass barely marks
 }
 
 const AREA_L = 122; // grass area incl. surround
@@ -348,6 +349,8 @@ export class Stadium {
 
   // Scuffs the turf where players sprint, turn and slide (or clears snow).
   wear(x: number, z: number, r: number, amount: number) {
+    const turf = this.opts.turf ?? 'normal';
+    amount *= turf === 'old' ? 1.7 : turf === 'hybrid' ? 0.45 : 1;
     const ctx = this.wearCtx;
     const sx = this.wearCanvas.width / AREA_L;
     const cx = (x + AREA_L / 2) * sx;
@@ -783,8 +786,68 @@ export class Stadium {
     }
   }
 
+  // Flares and smoke in the stands (0 = home end, 1 = away end).
+  private flares: { sprites: THREE.Sprite[]; smoke: THREE.Sprite[]; t: number }[] = [];
+  pyro(side: number) {
+    const tex = (inner: string, outer: string) => {
+      const c = document.createElement('canvas');
+      c.width = c.height = 64;
+      const g = c.getContext('2d')!;
+      const grd = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grd.addColorStop(0, inner);
+      grd.addColorStop(1, outer);
+      g.fillStyle = grd;
+      g.fillRect(0, 0, 64, 64);
+      return new THREE.CanvasTexture(c);
+    };
+    const fire = tex('rgba(255,240,200,1)', 'rgba(255,40,0,0)');
+    const smokeT = tex('rgba(200,200,200,0.7)', 'rgba(200,200,200,0)');
+    const x = (side === 0 ? -1 : 1) * (FIELD.HL + 13);
+    const sprites: THREE.Sprite[] = [];
+    const smoke: THREE.Sprite[] = [];
+    for (let i = 0; i < 10; i++) {
+      const pos = new THREE.Vector3(x + (Math.random() - 0.5) * 8, 3 + Math.random() * 6, (Math.random() - 0.5) * 50);
+      const f = new THREE.Sprite(new THREE.SpriteMaterial({ map: fire, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, color: Math.random() < 0.7 ? 0xff3b1f : 0xffd166 }));
+      f.position.copy(pos);
+      f.scale.setScalar(1.6);
+      this.group.add(f);
+      sprites.push(f);
+      for (let k = 0; k < 3; k++) {
+        const sm = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeT, transparent: true, depthWrite: false, opacity: 0, color: side === 0 ? 0xffb4a8 : 0xd0d8ff }));
+        sm.position.copy(pos);
+        sm.userData.v = new THREE.Vector3((Math.random() - 0.5) * 0.6, 0.8 + Math.random() * 0.6, (Math.random() - 0.5) * 0.6);
+        sm.userData.delay = k * 1.4 + Math.random();
+        this.group.add(sm);
+        smoke.push(sm);
+      }
+    }
+    this.flares.push({ sprites, smoke, t: 0 });
+  }
+
   update(dt: number, excitement: number) {
     this.time += dt;
+    for (const fl of this.flares) {
+      fl.t += dt;
+      const life = Math.max(0, 1 - fl.t / 10);
+      for (const f of fl.sprites) {
+        f.scale.setScalar((1.2 + Math.random() * 0.9) * life);
+        (f.material as THREE.SpriteMaterial).opacity = life;
+      }
+      for (const sm of fl.smoke) {
+        const t = fl.t - (sm.userData.delay as number);
+        if (t < 0) continue;
+        sm.position.addScaledVector(sm.userData.v as THREE.Vector3, dt);
+        sm.scale.setScalar(2 + t * 2.2);
+        (sm.material as THREE.SpriteMaterial).opacity = Math.max(0, 0.5 * (1 - fl.t / 12));
+      }
+    }
+    const dead = this.flares.filter((f) => f.t > 12);
+    for (const f of dead) for (const o of [...f.sprites, ...f.smoke]) {
+      this.group.remove(o);
+      o.material.map?.dispose();
+      o.material.dispose();
+    }
+    this.flares = this.flares.filter((f) => f.t <= 12);
     this.crowdUniforms.uTime.value = this.time;
     this.crowdUniforms.uExcite.value += (excitement - this.crowdUniforms.uExcite.value) * Math.min(1, dt * 2);
     for (const f of this.flags) f.rotation.y = Math.sin(this.time * 3 + f.position.x) * 0.5;

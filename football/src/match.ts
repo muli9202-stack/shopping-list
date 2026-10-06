@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-import { FORMATIONS, TACTICS, type Kit, type PlayerData, type Slot, type Tactic, type TacticId, type TeamData } from './data';
+import { FORMATIONS, INJURIES, REFEREES, TACTICS, type InjuryKind, type Kit, type PlayerData, type Referee, type Slot, type Tactic, type TacticId, type TeamData } from './data';
 import { BALL_R, BallBody, FIELD, G, groundSpeedFor, lobVelocity, predictPath, rollTime, type BallEvent } from './physics';
 import { JOINTS, PlayerModel, type ActionKind, type PoseState } from './playerModel';
 import { Stadium, type TimeOfDay, type Weather } from './stadium';
 import { statsTable, type Hud, type HudTeam } from './hud';
 import type { GameAudio } from './audio';
-import type { Btn, Input, Pad } from './input';
+import { kbd, type Btn, type Input, type Pad } from './input';
 import { analyst, line, type CEvent } from './commentary';
 import { aiThink, aiMove, keeperThink } from './ai';
 
@@ -61,6 +61,12 @@ export interface MatchSetup {
   cameraZoom: number;
   title: string;
   commentary: boolean;
+  referee?: Referee;
+  fitness?: Record<string, number>; // starting fitness 0..100 per player id (career)
+  derby?: string | null;
+  history?: string;
+  bigGame?: boolean; // finals: composure suffers late on
+  turf?: 'hybrid' | 'old' | 'normal';
 }
 
 export interface PStats {
@@ -77,6 +83,10 @@ export interface PStats {
   yellow: number;
   red: boolean;
   minutes: number;
+  ownGoals: number;
+  subOff: number | null;
+  subOn: number | null;
+  injury: InjuryKind | null;
 }
 
 export interface TeamStats {
@@ -103,6 +113,9 @@ export interface MatchResult {
   stats: TeamStats[];
   winner: 0 | 1 | -1;
   quit?: boolean;
+  subs: { side: number; out: string; in: string; minute: number }[];
+  injuries: { id: string; name: string; kind: InjuryKind }[];
+  referee: string;
 }
 
 export type KickType = 'pass' | 'through' | 'lob' | 'cross' | 'shot' | 'clear' | 'gkThrow' | 'gkKick' | 'throwIn';
@@ -146,6 +159,9 @@ export class Team {
   slots: Slot[];
   lostBallAt = -10;
   pressHeld = false;
+  subsLeft = 5;
+  aiSubs = 0;
+  pendingSubs: { out: Plr; inId: string | null }[] = [];
   constructor(public side: 0 | 1, public data: TeamData, public kit: Kit, formation: string, tactic: TacticId, public pad: number | null) {
     this.dir = side === 0 ? 1 : -1;
     this.tactic = TACTICS[tactic];
@@ -204,7 +220,9 @@ export class Plr {
     mark: null as Plr | null,
   };
   pose: PoseState;
-  stats: PStats = { passes: 0, passOk: 0, shots: 0, onTarget: 0, goals: 0, assists: 0, tackles: 0, saves: 0, fouls: 0, conceded: 0, yellow: 0, red: false, minutes: 0 };
+  stats: PStats = { passes: 0, passOk: 0, shots: 0, onTarget: 0, goals: 0, assists: 0, tackles: 0, saves: 0, fouls: 0, conceded: 0, yellow: 0, red: false, minutes: 0, ownGoals: 0, subOff: null, subOn: null, injury: null };
+  injury: InjuryKind | null = null;
+  limp = false;
   hs: number;
   isGK: boolean;
   celebrate = 0;
@@ -228,7 +246,7 @@ export class Plr {
   }
   maxSpeed(sprint: boolean, withBall: boolean) {
     const base = 5.3 + 4.4 * (this.s.pace / 100);
-    return base * (sprint ? 1 : 0.68) * (0.78 + 0.22 * this.stamina) * (withBall ? (sprint ? 0.93 : 0.92) : 1);
+    return base * (sprint ? 1 : 0.68) * (0.78 + 0.22 * this.stamina) * (this.stamina < 0.2 ? 0.9 : 1) * (this.limp ? 0.72 : 1) * (withBall ? (sprint ? 0.93 : 0.92) : 1);
   }
   busy() {
     return !!this.action && ['slide', 'fallen', 'dive', 'tackle', 'throw', 'celebrate'].includes(this.action.kind);
@@ -238,7 +256,7 @@ export class Plr {
   }
 }
 
-type Phase = 'intro' | 'play' | 'dead' | 'setpiece' | 'goal' | 'replay' | 'halftime' | 'fulltime' | 'over';
+type Phase = 'intro' | 'play' | 'dead' | 'setpiece' | 'goal' | 'replay' | 'halftime' | 'fulltime' | 'over' | 'var';
 
 export type SPKind = 'kickoff' | 'throw' | 'corner' | 'goalkick' | 'freekick' | 'penalty';
 
@@ -289,7 +307,23 @@ export class Match {
   added = 0;
   time = 0;
   kickoffTeam = 0;
-  offside: { team: Team; passer: Plr; set: Set<Plr> } | null = null;
+  offside: { team: Team; passer: Plr; set: Set<Plr>; margin: Map<Plr, number>; lineX: number } | null = null;
+  missedOffside: { team: Team; player: Plr; lineX: number; attackerX: number; time: number } | null = null;
+  varPending: { kind: 'offside' | 'penalty'; info: Record<string, unknown> } | null = null;
+  varState: { kind: 'offside' | 'penalty'; decided: boolean; overturn: boolean; info: Record<string, unknown> } | null = null;
+  ref: Referee;
+  refModel: PlayerModel;
+  refPos = new V(0, 0, 12);
+  refVel = new V();
+  refPose: PoseState;
+  retired: Plr[] = [];
+  subsLog: MatchResult['subs'] = [];
+  injuriesLog: MatchResult['injuries'] = [];
+  private varGroup = new THREE.Group();
+  private monitorPos = new V(0, 0, -(HW + 2.2));
+  private puffs: { s: THREE.Sprite; t: number }[] = [];
+  private puffT = 0;
+  private pressureSaid = false;
   scorers: MatchResult['scorers'] = [];
   shootout: { kicks: [boolean[], boolean[]]; turn: number; order: [Plr[], Plr[]]; idx: [number, number] } | null = null;
   pred: V3[] = [];
@@ -308,7 +342,7 @@ export class Match {
   private recordTick = 0;
   private camPos = new V(0, 30, 60);
   private camLook = new V();
-  private camMode: 'broadcast' | 'setpiece' | 'replay' | 'celebrate' | 'intro' = 'intro';
+  private camMode: 'broadcast' | 'setpiece' | 'replay' | 'celebrate' | 'intro' | 'var' = 'intro';
   private rings: THREE.Mesh[] = [];
   private arrows: THREE.Mesh[] = [];
   private aimGroup = new THREE.Group();
@@ -325,6 +359,7 @@ export class Match {
   private skipHeld = 0;
   careerId: string | null;
   callForBall = -1;
+  private monitorMesh: THREE.Group | null = null;
 
   constructor(
     public scene: THREE.Scene,
@@ -343,6 +378,7 @@ export class Match {
       homeColors: [setup.homeKit.shirt, setup.homeKit.shorts],
       awayColors: [setup.awayKit.shirt, setup.awayKit.shorts],
       name: setup.home.stadium,
+      turf: setup.turf ?? 'normal',
     });
     const home = new Team(0, setup.home, setup.homeKit, setup.homeFormation, setup.homeTactic, setup.pads[0]);
     const away = new Team(1, setup.away, setup.awayKit, setup.awayFormation, setup.awayTactic, setup.pads[1]);
@@ -388,6 +424,46 @@ export class Match {
 
     for (let i = 0; i < REPLAY_FRAMES; i++) this.replayBuf.push(new Float32Array(SNAP));
 
+    // the referee on the pitch
+    this.ref = setup.referee ?? REFEREES[Math.floor(Math.random() * REFEREES.length)];
+    const refData: PlayerData = {
+      ...setup.home.players[5], id: 'ref', name: ' ', num: 0, height: 178, weight: 74, skin: 1, hair: 1, hairColor: 1, boots: 0,
+    };
+    const refKit: Kit = { shirt: '#111111', sleeve: '#111111', shorts: '#111111', socks: '#111111', number: '#111111' };
+    this.refModel = new PlayerModel(refData, refKit, false);
+    scene.add(this.refModel.root);
+    this.refPose = {
+      speed: 0, phase: 0, turn: 0, accel: 0, action: null, actionT: 0, actionDur: 1, contact: 0.5,
+      leftFoot: false, diveSide: 1, diveHigh: 0, jockey: false, isGK: false, gkReady: false, time: 0, celebrateStyle: 0,
+    };
+    // VAR: offside lines and the pitch-side monitor
+    for (const c of [0xef4444, 0x3b82f6]) {
+      const line = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.03, FIELD.W), new THREE.MeshBasicMaterial({ color: c }));
+      line.position.y = 0.04;
+      const wall = new THREE.Mesh(new THREE.PlaneGeometry(FIELD.W, 2.2), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false }));
+      wall.rotation.y = Math.PI / 2;
+      wall.position.y = 1.1;
+      const g = new THREE.Group();
+      g.add(line, wall);
+      this.varGroup.add(g);
+    }
+    this.varGroup.visible = false;
+    scene.add(this.varGroup);
+    const mon = new THREE.Group();
+    const stand = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.3, 0.1), new THREE.MeshStandardMaterial({ color: 0x374151 }));
+    stand.position.y = 0.65;
+    const screen = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.6, 0.06), new THREE.MeshStandardMaterial({ color: 0x0b1220, emissive: 0x38bdf8, emissiveIntensity: 0.6 }));
+    screen.position.y = 1.5;
+    mon.add(stand, screen);
+    mon.position.copy(this.monitorPos);
+    scene.add(mon);
+    this.monitorMesh = mon;
+    if (setup.fitness)
+      for (const p of this.all) {
+        const f = setup.fitness[p.d.id];
+        if (f !== undefined) p.stamina = clamp(f / 100, 0.55, 1);
+      }
+
     const ht = (t: Team): HudTeam => ({ short: t.data.short, name: t.data.name, color: t.kit.shirt, color2: t.kit.shorts });
     hud.setTeams(ht(home), ht(away));
     this.added = 1 + Math.floor(Math.random() * 3);
@@ -399,6 +475,7 @@ export class Match {
     this.updateHudScore();
     for (const t of this.teams) if (t.pad !== null) this.input.splitGamepad = this.setup.pads[0] !== null && this.setup.pads[1] !== null;
     this.audio.crowd(true);
+    this.audio.setChantStyle(setup.home.id);
   }
 
   // ------------------------------------------------------------------ helpers
@@ -496,13 +573,21 @@ export class Match {
         if (this.phaseT > 6 || this.skipHeld) {
           this.skipHeld = 0;
           this.beginSetPiece(this.makeKickoff(this.teams[this.kickoffTeam]));
-          this.comment('kickoff', { team: this.teams[this.kickoffTeam].data.name, stadium: this.setup.home.stadium }, true);
+          if (this.setup.derby) {
+            this.comment('derby', { derby: this.setup.derby, history: this.setup.history ?? '' }, true);
+            this.stadium.pyro(0);
+          } else this.comment('kickoff', { team: this.teams[this.kickoffTeam].data.name, stadium: this.setup.home.stadium }, true);
+          setTimeout(() => !this.done && this.hud.comment(line('referee', { name: this.ref.name, style: this.ref.styleName })), 5000);
           this.audio.whistle('short');
         }
         this.animatePlayers(dt);
         return;
       case 'replay':
         this.stepReplay(dt);
+        return;
+      case 'var':
+        this.stepVar(dt);
+        this.animatePlayers(dt);
         return;
       case 'halftime':
       case 'fulltime':
@@ -526,6 +611,10 @@ export class Match {
       if (this.possTeam) this.possTeam.stats.poss += dt;
       for (const p of this.all) if (!p.sent) p.stats.minutes += (dt / this.setup.halfSeconds) * 45;
       if (this.clock >= this.setup.halfSeconds * (1 + this.added / 45) && !this.shootout) this.endHalf();
+      if (!this.pressureSaid && this.bigMoment()) {
+        this.pressureSaid = true;
+        this.comment('pressure', {}, true);
+      }
       this.possCommentT -= dt;
       if (this.possCommentT < 0) {
         this.possCommentT = 70 + Math.random() * 40;
@@ -535,13 +624,21 @@ export class Match {
         this.comment('possession', { team: this.teams[lead].data.name, pct: Math.round((Math.max(a, b) / tot) * 100) });
       }
     } else if (this.phase === 'dead') {
-      if (this.phaseT > 1.4 && this.nextSP) {
+      if (this.varPending && this.phaseT > 1.4) {
+        const vp = this.varPending;
+        this.varPending = null;
+        this.startVar(vp.kind, vp.info);
+      } else if (this.phaseT > 1.4 && this.nextSP) {
         const mk = this.nextSP;
         this.nextSP = null;
         this.beginSetPiece(mk());
       }
     } else if (this.phase === 'goal') {
-      if (this.phaseT > 4.2 || (this.skipHeld && this.phaseT > 1.2)) {
+      if (this.varPending && this.phaseT > 2.4) {
+        const vp = this.varPending;
+        this.varPending = null;
+        this.startVar(vp.kind, vp.info);
+      } else if (this.phaseT > 4.2 || (this.skipHeld && this.phaseT > 1.2)) {
         this.skipHeld = 0;
         if (this.shootout) this.nextShootoutKick();
         else this.startReplay();
@@ -655,7 +752,7 @@ export class Match {
             order.finesse = p!.chargeMods.finesse || pad.held.RB;
             order.chip = p!.chargeMods.chip || pad.held.LB;
           }
-          if (type !== 'shot') order.target = this.choosePassTarget(p!, stick, type);
+          if (type !== 'shot') order.target = this.choosePassTarget(p!, stick, type, p!.charge);
           p!.charging = null;
           p!.pending = order;
         }
@@ -775,8 +872,10 @@ export class Match {
   }
 
   // ------------------------------------------------------------------ passing & shooting
-  choosePassTarget(p: Plr, dir: V3 | null, type: KickType): Plr | null {
+  choosePassTarget(p: Plr, dir: V3 | null, type: KickType, power = 0): Plr | null {
     const f = dir ?? p.dir();
+    // a longer press means you want the man further away
+    const want = type === 'lob' ? 18 + power * 35 : 6 + power * 36;
     let best: Plr | null = null;
     let bs = -Infinity;
     for (const m of p.team.players) {
@@ -787,7 +886,8 @@ export class Match {
       v.normalize();
       const c = v.dot(f);
       if (c < 0.35) continue;
-      let s = c * 4 - d * (type === 'lob' ? -0.01 : 0.045);
+      let s = c * 5 - d * (type === 'lob' ? -0.01 : 0.045);
+      if (power > 0.15) s -= Math.abs(d - want) * 0.05;
       if (type === 'through') s += clamp((p.team.along(m.pos) - p.team.along(p.pos)) / 20, -1, 1);
       if (m.isGK) s -= 2.5;
       s += this.laneOpenness(p.pos, m.pos, p.team) * (type === 'lob' ? 0.3 : 1.4);
@@ -854,6 +954,15 @@ export class Match {
 
   private fireKick(p: Plr, o: KickOrder) {
     const b = this.ball;
+    if (b.pos.y < 0.6 && o.type !== 'throwIn' && o.type !== 'gkThrow' && this.held !== p) {
+      // put the ball exactly on the boot so the strike visibly connects
+      const foot = p.model.footWorld(p.pose.leftFoot, new V());
+      const ahead = p.dir().multiplyScalar(0.1);
+      if (hdist(foot, b.pos) < 0.75) {
+        b.pos.x = foot.x + ahead.x;
+        b.pos.z = foot.z + ahead.z;
+      }
+    }
     const env = this.env();
     const from = b.pos.clone();
     const head = from.y > 1.3;
@@ -862,7 +971,7 @@ export class Match {
     const spin = new V();
     const s = p.s;
     const press = o.setPiece ? 0 : this.pressureOn(p);
-    const fat = 1 + (1 - p.stamina) * 0.6;
+    const fat = 1 + (1 - p.stamina) * 0.6 + (p.stamina < 0.2 ? 0.5 : 0);
     const weak = !o.setPiece && (p.pose.leftFoot ? p.d.foot === 'R' : p.d.foot === 'L') ? 1.25 : 1;
     const diffMul = p.team.pad === null ? [1.45, 1.15, 1, 0.9][this.setup.difficulty] ?? 1 : 1;
     let type = o.type;
@@ -945,6 +1054,7 @@ export class Match {
     let speed = (12 + power * 22) * (0.72 + 0.28 * (s.shooting / 100));
     let err = (0.016 + (1 - s.shooting / 100) * 0.08) * (1 + f.press * 0.9) * f.fat * f.weak * f.diffMul * (1 + D / 45) * (1 + (1 - s.composure / 100) * 0.3);
     if (f.volley) err *= 1.6;
+    if (this.bigMoment()) err *= 1 + (1 - s.composure / 100) * 1.1;
     if (f.head) {
       speed = 9 + power * 8 + s.physical * 0.04;
       yAim = 0.3 + power * 0.9;
@@ -1091,23 +1201,35 @@ export class Match {
     const second = alongs[1] ?? 105;
     const ballA = t.along(this.ball.pos);
     const set = new Set<Plr>();
+    const margin = new Map<Plr, number>();
     for (const m of t.players) {
       if (m === passer || m.sent) continue;
       const a = t.along(m.pos);
-      if (a > HL && a > second + 0.15 && a > ballA + 0.15) set.add(m);
+      if (a > HL && a > second + 0.15 && a > ballA + 0.15) {
+        set.add(m);
+        margin.set(m, a - Math.max(second, ballA));
+      }
     }
-    this.offside = { team: t, passer, set };
+    this.offside = { team: t, passer, set, margin, lineX: (Math.max(second, ballA) - HL) * t.dir };
   }
 
   // Every touch passes through here: offside calls, pass completion stats, possession.
   onTouch(p: Plr) {
     const prev = this.lastTouch;
+    if (this.missedOffside && p.team !== this.missedOffside.team) this.missedOffside = null;
     if (this.offside) {
-      if (p.team === this.offside.team && p !== this.offside.passer && this.offside.set.has(p)) {
-        this.callOffside(p);
-        return;
-      }
-      if (p !== this.offside.passer) this.offside = null;
+      const o = this.offside;
+      if (p.team === o.team && p !== o.passer && o.set.has(p)) {
+        const m = o.margin.get(p) ?? 1;
+        // a tight one can slip past the officials (VAR may catch it later)
+        if (m < 0.5 && Math.random() < this.ref.error) {
+          this.missedOffside = { team: p.team, player: p, lineX: o.lineX, attackerX: o.lineX + p.team.dir * m, time: this.time };
+          this.offside = null;
+        } else {
+          this.callOffside(p);
+          return;
+        }
+      } else if (p !== o.passer) this.offside = null;
     }
     if (prev && prev !== p && this.lastKick && this.lastKick.p === prev && this.lastKick.type !== 'shot') {
       if (prev.team === p.team) {
@@ -1158,7 +1280,8 @@ export class Match {
   }
 
   standingTackle(p: Plr) {
-    p.action = { kind: 'tackle', t: 0, dur: 0.5, contact: 0.4, fired: false };
+    // tired legs arrive late
+    p.action = { kind: 'tackle', t: 0, dur: 0.5, contact: p.stamina < 0.2 ? 0.62 : 0.4, fired: false };
     // lunge towards the ball
     const to = this.tmp.copy(this.ball.pos).sub(p.pos).setY(0);
     if (to.length() < 4) p.facing = angOf(to.x, to.z);
@@ -1184,6 +1307,7 @@ export class Match {
       if (victim?.action?.kind === 'roulette' || victim?.action?.kind === 'skill') chance -= 0.3;
       if (victim && victim.team.pad !== null && this.input.pad(victim.team.pad).held.LT) chance -= 0.15 * (victim.s.physical / 100);
       if (p.team.pad === null) chance *= [0.75, 0.9, 1, 1.1][this.setup.difficulty] ?? 1;
+      if (p.stamina < 0.2) chance -= 0.15;
       if (Math.random() < clamp(chance, 0.12, 0.93)) {
         this.owner = null;
         if (Math.random() < p.s.defending / 140) {
@@ -1202,7 +1326,7 @@ export class Match {
     }
     if (victim && hdist(foot, victim.pos) < 0.75) {
       const behind = p.dir().dot(victim.dir()) > 0.5;
-      if (Math.random() < 0.45 + (behind ? 0.3 : 0)) this.foul(p, victim, behind ? 0.5 : 0.25);
+      if (Math.random() < 0.45 + (behind ? 0.3 : 0) + (p.stamina < 0.2 ? 0.2 : 0)) this.foul(p, victim, (behind ? 0.5 : 0.25) + (p.stamina < 0.2 ? 0.15 : 0));
     }
   }
 
@@ -1349,9 +1473,13 @@ export class Match {
     const cycle = 1.2 + speed * 0.32;
     p.phase += (speed / cycle) * Math.PI * 2 * dt;
 
-    // stamina
-    if (sprint && speed > 6) p.stamina = Math.max(0.05, p.stamina - dt * 0.012 * (1.45 - p.s.stamina / 100) * (60 / this.setup.halfSeconds) * 0.5);
-    else if (speed < 4) p.stamina = Math.min(1, p.stamina + dt * 0.006);
+    // stamina: sprinting and pressing empty the tank, walking refills it a little
+    const mk = 180 / this.setup.halfSeconds;
+    const eff = (1.45 - p.s.stamina / 100) / 0.75;
+    if (sprint && speed > 6) p.stamina = Math.max(0.03, p.stamina - dt * 0.0055 * mk * eff);
+    else if (speed > 4) p.stamina = Math.max(0.03, p.stamina - dt * 0.0017 * mk * eff);
+    else p.stamina = Math.min(1, p.stamina + dt * 0.0012 * mk);
+    if (sprint && p.stamina < 0.18 && !p.injury && this.phase === 'play' && Math.random() < dt * 0.003) this.injure(p, 'hamstring');
 
     // pitch wear and slipping on wet grass
     if (speed > 6.5 && Math.random() < dt * 1.5) this.stadium.wear(p.pos.x, p.pos.z, 0.22, 0.07);
@@ -1449,7 +1577,7 @@ export class Match {
       b.vel.y = -1;
     } else {
       if (rel > 7) p.action = { kind: 'trap', t: 0, dur: 0.3, contact: 1, fired: false };
-      const err = rel * (1 - p.s.dribbling / 100) * 0.13 * (1 + this.pressureOn(p) * 0.5);
+      const err = rel * (1 - p.s.dribbling / 100) * 0.13 * (1 + this.pressureOn(p) * 0.5) * (this.bigMoment() ? 1 + (1 - p.s.composure / 100) * 0.9 : 1);
       b.vel.copy(p.vel).multiplyScalar(0.92).addScaledVector(p.dir(), 0.5).add(new V(gauss() * err, 0, gauss() * err));
       b.vel.y = 0;
     }
@@ -1666,12 +1794,36 @@ export class Match {
     spot.z = clamp(spot.z, -HW + 0.5, HW - 0.5);
     const t = victim.team;
     const pen = this.inBox(off.team, spot);
-    // cards
+    // cards (depend on the referee's character)
     const r = Math.random();
-    if (severity > 1 && r < 0.3) this.card(off, 'red');
-    else if (r < severity * 0.42) this.card(off, 'yellow');
+    if (severity > 1 && r < 0.3 * Math.min(1.5, this.ref.cardMul)) this.card(off, 'red');
+    else if (r < severity * 0.42 * this.ref.cardMul) this.card(off, 'yellow');
     else if (!handball) this.comment('foul', { player: off.d.name });
+    if (off.team.side === 1) this.audio.boo();
+    // injuries from bad challenges
+    if (!handball && severity >= 0.55 && Math.random() < 0.14 + (severity > 0.9 ? 0.1 : 0)) {
+      const kinds: InjuryKind[] = ['hamstring', 'ankle', 'ankle', 'knee', 'head'];
+      this.injure(victim, kinds[Math.floor(Math.random() * kinds.length)]);
+    }
+    // advantage: the fouled side keeps the ball
+    if (!pen && !handball && severity < 0.9 && !victim.injury) {
+      const keep = this.all.some((q) => q.team === t && q !== victim && !q.sent && hdist(q.pos, this.ball.pos) < 4);
+      if (keep && Math.random() < this.ref.advantage) {
+        this.hud.banner('יתרון', '', 'info', 1.4);
+        this.comment('advantage', {}, true);
+        return;
+      }
+    }
     if (pen) {
+      if (severity < 0.35 && Math.random() < 0.5) {
+        // a soft penalty: VAR takes a look
+        this.dead(() => this.makePenalty(t, false));
+        this.nextSP = null;
+        this.hud.banner('פנדל?', 'בדיקת VAR', 'big');
+        this.varPending = { kind: 'penalty', info: { team: t, off: off.team, spot } };
+        this.audio.whistle('long');
+        return;
+      }
       this.dead(() => this.makePenalty(t, false));
       this.comment('penalty', { team: t.data.name }, true);
       this.hud.banner('פנדל!', t.data.name, 'big');
@@ -1750,11 +1902,16 @@ export class Match {
       this.shootoutResult(true);
       return;
     }
+    let assist: Plr | null = null;
     if (!own) {
       scorer.stats.goals++;
-      const assist = this.prevTouch && this.prevTouch.team === scoring && this.prevTouch !== scorer ? this.prevTouch : null;
+      assist = this.prevTouch && this.prevTouch.team === scoring && this.prevTouch !== scorer ? this.prevTouch : null;
       if (assist) assist.stats.assists++;
-    }
+    } else scorer.stats.ownGoals++;
+    // an offside the officials missed in the build-up: VAR will check it
+    const mo = this.missedOffside;
+    if (mo && mo.team === scoring && this.time - mo.time < 30) this.varPending = { kind: 'offside', info: { team: scoring, scorer, assist, own, mo } };
+    this.missedOffside = null;
     for (const p of this.opp(scoring).players) if (p.isGK) p.stats.conceded++;
     this.scorers.push({ side: scoring.side, name: scorer.d.name, minute, own, id: scorer.d.id });
     this.phase = 'goal';
@@ -1762,9 +1919,19 @@ export class Match {
     this.goalSide = scoring.side;
     this.owner = null;
     this.excitement = 1;
-    this.audio.roar(1);
-    this.audio.whistle('short');
     const [h, a] = [this.teams[0].score, this.teams[1].score];
+    const late = this.half === 2 && this.minute >= 85;
+    if (scoring.side === 1 && late && a >= h) {
+      // the home crowd falls silent; only the away end celebrates
+      this.audio.silence(7);
+      this.audio.roar(0.35);
+      setTimeout(() => !this.done && this.comment('silence', {}, true), 3500);
+    } else {
+      this.audio.roar(1);
+      if (scoring.side === 0) this.stadium.pyro(0);
+      else this.stadium.pyro(1);
+    }
+    this.audio.whistle('short');
     this.hud.banner(own ? 'שער עצמי!' : 'גוווול!', `${scorer.d.name} ${minute}'  ·  ${h} - ${a}`, 'goal', 3.5);
     if (own) this.comment('ownGoal', { player: scorer.d.name }, true);
     else this.comment('goal', { player: scorer.d.name, team: scoring.data.name }, true);
@@ -1851,10 +2018,10 @@ export class Match {
     const [H, A] = this.teams;
     const ratings: Record<string, number> = {};
     const playerStats: Record<string, PStats> = {};
-    for (const p of this.all) {
+    for (const p of [...this.all, ...this.retired]) {
       const s = p.stats;
       const win = p.team.score > this.opp(p.team).score ? 0.4 : p.team.score < this.opp(p.team).score ? -0.3 : 0;
-      let r = 6.2 + s.goals * 1.1 + s.assists * 0.7 + s.passOk * 0.04 - (s.passes - s.passOk) * 0.06 + s.tackles * 0.15 + s.saves * 0.35 + s.onTarget * 0.12 - s.conceded * (p.isGK ? 0.35 : 0.05) - s.yellow * 0.3 - (s.red ? 1.5 : 0) + win;
+      let r = 6.2 - s.ownGoals * 0.8 + s.goals * 1.1 + s.assists * 0.7 + s.passOk * 0.04 - (s.passes - s.passOk) * 0.06 + s.tackles * 0.15 + s.saves * 0.35 + s.onTarget * 0.12 - s.conceded * (p.isGK ? 0.35 : 0.05) - s.yellow * 0.3 - (s.red ? 1.5 : 0) + win;
       if (p.isGK && s.conceded === 0) r += 0.6;
       ratings[p.d.id] = Math.round(clamp(r, 3, 10) * 10) / 10;
       playerStats[p.d.id] = { ...s };
@@ -1866,7 +2033,7 @@ export class Match {
       pens = [k[0].filter(Boolean).length, k[1].filter(Boolean).length];
       winner = pens[0] > pens[1] ? 0 : 1;
     }
-    return { goals: [H.score, A.score], pens, scorers: this.scorers, ratings, playerStats, stats: [H.stats, A.stats], winner };
+    return { goals: [H.score, A.score], pens, scorers: this.scorers, ratings, playerStats, stats: [H.stats, A.stats], winner, subs: this.subsLog, injuries: this.injuriesLog, referee: this.ref.name };
   }
 
   // ------------------------------------------------------------------ set pieces
@@ -1918,6 +2085,16 @@ export class Match {
   }
 
   beginSetPiece(sp: SetPiece, silent = false) {
+    if (!silent && !this.shootout) {
+      const oldIdx = sp.taker.team.players.indexOf(sp.taker);
+      this.processSubs();
+      // the taker may just have been substituted (e.g. the injured player)
+      if (!this.all.includes(sp.taker) || sp.taker.sent) {
+        const t = sp.team;
+        const rep = oldIdx >= 0 ? t.players[oldIdx] : null;
+        sp.taker = rep && !rep.sent ? rep : sp.kind === 'goalkick' ? t.gk : this.nearestOutfield(t, sp.spot);
+      }
+    }
     this.sp = sp;
     this.phase = silent ? this.phase : 'setpiece';
     this.phaseT = 0;
@@ -2415,7 +2592,7 @@ export class Match {
       this.aimGroup.visible = false;
       const o = this.opp(sp.team);
       if (o.pad !== null && sp.kind === 'penalty') this.hud.hint('<b>פנדל נגדך</b> · בחר צד לזינוק עם <kbd>A</kbd>/<kbd>D</kbd> (או השאר במרכז)');
-      else if (o.pad !== null && sp.wall.length) this.hud.hint(`<b>חומה</b> · <kbd>K</kbd> קפיצה (${sp.wallJump ? 'כן' : 'לא'}) · החזק <kbd>C</kbd> + כיוון להזיז את החומה`);
+      else if (o.pad !== null && sp.wall.length) this.hud.hint(`<b>חומה</b> · ${kbd('X')} קפיצה (${sp.wallJump ? 'כן' : 'לא'}) · החזק <kbd>C</kbd> + כיוון להזיז את החומה`);
       else this.hud.hint(null);
       return;
     }
@@ -2435,21 +2612,21 @@ export class Match {
         this.compRing.scale.setScalar(r);
         (this.compRing.material as THREE.MeshBasicMaterial).color.set(r < 0.35 ? 0x4ade80 : r < 0.6 ? 0xfacc15 : 0xf87171);
         this.trajLine.visible = false;
-        this.hud.hint('<b>פנדל</b> · <kbd>WASD</kbd> כיוון · החזק <kbd>L</kbd> לעוצמה ושחרר כשמעגל הריכוז קטן');
+        this.hud.hint(`<b>פנדל</b> · <kbd>WASD</kbd> כיוון · החזק ${kbd('B')} לעוצמה ושחרר כשמעגל הריכוז קטן`);
       } else {
         this.trajLine.visible = true;
         this.drawTrajectory(sp, { type: 'shot', power: sp.charging ? sp.power : 0.6, dir: null, aim: { z: sp.aimZ, y: sp.aimY }, spinX: sp.spinX, spinY: sp.spinY, t: 1, setPiece: true });
-        this.hud.hint(`<b>בעיטה חופשית</b> · <kbd>WASD</kbd> כוונון · חצים: סיבוב (${Math.round(sp.spinX * 100)}) / טופ-ספין (${Math.round(sp.spinY * 100)}) · החזק <kbd>L</kbd> בעיטה · <kbd>K</kbd> הרמה · <kbd>J</kbd> מסירה`);
+        this.hud.hint(`<b>בעיטה חופשית</b> · <kbd>WASD</kbd> כוונון · חצים: סיבוב (${Math.round(sp.spinX * 100)}) / טופ-ספין (${Math.round(sp.spinY * 100)}) · החזק ${kbd('B')} בעיטה · ${kbd('X')} הרמה · ${kbd('A')} מסירה`);
       }
     } else if (cross) {
       this.reticle.position.copy(sp.aimPoint).setY(0.05);
       this.reticle.rotation.set(-Math.PI / 2, 0, 0);
       this.trajLine.visible = true;
       this.drawTrajectory(sp, { type: 'cross', power: sp.charging ? sp.power : 0.6, dir: null, point: sp.aimPoint.clone(), spinX: sp.spinX, t: 1, setPiece: true });
-      this.hud.hint(`<b>${sp.kind === 'corner' ? 'קרן' : 'בעיטה חופשית'}</b> · <kbd>WASD</kbd> נקודת נחיתה · חצים: סיבוב · החזק <kbd>K</kbd> הרמה · <kbd>J</kbd> מסירה קצרה`);
+      this.hud.hint(`<b>${sp.kind === 'corner' ? 'קרן' : 'בעיטה חופשית'}</b> · <kbd>WASD</kbd> נקודת נחיתה · חצים: סיבוב · החזק ${kbd('X')} הרמה · ${kbd('A')} מסירה קצרה`);
     } else {
       const names: Record<SPKind, string> = { kickoff: 'פתיחה', throw: 'זריקת חוץ', corner: 'קרן', goalkick: 'בעיטת שער', freekick: 'בעיטה חופשית', penalty: 'פנדל' };
-      this.hud.hint(`<b>${names[sp.kind]}</b> · כיוון + <kbd>J</kbd> קצרה · <kbd>K</kbd> ארוכה${sp.kind !== 'throw' ? ' · <kbd>I</kbd> עומק' : ''}`);
+      this.hud.hint(`<b>${names[sp.kind]}</b> · כיוון + ${kbd('A')} קצרה · ${kbd('X')} ארוכה${sp.kind !== 'throw' ? ` · ${kbd('Y')} עומק` : ''}`);
     }
   }
 
@@ -2599,6 +2776,7 @@ export class Match {
     this.phaseT = 0;
     this.camMode = 'replay';
     this.hud.replay(true);
+    this.refModel.root.visible = false;
   }
 
   private stepReplay(dt: number) {
@@ -2606,6 +2784,7 @@ export class Match {
     if (this.replayPos >= this.replayEnd - 1 || this.skipHeld) {
       this.skipHeld = 0;
       this.hud.replay(false);
+      this.refModel.root.visible = true;
       this.camMode = 'broadcast';
       const conceding = this.teams[1 - this.goalSide];
       for (const p of this.all) p.action = null;
@@ -2666,6 +2845,8 @@ export class Match {
   }
 
   private render(dt: number) {
+    if (this.phase !== 'replay') this.moveReferee(dt);
+    this.breath(dt);
     this.stadium.update(dt, this.excitement);
     this.audio.update(dt, this.excitement);
     this.updateCamera(dt);
@@ -2760,14 +2941,27 @@ export class Match {
         break;
       }
       case 'replay': {
+        // cinematic angles: spider-cam, steadicam, drone, behind the goal
         const side = this.teams[this.goalSide].dir;
-        const flip = Math.floor(this.phaseT / 3.5) % 2;
-        if (flip) {
-          want.set(side * (HL + 2.8), 2.3, b.z * 0.4 + 5);
-          look.copy(b);
+        const shot = Math.floor(this.phaseT / 2.4) % 4;
+        if (shot === 0) want.set(b.x - side * 4, 17, b.z + 5);
+        else if (shot === 1) want.set(b.x - side * 5, 1.6, b.z + 3.5);
+        else if (shot === 2) {
+          const a = this.phaseT * 0.6;
+          want.set(side * (HL - 8) + Math.cos(a) * 15, 8, Math.sin(a) * 15);
+        } else want.set(side * (HL + 2.8), 2.3, b.z * 0.4 + 5);
+        look.copy(b);
+        break;
+      }
+      case 'var': {
+        const vs = this.varState;
+        if (vs?.kind === 'offside') {
+          const mo = vs.info.mo as { lineX: number };
+          want.set(mo.lineX, 14, 26);
+          look.set(mo.lineX, 0, 0);
         } else {
-          want.set(b.x - side * 6, 2.5, b.z + 9);
-          look.copy(b);
+          want.set(this.monitorPos.x + 6, 3, this.monitorPos.z + 8);
+          look.copy(this.refPos).setY(1.3);
         }
         break;
       }
@@ -2784,6 +2978,226 @@ export class Match {
     this.camLook.lerp(look, this.camMode === 'replay' ? 1 : 1 - Math.exp(-dt * 5));
     cam.position.copy(this.camPos);
     cam.lookAt(this.camLook);
+  }
+
+  // ------------------------------------------------------------------ pressure, referee, VAR
+  bigMoment() {
+    if (this.shootout) return true;
+    if (this.half !== 2 || this.minute < 85) return false;
+    const diff = Math.abs(this.teams[0].score - this.teams[1].score);
+    return diff <= 1 && (this.setup.bigGame || this.setup.knockout || diff === 0 || this.minute >= 88);
+  }
+
+  private moveReferee(dt: number) {
+    const b = this.ball.pos;
+    const target = new V();
+    if (this.phase === 'var' && this.varState?.kind === 'penalty') target.copy(this.monitorPos).add(new V(0.9, 0, 1.1));
+    else {
+      // stay on the diagonal, 10-14 m from play, out of passing lanes
+      target.set(b.x - Math.sign(b.x || 1) * 6, 0, b.z + (b.z > 0 ? -12 : 12));
+      target.x = clamp(target.x, -HL + 8, HL - 8);
+      target.z = clamp(target.z, -HW + 4, HW - 4);
+    }
+    const to = target.sub(this.refPos).setY(0);
+    const d = to.length();
+    const want = d > 0.4 ? to.normalize().multiplyScalar(Math.min(7.2, d * 1.4)) : new V();
+    this.refVel.lerp(want, Math.min(1, dt * 3));
+    this.refPos.addScaledVector(this.refVel, dt);
+    const sp = this.refVel.length();
+    const r = this.refModel.root;
+    r.position.copy(this.refPos);
+    const look = this.phase === 'var' && this.varState?.kind === 'penalty' ? this.monitorPos : b;
+    const f = angOf(look.x - this.refPos.x, look.z - this.refPos.z);
+    r.rotation.y += wrapAng(f - r.rotation.y) * Math.min(1, dt * 6);
+    this.refPose.speed = sp;
+    this.refPose.phase += (sp / (1.2 + sp * 0.32)) * Math.PI * 2 * dt;
+    this.refPose.time = this.time;
+    this.refModel.setTarget(this.refPose);
+    this.refModel.blend(dt);
+  }
+
+  // Cold breath in the snow.
+  private breath(dt: number) {
+    if (this.setup.weather !== 'snow') return;
+    this.puffT -= dt;
+    if (this.puffT <= 0 && this.phase !== 'replay') {
+      this.puffT = 0.12;
+      const p = this.all[Math.floor(Math.random() * this.all.length)];
+      if (p && !p.sent) {
+        let pf = this.puffs.find((x) => x.t <= 0);
+        if (!pf && this.puffs.length < 40) {
+          const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: puffTexture(), transparent: true, depthWrite: false, opacity: 0 }));
+          this.scene.add(s);
+          pf = { s, t: 0 };
+          this.puffs.push(pf);
+        }
+        if (pf) {
+          pf.t = 1.2;
+          pf.s.position.copy(p.pos).addScaledVector(p.dir(), 0.25).setY(1.72 * p.hs);
+        }
+      }
+    }
+    for (const pf of this.puffs) {
+      if (pf.t <= 0) continue;
+      pf.t -= dt;
+      const k = 1 - pf.t / 1.2;
+      pf.s.scale.setScalar(0.15 + k * 0.45);
+      pf.s.position.y += dt * 0.25;
+      (pf.s.material as THREE.SpriteMaterial).opacity = Math.max(0, 0.55 * (1 - k));
+    }
+  }
+
+  startVar(kind: 'offside' | 'penalty', info: Record<string, unknown>) {
+    this.phase = 'var';
+    this.phaseT = 0;
+    this.owner = null;
+    this.varState = { kind, decided: false, overturn: kind === 'offside' ? true : Math.random() < 0.5, info };
+    this.camMode = 'var';
+    this.hud.banner('בדיקת VAR', kind === 'offside' ? 'נבדל אפשרי לפני השער' : 'האם זה פנדל?', 'info', 4.5);
+    this.comment('var', {}, true);
+    this.excitement = 0.5;
+    if (kind === 'offside') {
+      const mo = info.mo as { lineX: number; attackerX: number };
+      const [atk, def] = this.varGroup.children;
+      atk.position.x = mo.attackerX;
+      def.position.x = mo.lineX;
+    }
+  }
+
+  private stepVar(_dt: number) {
+    const vs = this.varState!;
+    this.varGroup.visible = vs.kind === 'offside' && this.phaseT > 1.2;
+    if (!vs.decided && this.phaseT > 5) {
+      vs.decided = true;
+      if (vs.kind === 'offside') {
+        const team = vs.info.team as Team;
+        const scorer = vs.info.scorer as Plr;
+        const assist = vs.info.assist as Plr | null;
+        team.score--;
+        this.scorers.pop();
+        if (vs.info.own) scorer.stats.ownGoals--;
+        else scorer.stats.goals--;
+        if (assist) assist.stats.assists--;
+        for (const p of this.opp(team).players) if (p.isGK) p.stats.conceded = Math.max(0, p.stats.conceded - 1);
+        team.stats.offsides++;
+        this.hud.banner('השער נפסל', 'נבדל – אחרי בדיקת VAR', 'red', 3);
+        this.comment('varOverturn', {}, true);
+        this.audio.groan();
+        this.updateHudScore();
+      } else if (vs.overturn) {
+        this.hud.banner('אין פנדל', 'ההחלטה בוטלה אחרי בדיקת VAR', 'info', 3);
+        this.comment('varOverturn', {}, true);
+      } else {
+        this.hud.banner('פנדל!', 'ה-VAR מאשר', 'big', 3);
+        this.comment('varStands', {}, true);
+        this.audio.roar(0.6);
+      }
+    }
+    if (this.phaseT > 7.5) {
+      this.varGroup.visible = false;
+      this.camMode = 'broadcast';
+      const info = vs.info;
+      this.varState = null;
+      if (vs.kind === 'offside') {
+        const mo = info.mo as { attackerX: number; player: Plr };
+        const def = this.opp(info.team as Team);
+        const spot = new V(mo.attackerX, 0, clamp(mo.player.pos.z, -HW + 1, HW - 1));
+        this.beginSetPiece(this.makeFreeKick(def, spot, false));
+      } else if (vs.overturn) {
+        const off = info.off as Team;
+        this.beginSetPiece(this.makeFreeKick(off, (info.spot as V3).clone(), false));
+      } else this.beginSetPiece(this.makePenalty(info.team as Team, false));
+    }
+  }
+
+  // ------------------------------------------------------------------ injuries & substitutions
+  injure(p: Plr, kind: InjuryKind) {
+    if (p.injury || p.sent) return;
+    p.injury = kind;
+    p.stats.injury = kind;
+    this.injuriesLog.push({ id: p.d.id, name: p.d.name, kind });
+    this.comment('injury', { player: p.d.name }, true);
+    if (kind === 'head') {
+      p.model.bandage(true);
+      this.hud.banner('מכה בראש', `${p.d.name} ממשיך עם חבישה`, 'info', 2.5);
+      return;
+    }
+    p.limp = true;
+    this.hud.banner('פציעה', `${p.d.name} – ${INJURIES[kind].name}`, 'info', 3);
+    // forced change at the next stoppage (the career player is never taken off by the AI)
+    if (!p.team.pendingSubs.some((x) => x.out === p)) p.team.pendingSubs.push({ out: p, inId: null });
+  }
+
+  // Human request (from the pause menu): done at the next stoppage.
+  requestSub(t: Team, out: Plr, inId: string) {
+    t.pendingSubs = t.pendingSubs.filter((x) => x.out !== out);
+    t.pendingSubs.push({ out, inId });
+  }
+
+  private bestBench(t: Team, out: Plr): PlayerData | null {
+    const gk = out.slot.pos === 'GK';
+    const cands = t.bench.filter((d) => (gk ? d.pos === 'GK' : d.pos !== 'GK'));
+    cands.sort((a, b) => (b.pos === out.slot.pos ? 6 : 0) + (b.role === out.slot.role ? 4 : 0) + b.ovr - ((a.pos === out.slot.pos ? 6 : 0) + (a.role === out.slot.role ? 4 : 0) + a.ovr));
+    return cands[0] ?? null;
+  }
+
+  private processSubs() {
+    const minute = Math.floor(this.minute);
+    for (const t of this.teams) {
+      // the AI rotates tired players after the hour
+      if (t.pad === null && t.subsLeft > 0 && t.aiSubs < 3 && minute >= 55) {
+        const tired = t.players.filter((p) => !p.sent && !p.isGK && !p.injury && p.stamina < 0.5 && p.d.id !== this.careerId && !t.pendingSubs.some((x) => x.out === p)).sort((a, b) => a.stamina - b.stamina)[0];
+        if (tired && Math.random() < 0.6) {
+          t.pendingSubs.push({ out: tired, inId: null });
+          t.aiSubs++;
+        }
+      }
+      const queue = t.pendingSubs;
+      t.pendingSubs = [];
+      for (const req of queue) {
+        const out = req.out;
+        if (out.sent || !t.players.includes(out)) continue;
+        const data = req.inId ? t.bench.find((d) => d.id === req.inId) ?? null : this.bestBench(t, out);
+        if (!data || t.subsLeft <= 0) {
+          if (out.injury && out.injury !== 'head') {
+            // no changes left: he has to go off and the team plays with ten
+            out.sent = true;
+            out.model.root.visible = false;
+            out.pos.set(0, 0, -HW - 8);
+            if (t.controlled === out) t.controlled = null;
+          }
+          continue;
+        }
+        this.substitute(t, out, data, minute);
+      }
+    }
+  }
+
+  private substitute(t: Team, out: Plr, data: PlayerData, minute: number) {
+    const np = new Plr(data, t, out.slot, out.idx);
+    if (out.isGK) {
+      np.isGK = true;
+      np.pose.isGK = true;
+    }
+    np.pos.copy(out.pos);
+    np.facing = out.facing;
+    np.yellow = 0;
+    np.stats.subOn = minute;
+    out.stats.subOff = minute;
+    t.players[t.players.indexOf(out)] = np;
+    this.all[this.all.indexOf(out)] = np;
+    t.bench = t.bench.filter((d) => d.id !== data.id);
+    t.subsLeft--;
+    this.scene.remove(out.model.root);
+    this.scene.add(np.model.root);
+    this.retired.push(out);
+    if (t.controlled === out) t.controlled = np;
+    if (this.owner === out) this.owner = null;
+    if (this.lastTouch === out) this.lastTouch = np;
+    if (this.prevTouch === out) this.prevTouch = null;
+    this.subsLog.push({ side: t.side, out: out.d.name, in: data.name, minute });
+    this.hud.banner(`חילוף – ${t.data.short}`, `⬆ ${data.name}   ⬇ ${out.d.name}`, 'info', 2.6);
+    this.comment('sub', { team: t.data.name, in: data.name, out: out.d.name }, true);
   }
 
   // ------------------------------------------------------------------ AI hooks into the engine
@@ -2808,7 +3222,10 @@ export class Match {
     this.hud.hint(null);
     this.stadium.dispose();
     for (const p of this.all) this.scene.remove(p.model.root);
-    this.scene.remove(this.ballMesh, this.aimGroup, ...this.rings, ...this.arrows);
+    this.scene.remove(this.ballMesh, this.aimGroup, this.refModel.root, this.varGroup, ...this.rings, ...this.arrows);
+    if (this.monitorMesh) this.scene.remove(this.monitorMesh);
+    for (const p of this.retired) this.scene.remove(p.model.root);
+    for (const pf of this.puffs) this.scene.remove(pf.s);
   }
 }
 
@@ -2847,4 +3264,19 @@ function ballTexture(orange: boolean) {
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
+}
+
+let PUFF: THREE.Texture | null = null;
+function puffTexture() {
+  if (PUFF) return PUFF;
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d')!;
+  const grd = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grd.addColorStop(0, 'rgba(255,255,255,0.9)');
+  grd.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grd;
+  g.fillRect(0, 0, 64, 64);
+  PUFF = new THREE.CanvasTexture(c);
+  return PUFF;
 }

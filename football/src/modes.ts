@@ -1,5 +1,6 @@
+import type { MatchResult } from './match';
 import {
-  allTeams, computeOvr, FORMATIONS, LEAGUES, makePlayer, NATIONS, pickEleven, rng, teamById, teamRating,
+  INJURIES, allTeams, computeOvr, FORMATIONS, LEAGUES, makePlayer, NATIONS, pickEleven, rng, teamById, teamRating,
   type Kit, type PlayerData, type Pos, type TacticId, type TeamData,
 } from './data';
 
@@ -201,7 +202,25 @@ export function simKnockout(a: string, b: string) {
 export interface CareerPlayer extends PlayerData {
   morale: number; // 0..100
   scouted?: boolean;
+  wonderkid?: boolean;
+  fitness?: number; // 0..100 carried between matches
+  injuredRounds?: number;
+  injuryName?: string;
+  contract?: { releaseClause: number; sellOn: number; bonus: number };
 }
+export type BoardKind = 'title' | 'budget' | 'youth';
+export const BOARD_TEXT: Record<BoardKind, string> = {
+  title: 'הדירקטוריון דורש אליפות – רק המקום הראשון נחשב.',
+  budget: 'הדירקטוריון דורש איזון תקציבי קפדני: לא לחרוג מתקציב השכר.',
+  youth: 'הדירקטוריון רוצה לקדם צעירים: לפחות שחקן אחד עד גיל 21 בהרכב.',
+};
+export const REGIONS: Record<string, string[]> = {
+  'דרום אמריקה': ['ברזיל', 'ארגנטינה'],
+  'אירופה': ['ספרד', 'צרפת', 'גרמניה', 'אנגליה', 'איטליה', 'פורטוגל', 'הולנד'],
+  'אפריקה': ['ניגריה'],
+  'אסיה': ['יפן'],
+  'ישראל': ['ישראל'],
+};
 export interface Career {
   kind: 'manager';
   teamId: string;
@@ -217,12 +236,14 @@ export interface Career {
   formation: string;
   tactic: TacticId;
   objective: number; // target league position
-  scouts: { nation: string; left: number }[];
+  scouts: { nation: string; left: number; pos?: Pos; maxAge?: number; region?: string }[];
   prospects: CareerPlayer[];
   news: string[];
   lastResult?: string;
   trophies: string[];
   boardHappy: number;
+  board: BoardKind;
+  fired?: boolean;
   others: Record<string, PlayerData[]>; // AI rosters (transfers move players)
 }
 export function newCareer(teamId: string): Career {
@@ -252,12 +273,14 @@ export function newCareer(teamId: string): Career {
     news: [`ברוכים הבאים ל${team.name}! הדירקטוריון מצפה לסיים במקום ${Math.min(clubs.length, rank + 1 + (rank < 2 ? 0 : 1))} ומעלה.`],
     trophies: [],
     boardHappy: 70,
+    board: rank < 2 ? 'title' : rank < 5 ? 'budget' : 'youth',
     others,
   };
 }
 export function careerTeamData(c: Career): TeamData {
   const base = teamById(c.teamId)!;
-  const t: TeamData = { ...base, players: c.squad.map((p) => moraleAdjusted(p)), formation: c.formation, tactic: c.tactic };
+  const fit = c.squad.filter((p) => !(p.injuredRounds && p.injuredRounds > 0));
+  const t: TeamData = { ...base, players: (fit.length >= 14 ? fit : c.squad).map((p) => moraleAdjusted(p)), formation: c.formation, tactic: c.tactic };
   t.rating = teamRating(t);
   return t;
 }
@@ -272,6 +295,42 @@ function moraleAdjusted(p: CareerPlayer): PlayerData {
   const s = { ...p.stats };
   for (const key of Object.keys(s) as (keyof typeof s)[]) s[key] = Math.max(20, Math.min(99, Math.round(s[key] + k)));
   return { ...p, stats: s };
+}
+export function careerFitness(c: Career): Record<string, number> {
+  return Object.fromEntries(c.squad.map((p) => [p.id, p.fitness ?? 100]));
+}
+// Contract talks: the selling club and the player's agent each have demands.
+export interface Offer {
+  fee: number;
+  wage: number;
+  releaseClause: number;
+  bonus: number;
+  sellOn: number; // % of a future sale
+}
+export function askingPrice(c: Career, p: PlayerData) {
+  const strong = p.ovr > careerTeamData(c).rating ? 1.15 : 1;
+  return Math.round(p.value * 1.15 * strong);
+}
+export function wageDemand(c: Career, p: PlayerData) {
+  const pull = careerTeamData(c).rating < p.ovr ? 1.35 : 1.15;
+  return Math.max(1, Math.round(p.wage * pull));
+}
+export function negotiate(c: Career, p: PlayerData & { askClub: string }, o: Offer): { ok: boolean; msg: string } {
+  const ask = askingPrice(c, p);
+  const clubValue = o.fee + (o.sellOn / 100) * p.value * 0.6;
+  if (clubValue < ask * 0.93) return { ok: false, msg: `המועדון דוחה: הם מבקשים כ-${ask.toLocaleString()}K (אחוז ממכירה עתידית מוסיף ערך).` };
+  const demand = wageDemand(c, p);
+  if (o.wage + o.bonus / 30 < demand) return { ok: false, msg: `הסוכן דורש שכר של ${demand}K לשבוע (או מענק חתימה גדול יותר).` };
+  if (o.releaseClause > 0 && o.releaseClause < p.value * 1.3) return { ok: false, msg: 'המועדון שלך לא יכול לקבוע סעיף שחרור נמוך משווי השחקן ×1.3.' };
+  if (o.releaseClause > p.value * 4) return { ok: false, msg: 'הסוכן מסרב לסעיף שחרור גבוה כל כך – הוא רוצה פתח ליציאה.' };
+  if (o.fee + o.bonus > c.budget) return { ok: false, msg: 'אין מספיק תקציב (דמי העברה + מענק חתימה).' };
+  if (wageBill(c) + o.wage > c.wageBudget) return { ok: false, msg: 'חריגה מתקציב השכר.' };
+  const err = buyPlayer(c, { ...p, wage: o.wage }, o.fee);
+  if (err) return { ok: false, msg: err };
+  c.budget -= o.bonus;
+  const signed = c.squad[c.squad.length - 1];
+  signed.contract = { releaseClause: o.releaseClause, sellOn: o.sellOn, bonus: o.bonus };
+  return { ok: true, msg: `${p.name} חתם! ${o.fee.toLocaleString()}K, ${o.wage}K לשבוע${o.releaseClause ? `, סעיף שחרור ${o.releaseClause.toLocaleString()}K` : ''}.` };
 }
 export function wageBill(c: Career) {
   return c.squad.reduce((a, p) => a + p.wage, 0);
@@ -308,11 +367,12 @@ export function sellPlayer(c: Career, id: string): number {
   c.news.unshift(`נמכר: ${p.name} תמורת ${fee}K`);
   return fee;
 }
-export function startScout(c: Career, nation: string) {
+export function startScout(c: Career, region: string, pos?: Pos, maxAge = 23) {
   if (c.scouts.length >= 2) return 'כבר יש שני סקאוטים בשטח';
   if (c.budget < 150) return 'אין תקציב לסקאוטינג';
   c.budget -= 150;
-  c.scouts.push({ nation, left: 2 });
+  const nations = REGIONS[region] ?? [region];
+  c.scouts.push({ nation: nations[0], region, pos, maxAge, left: 2 });
   return null;
 }
 export function advanceScouts(c: Career) {
@@ -320,16 +380,23 @@ export function advanceScouts(c: Career) {
     s.left--;
     if (s.left <= 0) {
       const r = rng(Date.now() % 100000);
-      const roles: { role: string; pos: Pos }[] = [{ role: 'ST', pos: 'FWD' }, { role: 'CM', pos: 'MID' }, { role: 'CB', pos: 'DEF' }, { role: 'LW', pos: 'FWD' }, { role: 'CAM', pos: 'MID' }];
+      const all: { role: string; pos: Pos }[] = [{ role: 'ST', pos: 'FWD' }, { role: 'LW', pos: 'FWD' }, { role: 'RW', pos: 'FWD' }, { role: 'CM', pos: 'MID' }, { role: 'CAM', pos: 'MID' }, { role: 'CDM', pos: 'MID' }, { role: 'CB', pos: 'DEF' }, { role: 'LB', pos: 'DEF' }, { role: 'GK', pos: 'GK' }];
+      const roles = s.pos ? all.filter((x) => x.pos === s.pos) : all.filter((x) => x.pos !== 'GK');
+      const nations = (s.region && REGIONS[s.region]) || [s.nation];
+      const maxAge = s.maxAge ?? 23;
+      let kids = 0;
       for (let i = 0; i < 3; i++) {
         const rp = roles[Math.floor(r() * roles.length)];
-        const p = makePlayer(r, { clubId: 'free', league: 'סקאוטינג', nation: s.nation, role: rp.role, pos: rp.pos, base: 58 + Math.floor(r() * 10), num: 30 + i, idx: Date.now() % 1e6 + i });
-        p.age = 17 + Math.floor(r() * 3);
-        p.potential = Math.min(94, p.ovr + 12 + Math.floor(r() * 18));
-        p.value = Math.round(p.value * 0.8);
-        c.prospects.push({ ...p, id: `scout-${Date.now()}-${i}`, morale: 85, scouted: true });
+        const nation = nations[Math.floor(r() * nations.length)];
+        const wonder = r() < 0.18;
+        const p = makePlayer(r, { clubId: 'free', league: 'סקאוטינג', nation, role: rp.role, pos: rp.pos, base: (wonder ? 64 : 58) + Math.floor(r() * 9), num: 30 + i, idx: Date.now() % 1e6 + i });
+        p.age = Math.min(maxAge, 16 + Math.floor(r() * Math.max(1, maxAge - 15)));
+        p.potential = wonder ? 88 + Math.floor(r() * 8) : Math.min(90, p.ovr + 8 + Math.floor(r() * 16));
+        p.value = Math.round(p.value * (wonder ? 1.6 : 0.8));
+        if (wonder) kids++;
+        c.prospects.push({ ...p, id: `scout-${Date.now()}-${i}`, morale: 85, scouted: true, wonderkid: wonder });
       }
-      c.news.unshift(`הסקאוט ב${s.nation} מצא 3 כישרונות צעירים!`);
+      c.news.unshift(`הסקאוט ב${s.region ?? s.nation} מצא 3 כישרונות${kids ? ` – כולל ${kids} ילד פלא!` : '.'}`);
     }
   }
   c.scouts = c.scouts.filter((s) => s.left > 0);
@@ -344,15 +411,47 @@ export function pressConference(c: Career, ai: number, qi: number) {
   for (const p of c.squad) p.morale = Math.max(20, Math.min(100, p.morale + a.morale));
   c.boardHappy = Math.max(0, Math.min(100, c.boardHappy + a.board));
 }
-export function afterCareerMatch(c: Career, myGoals: number, oppGoals: number, playedIds: string[]) {
+export function afterCareerMatch(c: Career, myGoals: number, oppGoals: number, playedIds: string[], r: MatchResult | null = null): string[] {
   const win = myGoals > oppGoals;
   const draw = myGoals === oppGoals;
+  const notes: string[] = [];
+  const clamp100 = (v: number) => Math.max(0, Math.min(100, v));
   for (const p of c.squad) {
-    const played = playedIds.includes(p.id);
-    p.morale = Math.max(20, Math.min(100, p.morale + (win ? 4 : draw ? 0 : -4) + (played ? 2 : -2)));
+    const st = r?.playerStats[p.id];
+    const played = st ? st.minutes > 0.5 : playedIds.includes(p.id);
+    let m = (win ? 4 : draw ? 0 : -4) + (played ? 2 : -2);
+    if (st) {
+      // individual moments shape a player's mood for the next games
+      m += st.goals * 4 - st.yellow * 5 - (st.red ? 12 : 0) - st.ownGoals * 10;
+      if (st.subOff !== null && st.subOff < 60 && !st.injury) m -= 6;
+      if (st.ownGoals) notes.push(`${p.name} מתקשה להתאושש מהשער העצמי.`);
+      if (st.injury) {
+        const inj = INJURIES[st.injury];
+        if (inj.rounds > 0) {
+          p.injuredRounds = inj.rounds;
+          p.injuryName = inj.name;
+          notes.push(`${p.name} פצוע: ${inj.name} (${inj.rounds} מחזורים).`);
+        }
+      }
+    }
+    p.morale = clamp100(Math.max(20, p.morale + m));
+    // fitness: playing costs energy; three games in a row leave a player 30% down
+    const mins = st ? st.minutes : played ? 90 : 0;
+    p.fitness = clamp100((p.fitness ?? 100) - (mins / 90) * 26 + (played ? 6 : 18));
   }
-  c.boardHappy = Math.max(0, Math.min(100, c.boardHappy + (win ? 3 : draw ? 0 : -4)));
+  for (const p of c.squad) if (p.injuredRounds && p.injuredRounds > 0 && !r?.playerStats[p.id]?.injury) p.injuredRounds--;
+  let delta = win ? 3 : draw ? 0 : -4;
+  if (c.board === 'title') delta += win ? 0 : draw ? -2 : -3;
+  if (c.board === 'budget' && (wageBill(c) > c.wageBudget || c.budget < 0)) delta -= 4;
+  if (c.board === 'youth') delta += c.squad.some((p) => p.age <= 21 && playedIds.includes(p.id)) ? 2 : -3;
+  c.boardHappy = clamp100(c.boardHappy + delta);
+  if (c.boardHappy <= 12 && c.round >= 4) {
+    c.fired = true;
+    notes.push('הדירקטוריון החליט לפטר אותך.');
+  }
   advanceScouts(c);
+  c.news.unshift(...notes);
+  return notes;
 }
 // Simulates the rest of the round's fixtures (all except the user's).
 export function simulateRound(c: Career, skip: string) {

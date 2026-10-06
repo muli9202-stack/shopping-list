@@ -88,8 +88,34 @@ export class GameAudio {
     this.crowdGain.gain.setTargetAtTime(on ? 0.35 : 0, this.ctx.currentTime, 0.6);
   }
 
+  private silenceT = 0;
+  // The home crowd goes quiet (late away goal).
+  silence(sec: number) {
+    this.silenceT = sec;
+  }
+
+  // Whistles and jeers from the stands.
+  boo() {
+    if (!this.ctx) return;
+    for (let i = 0; i < 4; i++) this.burst(1.4 + Math.random(), 180 + Math.random() * 60, 4, 0.22, 'bandpass', i * 0.12, 0.25);
+    this.burst(1.2, 2600, 6, 0.05, 'bandpass', 0.1, 0.2);
+  }
+
+  // Each club gets its own chant rhythm.
+  chantStyle = 0;
+  setChantStyle(teamId: string) {
+    let h = 0;
+    for (const c of teamId) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+    this.chantStyle = h % 4;
+  }
+
   update(dt: number, excitement: number) {
     if (!this.ctx) return;
+    if (this.silenceT > 0) {
+      this.silenceT -= dt;
+      this.crowdGain.gain.setTargetAtTime(0.03, this.ctx.currentTime, 0.4);
+      return;
+    }
     this.excite += (excitement - this.excite) * Math.min(1, dt * 1.5);
     const t = this.ctx.currentTime;
     this.crowdGain.gain.setTargetAtTime(0.22 + this.excite * 0.5, t, 0.3);
@@ -123,7 +149,13 @@ export class GameAudio {
   // Rhythmic "oh-oh-oh" + claps from the stands.
   chant() {
     if (!this.ctx) return;
-    const beats = [0, 0.5, 1.0, 1.75, 2.0, 2.5, 3.0, 3.75];
+    const patterns = [
+      [0, 0.5, 1.0, 1.75, 2.0, 2.5, 3.0, 3.75],
+      [0, 0.75, 1.5, 2.0, 2.25, 3.0],
+      [0, 0.33, 0.66, 1.5, 2.0, 2.33, 2.66, 3.5],
+      [0, 1.0, 1.5, 2.0, 3.0, 3.25, 3.5],
+    ];
+    const beats = patterns[this.chantStyle] ?? patterns[0];
     for (let r = 0; r < 2; r++)
       for (const b of beats) {
         this.burst(0.32, 420 + Math.random() * 40, 3, 0.18, 'bandpass', r * 4 + b, 0.06);

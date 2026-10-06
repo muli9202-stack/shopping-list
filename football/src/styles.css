@@ -262,7 +262,10 @@ table.stats td { font-weight: 700; width: 25%; }
 .touch { position: fixed; inset: 0; z-index: 12; pointer-events: none; user-select: none; -webkit-user-select: none; }
 .touch .stick { position: absolute; left: 26px; bottom: 26px; width: 140px; height: 140px; border-radius: 50%; background: rgba(255, 255, 255, 0.08); border: 2px solid rgba(255, 255, 255, 0.25); pointer-events: auto; touch-action: none; display: grid; place-items: center; }
 .touch .knob { width: 60px; height: 60px; border-radius: 50%; background: rgba(255, 255, 255, 0.35); }
-.touch .tbtns { position: absolute; right: 16px; bottom: 16px; display: grid; grid-template-columns: repeat(4, 62px); grid-template-rows: repeat(2, 62px); gap: 8px; direction: ltr; }
+.touch .tbtns { position: absolute; right: 12px; bottom: 12px; display: grid; grid-template-columns: repeat(5, 60px); grid-template-rows: repeat(3, 60px); gap: 6px; direction: ltr;
+  grid-template-areas: 'lb lt . y .' 'rb rt x . b' '. . . a .'; }
+.touch .tb.lb { grid-area: lb; } .touch .tb.rb { grid-area: rb; } .touch .tb.lt { grid-area: lt; } .touch .tb.rt { grid-area: rt; }
+.touch .tb.a { grid-area: a; } .touch .tb.b { grid-area: b; } .touch .tb.x { grid-area: x; } .touch .tb.y { grid-area: y; }
 .touch .tb { pointer-events: auto; touch-action: none; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.35); background: rgba(15, 23, 42, 0.45); color: #fff; font-size: 11px; font-weight: 700; line-height: 1.1; }
 .touch .tb.on { background: rgba(34, 211, 238, 0.55); }
 .touch .tb.a { background: rgba(34, 197, 94, 0.45); }
@@ -270,3 +273,6 @@ table.stats td { font-weight: 700; width: 25%; }
 .touch .tb.x { background: rgba(59, 130, 246, 0.45); }
 .touch .tb.y { background: rgba(234, 179, 8, 0.45); }
 .touch .start { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 44px; height: 44px; }
+.subs { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; }
+.neg-msg { min-height: 1.4em; font-weight: 700; }
+.field input[type=number] { background: #111a2b; color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font-family: inherit; font-size: 15px; }

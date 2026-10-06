@@ -554,6 +554,25 @@ export class PlayerModel {
     }
   }
 
+  private bandageMesh: THREE.Mesh | null = null;
+  // White head bandage after a head knock.
+  bandage(on: boolean) {
+    if (on && !this.bandageMesh) {
+      this.bandageMesh = new THREE.Mesh(geo('bandage', () => new THREE.TorusGeometry(0.108, 0.022, 8, 24)), stdMat('#f4f4f5', 0.9));
+      this.bandageMesh.rotation.x = Math.PI / 2;
+      this.bandageMesh.position.y = 0.045;
+      this.head.add(this.bandageMesh);
+    }
+    if (this.bandageMesh) this.bandageMesh.visible = on;
+  }
+
+  // World position of a boot (for exact foot-to-ball contact).
+  footWorld(left: boolean, out: THREE.Vector3) {
+    const f = left ? this.lFoot : this.rFoot;
+    f.updateWorldMatrix(true, false);
+    return out.set(0, -0.012, 0.09).applyMatrix4(f.matrixWorld);
+  }
+
   setTarget(s: PoseState) {
     computePose(this.target, s);
   }

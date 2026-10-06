@@ -3,7 +3,7 @@ import '@fontsource/heebo/700.css';
 import '@fontsource/heebo/800.css';
 import './styles.css';
 import * as THREE from 'three';
-import { allTeams, FORMATIONS, LEAGUES, NATION_FLAGS, NATIONS, pickEleven, TACTICS, teamById, BOOT_COLORS, HAIR_COLORS, SKIN_TONES, type Kit, type PlayerData, type Pos, type TacticId, type TeamData } from './data';
+import { allTeams, derbyName, FORMATIONS, LEAGUES, NATION_FLAGS, NATIONS, pickEleven, TACTICS, teamById, BOOT_COLORS, HAIR_COLORS, SKIN_TONES, type Kit, type PlayerData, type Pos, type TacticId, type TeamData } from './data';
 import { Match, type MatchResult, type MatchSetup } from './match';
 import { Hud } from './hud';
 import { Input, CONTROL_HELP } from './input';
@@ -134,7 +134,14 @@ function touchOn() {
 
 function baseSetup(home: TeamData, away: TeamData, over: Partial<MatchSetup> = {}): MatchSetup {
   const [hk, ak] = M.kitsFor(home, away);
+  const derby = derbyName(home.id, away.id);
+  const h = M.h2hSummary(home.id, away.id);
+  const history = h.n ? `במפגשים הקודמים: ${h.wa} ניצחונות ל${home.name}, ${h.wb} ל${away.name} ו-${h.d} תיקו.` : 'זה המפגש הראשון ביניהן.';
+  let hash = 0;
+  for (const c of home.id) hash = (hash * 31 + c.charCodeAt(0)) >>> 0;
+  const turf = (['hybrid', 'normal', 'old'] as const)[hash % 3];
   return {
+    derby, history, turf,
     home, away, homeKit: hk, awayKit: ak,
     homeXI: pickEleven(home.players, home.formation),
     awayXI: pickEleven(away.players, away.formation),
@@ -194,6 +201,12 @@ function playMatch(setup: MatchSetup): Promise<MatchResult | null> {
           <label class="field">זום מצלמה <input type="range" min="0.6" max="1.6" step="0.05" value="${m.setup.cameraZoom}" data-a="zoom"></label>
           <label class="check"><input type="checkbox" data-a="comm" ${m.setup.commentary ? 'checked' : ''}> קריינות קולית${audio.hasHebrewVoice ? '' : ' (אין קול עברי בדפדפן – כתוביות בלבד)'}</label>
           <label class="check"><input type="checkbox" data-a="radar" ${settings.radar ? 'checked' : ''}> מכ"ם</label>
+          <div class="subs">
+            <b>חילופים (${t.subsLeft} נותרו)</b>
+            <label class="field">יוצא<select data-a="subOut">${t.players.filter((p) => !p.sent).map((p, i) => `<option value="${i}">${p.d.num} ${esc(p.d.name)} · כושר ${Math.round(p.stamina * 100)}%${p.injury ? ' · פצוע' : ''}</option>`).join('')}</select></label>
+            <label class="field">נכנס<select data-a="subIn">${t.bench.map((d) => `<option value="${d.id}">${d.num} ${esc(d.name)} · ${d.role} ${d.ovr}</option>`).join('')}</select></label>
+            <button class="btn" data-a="sub" ${t.subsLeft > 0 && t.bench.length ? '' : 'disabled'}>בצע חילוף (בעצירה הבאה)</button>
+          </div>
           <button class="btn" data-a="controls">מקשים ושליטה</button>
           <button class="btn danger" data-a="quit">יציאה מהמשחק</button>
         </div>`);
@@ -228,6 +241,15 @@ function playMatch(setup: MatchSetup): Promise<MatchResult | null> {
         saveSettings();
       });
       el.querySelector('[data-a=controls]')!.addEventListener('click', () => controlsModal());
+      el.querySelector('[data-a=sub]')?.addEventListener('click', () => {
+        const active = t.players.filter((p) => !p.sent);
+        const out = active[+(el.querySelector('[data-a=subOut]') as HTMLSelectElement).value];
+        const inId = (el.querySelector('[data-a=subIn]') as HTMLSelectElement).value;
+        if (out && inId) {
+          m.requestSub(t, out, inId);
+          toast('החילוף יבוצע בעצירת המשחק הבאה');
+        }
+      });
       el.querySelector('[data-a=quit]')!.addEventListener('click', () => {
         mdl.close();
         const r = m.result();
@@ -274,11 +296,11 @@ async function preMatch(setup: MatchSetup): Promise<MatchResult | null> {
 const TIPS = [
   'לחיצה שנייה על מקש הבעיטה בדיוק ברגע שהרגל פוגעת בכדור = סיום מתוזמן ירוק.',
   'החזק C (LT) כדי לג\'קי מול התוקף במקום לרוץ לתוכו.',
-  'E + L = בעיטה מסובבת לפינה הרחוקה. Q + L = צ\'יפ מעל השוער.',
+  'E + ף = בעיטה מסובבת לפינה הרחוקה. Q + ף = צ\'יפ מעל השוער.',
   'בגשם הכדור מחליק מהר יותר על הדשא, ושלוליות עוצרות אותו.',
   'בשלג הכדור כתום והקווים כחולים – והכדור מאט מהר.',
   'שחקן כבד וחזק ינצח במאבק כתף מול שחקן קל.',
-  'מסירת עומק (I) עובדת הכי טוב כשהחלוץ כבר רץ מאחורי הקו.',
+  'מסירת עומק (ם) עובדת הכי טוב כשהחלוץ כבר רץ מאחורי הקו.',
   'גלישה מאחור = סכנה לכרטיס אדום.',
   'עייפות פוגעת במהירות ובדיוק – שים לב לפס הסיבולת.',
 ];
@@ -463,7 +485,7 @@ function tournament() {
         const A = teamById(b)!;
         const pads: [number | null, number | null] = a === tt.teamId ? [0, null] : [null, 0];
         const weathers: Weather[] = ['clear', 'clear', 'cloudy', 'rain', 'snow'];
-        const setup = baseSetup(H, A, { pads, knockout: true, title: `גביע היבשת – ${names[tt.round]}`, weather: weathers[Math.floor(Math.random() * weathers.length)], time: tt.round === 2 ? 'night' : 'dusk' });
+        const setup = baseSetup(H, A, { pads, knockout: true, title: `גביע היבשת – ${names[tt.round]}`, bigGame: tt.round === 2, weather: weathers[Math.floor(Math.random() * weathers.length)], time: tt.round === 2 ? 'night' : 'dusk' });
         const r = await preMatch(setup);
         if (!r) return render();
         const winner = r.winner === 0 ? a : b;
@@ -484,9 +506,14 @@ function career() {
       root.querySelector('[data-back]')!.addEventListener('click', home);
       root.querySelectorAll<HTMLElement>('[data-t]').forEach((b) => b.addEventListener('click', () => { c = M.newCareer(b.dataset.t!); persist(); render(); }));
     });
+  const pickNew = (trophies: string[]) =>
+    screen(`<div class="panel-screen wide"><div class="top"><h2>מועדון חדש מחפש מאמן</h2></div>${teamGrid('', 'data-t')}</div>`, (root) => {
+      root.querySelectorAll<HTMLElement>('[data-t]').forEach((b) => b.addEventListener('click', () => { c = M.newCareer(b.dataset.t!); c.trophies = trophies; persist(); render(); }));
+    });
   const render = () => {
     if (!c) return pick();
     const cc = c;
+    if (!cc.board) cc.board = 'budget';
     const team = M.careerTeamData(cc);
     const round = cc.schedule[cc.round];
     const fx = round?.find((p) => p.includes(cc.teamId));
@@ -496,7 +523,7 @@ function career() {
     if (tab === 'home') {
       body = `<div class="cards3">
         <div class="box"><h4>המשחק הבא</h4>${opp ? `<div class="next">${teamBadge(team, 44)}<b>נגד</b>${teamBadge(opp, 44)}</div><p>${fx![0] === cc.teamId ? 'בבית' : 'בחוץ'} מול ${esc(opp.name)} (${opp.rating})</p><div class="row-btns"><button class="btn primary" data-play>שחק ▶</button><button class="btn" data-sim>סימולציה</button></div>` : '<p>העונה הסתיימה</p>'}</div>
-        <div class="box"><h4>כספים</h4><p>תקציב העברות: <b>${cc.budget.toLocaleString()}K ₪</b></p><p>שכר שבועי: <b>${M.wageBill(cc)}K</b> / ${cc.wageBudget}K</p><p>שביעות רצון הדירקטוריון: <b>${cc.boardHappy}%</b></p><p>יעד: מקום ${cc.objective} ומעלה</p></div>
+        <div class="box"><h4>כספים</h4><p>תקציב העברות: <b>${cc.budget.toLocaleString()}K ₪</b></p><p>שכר שבועי: <b>${M.wageBill(cc)}K</b> / ${cc.wageBudget}K</p><p>שביעות רצון הדירקטוריון: <b>${cc.boardHappy}%</b></p><p>יעד: מקום ${cc.board === 'title' ? 1 : cc.objective} ומעלה</p><p class="tdesc">${esc(M.BOARD_TEXT[cc.board ?? 'budget'])}</p></div>
         <div class="box"><h4>עונה ${cc.season} · מחזור ${Math.min(cc.round + 1, cc.schedule.length)}/${cc.schedule.length}</h4>${miniTable(cc.table, cc.teamId)}${cc.lastResult ? `<p class="last">${esc(cc.lastResult)}</p>` : ''}</div>
       </div>${cc.trophies.length ? `<p>🏆 ${cc.trophies.map(esc).join(' · ')}</p>` : ''}`;
     } else if (tab === 'table') body = fullTable(cc.table, cc.teamId);
@@ -505,19 +532,22 @@ function career() {
       body = `<div class="opts"><label class="field">מערך<select data-f>${Object.keys(FORMATIONS).map((f) => `<option ${f === cc.formation ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
         <label class="field">סגנון<select data-tac>${Object.values(TACTICS).map((t) => `<option value="${t.id}" ${t.id === cc.tactic ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select></label></div>
         <p class="tdesc">${esc(TACTICS[cc.tactic].desc)}</p>
-        <table class="list"><tr><th></th><th>שם</th><th>עמדה</th><th>גיל</th><th>כללי</th><th>פוטנציאל</th><th>מורל</th><th>שכר</th><th>שווי</th><th></th></tr>
-        ${[...cc.squad].sort((a, b) => b.ovr - a.ovr).map((p) => `<tr class="${xi.includes(p.id) ? 'xi' : ''}"><td>${xi.includes(p.id) ? '●' : ''}</td><td>${face(p, 26)} ${esc(p.name)} ${NATION_FLAGS[p.nation] ?? ''}</td><td>${p.role}</td><td>${p.age}</td><td><b>${p.ovr}</b></td><td>${p.scouted || p.age < 23 ? p.potential : '?'}</td><td>${moraleIcon(p.morale)}</td><td>${p.wage}K</td><td>${p.value}K</td><td><button class="btn tiny" data-sell="${p.id}">מכירה</button></td></tr>`).join('')}</table>`;
+        <table class="list"><tr><th></th><th>שם</th><th>עמדה</th><th>גיל</th><th>כללי</th><th>פוטנציאל</th><th>מורל</th><th>כושר</th><th>שכר</th><th>שווי</th><th></th></tr>
+        ${[...cc.squad].sort((a, b) => b.ovr - a.ovr).map((p) => `<tr class="${xi.includes(p.id) ? 'xi' : ''}"><td>${xi.includes(p.id) ? '●' : ''}</td><td>${face(p, 26)} ${esc(p.name)} ${NATION_FLAGS[p.nation] ?? ''}</td><td>${p.role}</td><td>${p.age}</td><td><b>${p.ovr}</b></td><td>${p.scouted || p.age < 23 ? p.potential : '?'}</td><td>${moraleIcon(p.morale)}</td><td>${p.injuredRounds ? `🤕 ${p.injuredRounds} מחז'` : `${Math.round(p.fitness ?? 100)}%`}</td><td>${p.wage}K</td><td>${p.value}K</td><td><button class="btn tiny" data-sell="${p.id}">מכירה</button></td></tr>`).join('')}</table>`;
     } else if (tab === 'transfers') {
       const list = M.transferList(cc).filter((p) => !filterPos || p.pos === filterPos).slice(0, 60);
       body = `<div class="opts"><label class="field">עמדה<select data-pos><option value="">הכל</option>${['GK', 'DEF', 'MID', 'FWD'].map((p) => `<option ${filterPos === p ? 'selected' : ''}>${p}</option>`).join('')}</select></label><span class="pill">תקציב: ${cc.budget.toLocaleString()}K</span></div>
         <table class="list"><tr><th>שם</th><th>מועדון</th><th>עמדה</th><th>גיל</th><th>כללי</th><th>שכר</th><th>מחיר</th><th></th></tr>
-        ${list.map((p) => `<tr><td>${face(p, 26)} ${esc(p.name)} ${NATION_FLAGS[p.nation] ?? ''}</td><td>${esc(teamById(p.askClub)?.short ?? '')}</td><td>${p.role}</td><td>${p.age}</td><td><b>${p.ovr}</b></td><td>${p.wage}K</td><td>${Math.round(p.value * 1.15)}K</td><td><button class="btn tiny" data-buy="${p.id}|${p.askClub}">קנייה</button></td></tr>`).join('')}</table>`;
+        ${list.map((p) => `<tr><td>${face(p, 26)} ${esc(p.name)} ${NATION_FLAGS[p.nation] ?? ''}</td><td>${esc(teamById(p.askClub)?.short ?? '')}</td><td>${p.role}</td><td>${p.age}</td><td><b>${p.ovr}</b></td><td>${p.wage}K</td><td>${M.askingPrice(cc, p).toLocaleString()}K</td><td><button class="btn tiny" data-buy="${p.id}|${p.askClub}">משא ומתן</button></td></tr>`).join('')}</table>`;
     } else if (tab === 'scout') {
-      body = `<p>שלח סקאוט למדינה (150K) – אחרי שני מחזורים יחזור עם 3 כישרונות צעירים עם פוטנציאל גבוה.</p>
-        <div class="chips">${NATIONS.map((n) => `<button class="btn tiny" data-scout="${esc(n)}">${NATION_FLAGS[n] ?? ''} ${esc(n)}</button>`).join('')}</div>
-        <p>${cc.scouts.map((s) => `🔍 ${esc(s.nation)}: עוד ${s.left} מחזורים`).join(' · ') || 'אין סקאוטים בשטח.'}</p>
+      body = `<p>שלח סקאוט (150K) עם הנחיות – אחרי שני מחזורים יחזור עם 3 שחקנים. לפעמים יימצא "ילד פלא" עם פוטנציאל 88+.</p>
+        <div class="opts"><label class="field">אזור<select data-sr>${Object.keys(M.REGIONS).map((r) => `<option>${esc(r)}</option>`).join('')}</select></label>
+        <label class="field">עמדה<select data-sp><option value="">כל עמדה</option><option value="FWD">חלוץ</option><option value="MID">קשר</option><option value="DEF">מגן</option><option value="GK">שוער</option></select></label>
+        <label class="field">גיל מקסימלי<select data-sa>${[19, 20, 21, 23, 26].map((a) => `<option ${a === 21 ? 'selected' : ''}>${a}</option>`).join('')}</select></label>
+        <button class="btn" data-scout>שלח סקאוט</button></div>
+        <p>${cc.scouts.map((s) => `🔍 ${esc(s.region ?? s.nation)}${s.pos ? ` (${s.pos})` : ''}: עוד ${s.left} מחזורים`).join(' · ') || 'אין סקאוטים בשטח.'}</p>
         <table class="list"><tr><th>שם</th><th>עמדה</th><th>גיל</th><th>כללי</th><th>פוטנציאל</th><th>מחיר</th><th></th></tr>
-        ${cc.prospects.map((p) => `<tr><td>${face(p, 26)} ${esc(p.name)} ${NATION_FLAGS[p.nation] ?? ''}</td><td>${p.role}</td><td>${p.age}</td><td>${p.ovr}</td><td><b>${p.potential}</b></td><td>${p.value}K</td><td><button class="btn tiny" data-sign="${p.id}">החתמה</button></td></tr>`).join('') || '<tr><td colspan="7">עדיין אין דוחות סקאוטינג</td></tr>'}</table>`;
+        ${cc.prospects.map((p) => `<tr><td>${face(p, 26)} ${esc(p.name)} ${NATION_FLAGS[p.nation] ?? ''}</td><td>${p.role}</td><td>${p.age}</td><td>${p.ovr}</td><td><b>${p.potential}</b>${p.wonderkid ? ' ⭐ ילד פלא' : ''}</td><td>${p.value}K</td><td><button class="btn tiny" data-sign="${p.id}">החתמה</button></td></tr>`).join('') || '<tr><td colspan="7">עדיין אין דוחות סקאוטינג</td></tr>'}</table>`;
     } else if (tab === 'news') body = `<ul class="news">${cc.news.slice(0, 30).map((n) => `<li>${esc(n)}</li>`).join('')}</ul>`;
 
     screen(`<div class="panel-screen wide">
@@ -534,12 +564,20 @@ function career() {
       root.querySelectorAll<HTMLElement>('[data-buy]').forEach((b) => b.addEventListener('click', () => {
         const [id, club] = b.dataset.buy!.split('|');
         const p = M.transferList(cc).find((x) => x.id === id && x.askClub === club)!;
-        const err = M.buyPlayer(cc, p, Math.round(p.value * 1.15));
-        toast(err ?? `${p.name} הצטרף לקבוצה!`);
+        negotiationModal(cc, p, () => {
+          persist();
+          render();
+        });
+      }));
+      root.querySelector('[data-scout]')?.addEventListener('click', () => {
+        const region = (root.querySelector('[data-sr]') as HTMLSelectElement).value;
+        const pos = ((root.querySelector('[data-sp]') as HTMLSelectElement).value || undefined) as Pos | undefined;
+        const age = +(root.querySelector('[data-sa]') as HTMLSelectElement).value;
+        const err = M.startScout(cc, region, pos, age);
+        toast(err ?? 'הסקאוט יצא לדרך');
         persist();
         render();
-      }));
-      root.querySelectorAll<HTMLElement>('[data-scout]').forEach((b) => b.addEventListener('click', () => { const err = M.startScout(cc, b.dataset.scout!); toast(err ?? 'הסקאוט יצא לדרך'); persist(); render(); }));
+      });
       root.querySelectorAll<HTMLElement>('[data-sign]').forEach((b) => b.addEventListener('click', () => {
         const p = cc.prospects.find((x) => x.id === b.dataset.sign)!;
         const err = M.buyPlayer(cc, { ...p, askClub: 'free' }, p.value);
@@ -548,12 +586,25 @@ function career() {
         persist();
         render();
       }));
-      const after = (gf: number, ga: number, played: string[]) => {
+      const after = (gf: number, ga: number, played: string[], res: MatchResult | null = null) => {
         const [a, b] = fx!;
         const isHome = a === cc.teamId;
         M.applyResult(cc.table, a, b, isHome ? gf : ga, isHome ? ga : gf);
         M.simulateRound(cc, cc.teamId);
-        M.afterCareerMatch(cc, gf, ga, played);
+        const notes = M.afterCareerMatch(cc, gf, ga, played, res);
+        if (cc.fired) {
+          persist();
+          const md = modal(`<h2>פוטרת</h2><p>${esc(notes.join(' '))}</p><p>אחרי ${cc.round + 1} מחזורים ושביעות רצון של ${cc.boardHappy}%, ההנהלה של ${esc(team.name)} נפרדת ממך.</p><div class="row-btns"><button class="btn primary">חפש מועדון חדש</button></div>`);
+          md.el.querySelector('button')!.addEventListener('click', () => {
+            md.close();
+            const trophies = cc.trophies;
+            c = null;
+            persist();
+            pickNew(trophies);
+          });
+          return;
+        }
+        if (notes.length) toast(notes[0]);
         cc.lastResult = `${isHome ? team.name : opp!.name} ${isHome ? gf : ga} - ${isHome ? ga : gf} ${isHome ? opp!.name : team.name}`;
         cc.news.unshift(cc.lastResult);
         cc.round++;
@@ -573,24 +624,53 @@ function career() {
       };
       root.querySelector('[data-sim]')?.addEventListener('click', () => {
         const [g1, g2] = M.simulate(team.rating, opp!.rating);
-        after(fx![0] === cc.teamId ? g1 : g2, fx![0] === cc.teamId ? g2 : g1, pickEleven(team.players, cc.formation).map((p) => p.id));
+        after(fx![0] === cc.teamId ? g1 : g2, fx![0] === cc.teamId ? g2 : g1, pickEleven(team.players, cc.formation).map((p) => p.id), null);
       });
       root.querySelector('[data-play]')?.addEventListener('click', async () => {
         const isHome = fx![0] === cc.teamId;
         const H = isHome ? team : opp!;
         const A = isHome ? opp! : team;
         const weathers: Weather[] = ['clear', 'clear', 'cloudy', 'rain', 'snow'];
-        const setup = baseSetup(H, A, { pads: isHome ? [0, null] : [null, 0], title: `${cc.league} – מחזור ${cc.round + 1}`, weather: weathers[Math.floor(Math.random() * weathers.length)], time: (['day', 'dusk', 'night'] as TimeOfDay[])[cc.round % 3] });
+        const setup = baseSetup(H, A, { pads: isHome ? [0, null] : [null, 0], fitness: M.careerFitness(cc), title: `${cc.league} – מחזור ${cc.round + 1}`, weather: weathers[Math.floor(Math.random() * weathers.length)], time: (['day', 'dusk', 'night'] as TimeOfDay[])[cc.round % 3] });
         const r = await preMatch(setup);
         if (!r) return render();
         const gf = isHome ? r.goals[0] : r.goals[1];
         const ga = isHome ? r.goals[1] : r.goals[0];
-        after(gf, ga, (isHome ? setup.homeXI : setup.awayXI).map((p) => p.id));
+        after(gf, ga, (isHome ? setup.homeXI : setup.awayXI).map((p) => p.id), r);
       });
     });
   };
   let filterPos = '';
   render();
+}
+
+function negotiationModal(cc: M.Career, p: PlayerData & { askClub: string }, done: () => void) {
+  const ask = M.askingPrice(cc, p);
+  const wage = M.wageDemand(cc, p);
+  const md = modal(`<h2>משא ומתן: ${esc(p.name)}</h2>
+    <p class="tdesc">${esc(teamById(p.askClub)?.name ?? 'שחקן חופשי')} · ${p.role} · ${p.ovr} · גיל ${p.age} · שווי ${p.value.toLocaleString()}K</p>
+    <div class="opts col">
+      <label class="field">דמי העברה (K) <input type="number" data-n="fee" value="${Math.round(ask * 0.9)}" step="50"></label>
+      <label class="field">אחוז ממכירה עתידית למועדון המוכר <input type="number" data-n="sellOn" value="0" min="0" max="40" step="5"></label>
+      <label class="field">שכר שבועי (K) <input type="number" data-n="wage" value="${p.wage}" step="1"></label>
+      <label class="field">מענק חתימה (K) <input type="number" data-n="bonus" value="0" step="50"></label>
+      <label class="field">סעיף שחרור (K, 0 = ללא) <input type="number" data-n="releaseClause" value="${Math.round(p.value * 2)}" step="100"></label>
+      <p class="tdesc">המועדון מבקש בערך ${ask.toLocaleString()}K · הסוכן מכוון לשכר של כ-${wage}K · תקציב: ${cc.budget.toLocaleString()}K</p>
+      <p class="neg-msg"></p>
+    </div>
+    <div class="row-btns"><button class="btn primary" data-go>הגש הצעה</button><button class="btn" data-x>ביטול</button></div>`);
+  const msg = md.el.querySelector('.neg-msg') as HTMLElement;
+  md.el.querySelector('[data-x]')!.addEventListener('click', md.close);
+  md.el.querySelector('[data-go]')!.addEventListener('click', () => {
+    const v = (k: string) => +((md.el.querySelector(`[data-n=${k}]`) as HTMLInputElement).value || 0);
+    const r = M.negotiate(cc, p, { fee: v('fee'), wage: v('wage'), bonus: v('bonus'), sellOn: v('sellOn'), releaseClause: v('releaseClause') });
+    msg.textContent = r.msg;
+    msg.style.color = r.ok ? '#86efac' : '#fca5a5';
+    if (r.ok) {
+      toast(r.msg);
+      setTimeout(() => { md.close(); done(); }, 900);
+    }
+  });
 }
 
 function moraleIcon(m: number) {
@@ -930,12 +1010,13 @@ function controlsModal() {
     ${CONTROL_HELP.map((r) => `<tr><td><kbd>${esc(r.keys)}</kbd></td><td>${esc(r.pad)}</td><td>${esc(r.attack)}</td><td>${esc(r.defend)}</td></tr>`).join('')}</table>
     <h3>מצבים נייחים</h3>
     <ul class="news">
-      <li><b>בעיטה חופשית ישירה:</b> WASD מזיז את הכוונת על השער, החצים קובעים סיבוב (שמאל/ימין = עקמומיות, למעלה = טופ-ספין, למטה = דרייב נמוך), החזק L לעוצמה ושחרר. קו העזר מראה את תחילת המסלול – ארוך יותר לבועטים טובים.</li>
-      <li><b>קרן:</b> WASD בוחר נקודת נחיתה, חצים לסיבוב, החזק K להרמה או J למסירה קצרה.</li>
-      <li><b>פנדל:</b> כוון עם WASD, החזק L לעוצמה ושחרר כשמעגל הריכוז הכי קטן (ירוק). עייפות ולחץ מקשים על הריכוז.</li>
+      <li><b>בעיטה חופשית ישירה:</b> WASD מזיז את הכוונת על השער, החצים קובעים סיבוב (שמאל/ימין = עקמומיות, למעלה = טופ-ספין, למטה = דרייב נמוך), החזק ף לעוצמה ושחרר (ל = הרמה, ך = מסירה). קו העזר מראה את תחילת המסלול – ארוך יותר לבועטים טובים.</li>
+      <li><b>קרן:</b> WASD בוחר נקודת נחיתה, חצים לסיבוב, החזק ל להרמה או ך למסירה קצרה.</li>
+      <li><b>פנדל:</b> כוון עם WASD, החזק ף לעוצמה ושחרר כשמעגל הריכוז הכי קטן (ירוק). עייפות ולחץ מקשים על הריכוז.</li>
       <li><b>שוער בפנדל נגדך:</b> בחר צד עם A/D לפני הבעיטה.</li>
-      <li><b>חומה:</b> K מחליף קפיצה/עמידה, החזק C + כיוון כדי להזיז את החומה.</li>
+      <li><b>חומה:</b> ל מחליף קפיצה/עמידה, החזק C + כיוון כדי להזיז את החומה.</li>
     </ul>
+    <p class="tdesc">כפתורי הפעולה מסודרים כמו בשלט נינטנדו סוויץ': ם למעלה, ל משמאל, ף מימין, ך למטה (במקלדת אנגלית: O, K, ;, L). החיצים הם הסטיק הימני – מהלכי כדרור. שלט סוויץ' / Xbox / פלייסטיישן מתחבר לפי מיקום הכפתורים.</p>
     <p class="tdesc">שני שחקנים מקומיים: בחר "שני שחקנים" במשחק מהיר – שחקן 1 במקלדת, שחקן 2 בשלט.</p>
     <div class="row-btns"><button class="btn primary">סגור</button></div>`);
   md.el.querySelector('.row-btns button')!.addEventListener('click', md.close);

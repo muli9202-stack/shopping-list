@@ -4,7 +4,8 @@ export type CEvent =
   | 'kickoff' | 'goal' | 'ownGoal' | 'shot' | 'saved' | 'post' | 'miss' | 'foul' | 'yellow' | 'red'
   | 'offside' | 'corner' | 'freekick' | 'penalty' | 'penScored' | 'penMissed' | 'tackle' | 'halftime'
   | 'fulltime' | 'bigChance' | 'skill' | 'longPass' | 'possession' | 'secondHalf' | 'throw' | 'goalkick'
-  | 'equalizer' | 'lead' | 'handball' | 'catch';
+  | 'equalizer' | 'lead' | 'handball' | 'catch' | 'derby' | 'pressure' | 'advantage' | 'var' | 'varOverturn'
+  | 'varStands' | 'injury' | 'sub' | 'parry' | 'silence' | 'referee';
 
 const LINES: Record<CEvent, string[]> = {
   kickoff: ['והמשחק יוצא לדרך! {stadium} מלא עד אפס מקום.', 'שריקת הפתיחה! {team} פותחת עם הכדור.', 'אנחנו מתחילים, ערב גדול של כדורגל לפנינו.'],
@@ -37,6 +38,17 @@ const LINES: Record<CEvent, string[]> = {
   throw: ['זריקת חוץ ל{team}.'],
   goalkick: ['בעיטת שער.'],
   handball: ['נגיעת יד! השופט שורק.', 'יד! עבירה ברורה.'],
+  derby: ['ערב של {derby}! העיר כולה עוצרת מלכת. {history}', 'זה לא עוד משחק – זה {derby}. {history}'],
+  pressure: ['הדקות האחרונות, הלחץ על השחקנים עצום.', 'כל נגיעה עכשיו שווה זהב – והרגליים רועדות.'],
+  advantage: ['השופט נותן יתרון – ממשיכים!', 'יתרון! המשחק זורם.'],
+  var: ['רגע, ה-VAR בודק את המהלך...', 'בדיקת וידאו – כולם מחכים להחלטה.'],
+  varOverturn: ['ה-VAR הפך את ההחלטה!', 'מילימטרים! ההחלטה בוטלה אחרי בדיקת וידאו.'],
+  varStands: ['ההחלטה עומדת בעינה.', 'ה-VAR מאשר – ממשיכים.'],
+  injury: ['{player} שוכב על הדשא, נראה שהוא נפגע.', 'הצוות הרפואי נכנס לטפל ב{player}.'],
+  sub: ['חילוף ל{team}: {in} נכנס במקום {out}.', '{in} עולה למגרש, {out} יורד.'],
+  parry: ['{player} מעיף לקרן!', 'הצלה מעל המשקוף של {player}!'],
+  silence: ['שקט מוחלט באצטדיון. האוהדים המקומיים בהלם.', 'אפשר לשמוע סיכה נופלת ביציעים.'],
+  referee: ['השופט היום: {name} – שופט {style}.'],
 };
 
 const ANALYST: Partial<Record<CEvent, string[]>> = {

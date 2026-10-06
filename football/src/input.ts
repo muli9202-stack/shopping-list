@@ -27,22 +27,28 @@ const newPad = (): Pad => ({
 });
 
 export const KEYMAP: Record<string, Btn> = {
-  KeyJ: 'A', KeyL: 'B', KeyK: 'X', KeyI: 'Y',
+  // Face buttons sit on the keyboard like the Nintendo Switch diamond (Hebrew layout):
+  // ך (L) bottom = pass, ף (;) right = shoot, ל (K) left = lob, ם (O) top = through ball.
+  KeyL: 'A', Semicolon: 'B', KeyK: 'X', KeyO: 'Y',
   KeyQ: 'LB', KeyE: 'RB', KeyC: 'LT', ShiftLeft: 'RT', ShiftRight: 'RT',
   Escape: 'START', KeyP: 'START', KeyR: 'R3',
   ArrowUp: 'RUP', ArrowDown: 'RDOWN', ArrowLeft: 'RLEFT', ArrowRight: 'RRIGHT',
   Space: 'B', Enter: 'A',
 };
 
+// On-screen key names for the face buttons (Hebrew letter + the Latin key under it).
+export const KEY_LABEL: Record<'A' | 'B' | 'X' | 'Y', string> = { A: 'ך', B: 'ף', X: 'ל', Y: 'ם' };
+export const kbd = (b: 'A' | 'B' | 'X' | 'Y') => `<kbd>${KEY_LABEL[b]}</kbd>`;
+
 export const CONTROL_HELP: { keys: string; pad: string; attack: string; defend: string }[] = [
   { keys: 'W A S D', pad: 'סטיק שמאלי', attack: 'תנועה (עוצמת ההטיה: הליכה/ריצה)', defend: 'תנועה' },
   { keys: 'Shift', pad: 'RT / R2', attack: 'ספרינט (פחות שליטה בכדור)', defend: 'ספרינט' },
-  { keys: 'J', pad: 'A / ✕', attack: 'מסירה קצרה (החזקה = עוצמה)', defend: 'לחץ על מחזיק הכדור (החזקה)' },
-  { keys: 'K', pad: 'X / ▢', attack: 'הגבהה / חילוף אגף / הרמה לרחבה', defend: 'תיקול גלישה' },
-  { keys: 'I', pad: 'Y / △', attack: 'מסירת עומק', defend: '—' },
-  { keys: 'L / רווח', pad: 'B / ○', attack: 'בעיטה (החזקה = עוצמה, לחיצה שנייה ברגע הפגיעה = סיום מתוזמן) / נגיחה', defend: 'תיקול עומד' },
-  { keys: 'Q', pad: 'LB / L1', attack: 'כדרור צמוד (החזקה) · Q+L = צ\'יפ', defend: 'החלפת שחקן' },
-  { keys: 'E', pad: 'RB / R1', attack: 'E+L = בעיטה מסובבת (Finesse)', defend: 'חבר קבוצה לוחץ (החזקה)' },
+  { keys: 'ך (L)', pad: 'Switch B · Xbox A · ✕', attack: 'מסירה קצרה (החזקה = עוצמה)', defend: 'לחץ על מחזיק הכדור (החזקה)' },
+  { keys: 'ל (K)', pad: 'Switch Y · Xbox X · ▢', attack: 'הגבהה / חילוף אגף / הרמה לרחבה', defend: 'תיקול גלישה' },
+  { keys: 'ם (O)', pad: 'Switch X · Xbox Y · △', attack: 'מסירת עומק', defend: '—' },
+  { keys: 'ף (;) / רווח', pad: 'Switch A · Xbox B · ○', attack: 'בעיטה (החזקה = עוצמה, לחיצה שנייה ברגע הפגיעה = סיום מתוזמן) / נגיחה', defend: 'תיקול עומד' },
+  { keys: 'Q', pad: 'LB / L1', attack: 'כדרור צמוד (החזקה) · Q+ף = צ\'יפ', defend: 'החלפת שחקן' },
+  { keys: 'E', pad: 'RB / R1', attack: 'E+ף = בעיטה מסובבת (Finesse)', defend: 'חבר קבוצה לוחץ (החזקה)' },
   { keys: 'C', pad: 'LT / L2', attack: 'הגנה על הכדור עם הגב', defend: 'הכלה / ג\'וקי' },
   { keys: '← ↑ → ↓', pad: 'סטיק ימני', attack: 'מהלכי כדרור: ← → הטעיה, ↑ דחיקה קדימה, ↓ משיכה לאחור, R רולטה', defend: 'החלפה לשחקן בכיוון' },
   { keys: 'Esc / P', pad: 'Start', attack: 'השהיה, טקטיקה ומצלמה', defend: '' },

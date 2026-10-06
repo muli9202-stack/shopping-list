@@ -440,3 +440,44 @@ export function fmtMoney(thousands: number): string {
   if (thousands >= 1000) return `₪${(thousands / 1000).toFixed(thousands >= 10000 ? 0 : 1)}M`;
   return `₪${Math.round(thousands)}K`;
 }
+
+// ---- referees ----
+export interface Referee {
+  name: string;
+  style: 'strict' | 'lenient' | 'cards';
+  styleName: string;
+  cardMul: number; // multiplies the chance of a card
+  advantage: number; // chance to play advantage
+  error: number; // chance to miss a tight offside
+}
+export const REFEREES: Referee[] = [
+  { name: 'אורן ברק', style: 'strict', styleName: 'קפדן', cardMul: 1.5, advantage: 0.25, error: 0.15 },
+  { name: 'יוסי שגיא', style: 'lenient', styleName: 'מקל', cardMul: 0.6, advantage: 0.75, error: 0.3 },
+  { name: 'מרקו פיורנטיני', style: 'cards', styleName: 'שולף כרטיסים', cardMul: 2, advantage: 0.35, error: 0.2 },
+  { name: 'דניאלה לוין', style: 'strict', styleName: 'קפדנית', cardMul: 1.3, advantage: 0.45, error: 0.1 },
+  { name: 'הנס ריכטר', style: 'lenient', styleName: 'מקל', cardMul: 0.8, advantage: 0.6, error: 0.25 },
+];
+
+// ---- derbies ----
+export const RIVALRIES: [string, string, string][] = [
+  ['gal', 'brk', 'דרבי הצפון'],
+  ['koc', 'sar', 'דרבי החוף'],
+  ['nes', 'drk', 'דרבי הדרום-מזרח'],
+  ['zav', 'pan', 'דרבי ההרים'],
+  ['ven', 'sol', 'הקלאסיקו של היבשת'],
+  ['alb', 'lum', 'דרבי התעלה'],
+  ['rhe', 'kar', 'דרבי הנהר'],
+  ['nor', 'lus', 'דרבי הנמלים'],
+];
+export function derbyName(a: string, b: string): string | null {
+  const r = RIVALRIES.find(([x, y]) => (x === a && y === b) || (x === b && y === a));
+  return r ? r[2] : null;
+}
+
+export const INJURIES = {
+  hamstring: { name: 'מתיחה בשריר הירך האחורי', rounds: 3 },
+  ankle: { name: 'נקע בקרסול', rounds: 2 },
+  knee: { name: 'פגיעה ברצועה בברך', rounds: 8 },
+  head: { name: 'מכה בראש (ממשיך עם חבישה)', rounds: 0 },
+} as const;
+export type InjuryKind = keyof typeof INJURIES;

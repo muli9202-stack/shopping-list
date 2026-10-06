@@ -206,6 +206,18 @@ export function aiThink(m: Match, dt: number) {
           }
           if (p.slot.pos === 'DEF') ai.run = { target: t.world(Math.min(off - 1, t.along(holder.pos) + 12), Math.sign(p.slot.w) * (HW - 3)), t: 3, kind: 'overlap' };
         }
+        // ball out wide in the final third: attack the box for the cross
+        const bA = t.along(ball);
+        const bW = t.lat(ball);
+        if (!ai.run && bA > 72 && Math.abs(bW) > 14 && (p.slot.pos === 'FWD' || p.slot.role === 'CAM' || (p.slot.pos === 'MID' && Math.abs(p.slot.w) > 0.6 && Math.sign(p.slot.w) !== Math.sign(bW)))) {
+          const spots = [[99, 2.5], [96, -3.5], [93, 0], [90, -7]];
+          const sp = spots[p.idx % spots.length];
+          ai.target.copy(t.world(Math.min(sp[0], m.offsideLineFor(t) - 0.5), -Math.sign(bW) * sp[1] * (sp[1] < 0 ? -1 : 1) * (p.idx % 2 ? 1 : -1)));
+          ai.sprint = hdist(p.pos, ai.target) > 5;
+          ai.speed = 1;
+          ai.look = ball;
+          continue;
+        }
         if (ai.run) {
           ai.target.copy(ai.run.target);
           ai.sprint = ai.run.kind === 'deep' || ai.run.kind === 'overlap';
@@ -357,12 +369,25 @@ export function carrierThink(m: Match, p: Plr, dt: number) {
     }
   }
 
+  // switch of play: a long diagonal to the free man on the far side
+  if (Math.abs(w) > 9 && a > 30 && a < 85) {
+    for (const q of t.players) {
+      if (q === p || q.sent || q.isGK) continue;
+      const qw = t.lat(q.pos);
+      if (Math.sign(qw) === Math.sign(w) || Math.abs(qw) < 16) continue;
+      const space = clamp(m.nearestOpp(q) / 7, 0, 1);
+      if (space < 0.45) continue;
+      const tp = q.pos.clone().add(new V(t.dir * 4, 0, 0));
+      options.push({ k: 'switch', s: 0.3 + space * 0.55 + tac.width * 0.3 + (p.s.passing - 65) / 90 - press * 0.15, go: () => m.aiKick(p, { type: 'lob', power: 0.7, dir: null, target: q, point: tp, t: 0.8 }) });
+    }
+  }
+
   // cross from wide areas
-  if (a > 78 && Math.abs(w) > 15) {
+  if (a > 76 && Math.abs(w) > 13) {
     const inBox = t.players.filter((q) => !q.sent && q !== p && t.along(q.pos) > 86 && Math.abs(q.pos.z) < 16);
     if (inBox.length) {
       const tgt = inBox[Math.floor(Math.random() * inBox.length)];
-      options.push({ k: 'cross', s: 0.55 + inBox.length * 0.12 + (p.s.passing - 65) / 100, go: () => m.aiKick(p, { type: 'cross', power: 0.6, dir: null, point: tgt.pos.clone().add(new V(t.dir * 1.5, 0, 0)), target: tgt, t: 0.8 }) });
+      options.push({ k: 'cross', s: 0.75 + inBox.length * 0.14 + (p.s.passing - 65) / 100, go: () => m.aiKick(p, { type: 'cross', power: 0.6, dir: null, point: tgt.pos.clone().add(new V(t.dir * 1.5, 0, 0)), target: tgt, t: 0.8 }) });
     }
   }
 
@@ -652,10 +677,21 @@ function saveCheck(m: Match, gk: Plr) {
       gk.action = { kind: 'dive', t: 0.6, dur: 1.3, contact: 1, fired: false };
     } else {
       const t = gk.team;
-      b.vel.set(t.dir * (3 + Math.random() * 4), 2 + Math.random() * 3, Math.sign(b.pos.z || side.z || 1) * (5 + Math.random() * 5));
+      const nearPost = Math.abs(b.pos.z) > 2.3;
+      const high = b.pos.y > 1.8;
+      if ((nearPost || high) && Math.random() < 0.65) {
+        // fingertips: over the bar or around the post for a corner
+        b.vel.set(-t.dir * (3 + Math.random() * 2), high ? 4.5 + Math.random() * 2 : 1 + Math.random(), Math.sign(b.pos.z || 1) * (high ? 1.5 : 6 + Math.random() * 3));
+        m.comment('parry', { player: gk.d.name }, true);
+      } else {
+        b.vel.set(t.dir * (3 + Math.random() * 4), 2 + Math.random() * 3, Math.sign(b.pos.z || side.z || 1) * (5 + Math.random() * 5));
+        m.comment('saved', { player: gk.d.name }, true);
+      }
       b.spin.set(0, 0, 0);
       m.onTouch(gk);
       gk.kickCD = 0.6;
+      m.audio.roar(0.45);
+      return;
     }
     m.comment('saved', { player: gk.d.name }, true);
     m.audio.roar(0.45);
