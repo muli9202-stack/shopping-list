@@ -148,10 +148,22 @@ export async function loadCustomModel(file: File) {
 }
 export async function restoreCustomModel() {
   try {
-    const v = await idbGet<{ buf: ArrayBuffer; name: string }>(KEY);
+    const v = await idbGet<{ buf: ArrayBuffer; name: string }>(KEY).catch(() => undefined);
     if (v) rig = await parseRig(v.buf, v.name);
   } catch (e) {
     console.warn('custom model', e);
+  }
+  // A private build may bundle a default character (never part of the public site).
+  const bundled = (window as unknown as { __FB_DEFAULT_MODEL?: { b64: string; name: string } }).__FB_DEFAULT_MODEL;
+  if (!rig && bundled) {
+    try {
+      const bin = atob(bundled.b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      rig = await parseRig(bytes.buffer, bundled.name);
+    } catch (e) {
+      console.warn('bundled model', e);
+    }
   }
   return rig;
 }
@@ -186,6 +198,7 @@ function kitMaterial(orig: THREE.Material, color: string) {
 // ---------------------------------------------------------------- per-player instance
 const tmpQ = new THREE.Quaternion();
 const tmpQ2 = new THREE.Quaternion();
+const tmpQ3 = new THREE.Quaternion();
 
 // Rotation of `o` relative to `stop` (exclusive), from local quaternions only.
 function chainQuat(o: THREE.Object3D, stop: THREE.Object3D, out: THREE.Quaternion) {
@@ -198,6 +211,10 @@ export class CustomBody {
   root: THREE.Group;
   private bones: Partial<Record<Part, THREE.Bone>>;
   private rest = new Map<Part, THREE.Quaternion>(); // bone rest rotation (player space) pre-aligned to the driver's rest
+  // Spine and neck bones share the driver's torso / head rotation so the back bends
+  // as a curve instead of hinging at one vertebra.
+  private spine: { bone: THREE.Bone; rest: THREE.Quaternion; f: number }[] = [];
+  private neck: { bone: THREE.Bone; rest: THREE.Quaternion } | null = null;
 
   constructor(r: Rig, kit: Kit, boots: string, isGK: boolean, owner: THREE.Object3D, backNumber?: THREE.Mesh, scale = 1) {
     this.root = cloneSkinned(r.template) as THREE.Group;
@@ -242,7 +259,23 @@ export class CustomBody {
       }
       this.rest.set(p, q);
     }
+    const sp = this.bones.spine;
+    if (sp) {
+      const chain: THREE.Bone[] = [];
+      for (let b: THREE.Bone | undefined = sp; b && /spine|chest/i.test(clean(b.name)); ) {
+        chain.push(b);
+        b = b.children.find((c) => (c as THREE.Bone).isBone && /spine|chest/i.test(clean(c.name))) as THREE.Bone | undefined;
+      }
+      this.spine = chain.map((bone, i) => ({ bone, rest: chainQuat(bone, owner, new THREE.Quaternion()), f: (i + 1) / chain.length }));
+    }
+    const head = this.bones.head;
+    if (head?.parent && /neck/i.test(head.parent.name)) this.neck = { bone: head.parent as THREE.Bone, rest: chainQuat(head.parent, owner, new THREE.Quaternion()) };
     if (backNumber) this.placeNumber(backNumber, owner);
+  }
+
+  private setBone(b: THREE.Bone, target: THREE.Quaternion, owner: THREE.Object3D) {
+    chainQuat(b.parent!, owner, tmpQ2).invert();
+    b.quaternion.copy(tmpQ2.multiply(target));
   }
 
   // Sticks the name/number decal onto the back of the shirt: cast a ray from behind
@@ -280,9 +313,21 @@ export class CustomBody {
     for (const p of PARTS) {
       const b = this.bones[p];
       if (!b) continue;
+      if (p === 'spine' && this.spine.length) {
+        const base = chainQuat(drivers.pelvis, owner, tmpQ3);
+        for (const s of this.spine) {
+          tmpQ.identity().slerp(drivers.spine.quaternion, s.f).premultiply(base).multiply(s.rest);
+          this.setBone(s.bone, tmpQ, owner);
+        }
+        continue;
+      }
+      if (p === 'head' && this.neck) {
+        chainQuat(drivers.spine, owner, tmpQ3);
+        tmpQ.identity().slerp(drivers.head.quaternion, 0.45).premultiply(tmpQ3).multiply(this.neck.rest);
+        this.setBone(this.neck.bone, tmpQ, owner);
+      }
       chainQuat(drivers[p], owner, tmpQ).multiply(this.rest.get(p)!); // target, player space
-      chainQuat(b.parent!, owner, tmpQ2).invert();
-      b.quaternion.copy(tmpQ2.multiply(tmpQ));
+      this.setBone(b, tmpQ, owner);
     }
   }
 }

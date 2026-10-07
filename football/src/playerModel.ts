@@ -12,12 +12,14 @@ export const J = {
   torsoX: 4, torsoZ: 5, torsoY: 6, headX: 7,
   lArmX: 8, lArmZ: 9, lForeX: 10, rArmX: 11, rArmZ: 12, rForeX: 13,
   lThighX: 14, lThighZ: 15, lShinX: 16, rThighX: 17, rThighZ: 18, rShinX: 19, lFootX: 20, rFootX: 21,
+  headY: 22, lLegY: 23, rLegY: 24, // head turn; leg external rotation (inside-foot)
+  rootZ: 25, // forward lunge of the hips (set by foot IK when the ball is a stride away)
 } as const;
-export const JOINTS = 22;
+export const JOINTS = 26;
 
 export type ActionKind =
   | 'kick' | 'lob' | 'header' | 'tackle' | 'slide' | 'dive' | 'catch' | 'throw' | 'gkKick'
-  | 'celebrate' | 'fallen' | 'trap' | 'chest' | 'wallJump' | 'skill' | 'roulette';
+  | 'celebrate' | 'fallen' | 'trap' | 'chest' | 'wallJump' | 'skill' | 'roulette' | 'stumble';
 
 export interface PoseState {
   speed: number;
@@ -38,6 +40,10 @@ export interface PoseState {
   celebrateStyle: number;
   touch?: number; // 0..1 progress of a dribble touch, < 0 none
   touchLeft?: boolean;
+  inside?: number; // 0 laces .. 1 side-foot pass
+  power?: number; // 0..1 strike power (backswing and follow-through)
+  look?: number; // ball bearing relative to facing (rad, + = to the left)
+  lookDown?: number; // pitch down to the ball (rad)
 }
 
 const lerpKeys = (u: number, keys: number[][]): number => {
@@ -131,7 +137,18 @@ export function computePose(o: Float32Array, s: PoseState) {
     o[th] = o[th] * (1 - k) - 0.55 * k;
     o[sh] = o[sh] * (1 - k) + 0.25 * k;
   }
-  if (!s.action) return;
+  if (s.action) actionPose(o, s);
+  // eyes on the ball: the head turns (and the shoulders a little) towards it
+  if (s.look !== undefined && !['dive', 'fallen', 'slide', 'celebrate', 'throw', 'stumble'].includes(s.action ?? '')) {
+    const yaw = Math.max(-1.25, Math.min(1.25, s.look));
+    const behind = Math.abs(s.look) > 2.2 ? 0.4 : 1;
+    o[J.headY] = yaw * 0.75 * behind;
+    o[J.torsoY] += yaw * 0.15 * behind;
+    o[J.headX] += Math.max(-0.35, Math.min(0.55, s.lookDown ?? 0)) * 0.6;
+  }
+}
+
+function actionPose(o: Float32Array, s: PoseState) {
   const u = Math.min(1, s.actionT / Math.max(0.01, s.actionDur));
   const c = s.contact;
   const kL = s.leftFoot;
@@ -144,11 +161,20 @@ export function computePose(o: Float32Array, s: PoseState) {
     case 'lob':
     case 'gkKick': {
       const lob = s.action !== 'kick';
-      const thigh = lerpKeys(u, [[0, 0], [c - 0.32, 0.75], [c, -0.6], [c + 0.18, lob ? -1.6 : -1.25], [1, -0.2]]);
-      const shin = lerpKeys(u, [[0, 0.3], [c - 0.3, 1.7], [c - 0.02, 0.15], [c + 0.2, 0.25], [1, 0.4]]);
+      const pw = Math.min(1, Math.max(0, s.power ?? 0.7));
+      const ins = lob ? 0 : Math.min(1, Math.max(0, s.inside ?? 0));
+      // the harder the strike, the higher the back-lift and the longer the follow-through
+      const back = (0.35 + 0.6 * pw) * (1 - 0.35 * ins);
+      const follow = lob ? -1.6 : ins > 0.5 ? -0.75 : -(0.95 + 0.6 * pw);
+      const thigh = lerpKeys(u, [[0, 0], [c - 0.32, back], [c, -0.6 + 0.2 * ins], [c + 0.18, follow], [1, -0.2]]);
+      const shin = lerpKeys(u, [[0, 0.3], [c - 0.3, 1.15 + 0.75 * pw * (1 - 0.5 * ins)], [c - 0.02, 0.15 + 0.2 * ins], [c + 0.2, 0.25], [1, 0.4]]);
       set(J.lThighX, J.rThighX, thigh, -0.2);
-      set(J.lShinX, J.rShinX, shin, 0.35);
+      set(J.lShinX, J.rShinX, shin, 0.35 + 0.15 * ins);
       set(J.lThighZ, J.rThighZ, 0.05, 0.08);
+      // side-foot: the kicking leg turns out so the instep faces the ball
+      set(J.lLegY, J.rLegY, ins * lerpKeys(u, [[0, 0.3], [c - 0.15, 1.15], [c + 0.25, 0.9], [1, 0.2]]), 0);
+      // planted foot stays flat beside the ball
+      set(J.lFootX, J.rFootX, lerpKeys(u, [[0, 0.3], [c, -0.1], [1, 0]]), lerpKeys(u, [[0, 0], [c, -0.15], [1, 0]]));
       // balance arms: opposite arm swings across, same-side arm out
       o[kL ? J.rArmX : J.lArmX] = lerpKeys(u, [[0, 0], [c, -0.7], [1, -0.2]]);
       o[kL ? J.rArmZ : J.lArmZ] = lerpKeys(u, [[0, 0.1], [c, 0.9], [1, 0.3]]);
@@ -156,10 +182,30 @@ export function computePose(o: Float32Array, s: PoseState) {
       o[kL ? J.lArmX : J.rArmX] = 0.4;
       o[J.lForeX] = -0.5;
       o[J.rForeX] = -0.5;
-      o[J.torsoX] = lob ? lerpKeys(u, [[0, 0.1], [c, -0.18], [1, 0]]) : lerpKeys(u, [[0, 0.15], [c, 0.3], [1, 0.1]]);
-      o[J.torsoY] = (kL ? -1 : 1) * lerpKeys(u, [[0, 0], [c - 0.2, 0.3], [c + 0.1, -0.25], [1, 0]]);
-      o[J.rootY] = lerpKeys(u, [[0, 0], [c + 0.1, 0.05], [1, 0]]);
+      // lofted ball: lean back ~15 degrees and away from the kicking leg
+      o[J.torsoX] = lob ? lerpKeys(u, [[0, 0.1], [c, -0.26], [1, 0]]) : lerpKeys(u, [[0, 0.15], [c, 0.3 - 0.1 * ins], [1, 0.1]]);
+      o[J.torsoZ] = lob ? (kL ? 1 : -1) * lerpKeys(u, [[0, 0], [c, 0.22], [1, 0.05]]) : 0;
+      o[J.torsoY] = (kL ? -1 : 1) * lerpKeys(u, [[0, 0], [c - 0.2, 0.3], [c + 0.1, -0.25 * (1 - 0.6 * ins)], [1, 0]]);
+      // follow-through: a hard strike lifts the standing foot off the grass
+      o[J.rootY] = lerpKeys(u, [[0, 0], [c, 0.01], [c + 0.12, 0.03 + 0.13 * pw * (1 - ins)], [c + 0.3, 0], [1, 0]]);
       o[J.rootRZ] *= 0.3;
+      break;
+    }
+    case 'stumble': {
+      // knocked off balance: windmilling arms, lurching torso, staggered steps
+      const k = Math.sin(Math.PI * u);
+      o[J.torsoX] = 0.35 * k;
+      o[J.torsoZ] = 0.25 * k * Math.sin(u * 9);
+      o[J.lArmZ] = 0.4 + 1.1 * k * (0.5 + 0.5 * Math.sin(u * 14));
+      o[J.rArmZ] = 0.4 + 1.1 * k * (0.5 + 0.5 * Math.cos(u * 14));
+      o[J.lArmX] = -0.8 * k;
+      o[J.rArmX] = -0.5 * k;
+      o[J.lThighX] = -0.6 * k * Math.max(0, Math.sin(u * 12));
+      o[J.rThighX] = -0.6 * k * Math.max(0, -Math.sin(u * 12));
+      o[J.lShinX] = 0.3 + 0.5 * k;
+      o[J.rShinX] = 0.3 + 0.5 * k;
+      o[J.pelvisDrop] = 0.08 * k;
+      o[J.rootRZ] = 0.2 * k * Math.sin(u * 7);
       break;
     }
     case 'header': {
@@ -368,6 +414,16 @@ const PROFILES = {
   sleeve: [[0, 0.05], [0.064, 0.03], [0.064, -0.05], [0.06, -0.12], [0, -0.121]],
   foreArm: [[0, 0.01], [0.038, 0], [0.042, -0.06], [0.034, -0.17], [0.027, -0.23], [0, -0.24]],
 };
+const ikT = new THREE.Vector3();
+const ikG = new THREE.Vector3();
+const ikGoal = new THREE.Vector3();
+const ikD = new THREE.Vector3();
+const ikP = new THREE.Vector3();
+const ikA = new THREE.Vector3();
+const ikE = new THREE.Euler();
+const Y_AXIS = new THREE.Vector3(0, 1, 0);
+const clampN = (v: number) => Math.max(-1, Math.min(1, v));
+
 const sph = (r: number) => geo(`s${r}`, () => new THREE.SphereGeometry(r, 18, 14));
 
 const matCache = new Map<string, THREE.Material>();
@@ -502,6 +558,7 @@ export class PlayerModel {
 
     this.torso.add(this.head);
     this.head.position.y = 0.72;
+    this.head.rotation.order = 'YXZ';
     add(this.head, sph(0.105), skin, 0, 0, 0, 0.92, 1.12, 1);
     add(this.head, sph(0.08), skin, 0, -0.045, 0.022, 0.92, 0.9, 1); // jaw
     add(this.head, sph(0.022), skin, 0.1, 0, -0.005, 0.6, 1.1, 1); // ears
@@ -530,6 +587,7 @@ export class PlayerModel {
     const leg = (thigh: THREE.Group, shin: THREE.Group, foot: THREE.Group, side: number) => {
       this.pelvis.add(thigh);
       thigh.position.set(0.095 * side, -0.02, 0);
+      thigh.rotation.order = 'YXZ'; // turn-out first, then swing in the turned plane
       add(thigh, lathe('shortLeg', PROFILES.shortLeg), shorts, 0, 0, 0);
       add(thigh, lathe('thigh', PROFILES.thigh), skin, 0, 0, 0);
       thigh.add(shin);
@@ -603,6 +661,78 @@ export class PlayerModel {
     return out.set(0, -0.012, 0.09).applyMatrix4(f.matrixWorld);
   }
 
+  // Two-bone leg IK: bends hip and knee so the boot meets `target` (a world point on
+  // the ball's surface), blended over the animated pose by w. Runs on the joint
+  // array itself, so replays record the corrected legs.
+  reachFoot(left: boolean, target: THREE.Vector3, w: number, inside = 0) {
+    const j = this.joints;
+    if (w <= 0.01 || Math.abs(j[J.rootRX]) > 0.3) return;
+    this.root.updateMatrixWorld(true);
+    const T = this.pelvis.worldToLocal(ikT.copy(target));
+    const ground = this.pelvis.worldToLocal(ikG.set(target.x, 0, target.z)).y;
+    const hip = (left ? this.lThigh : this.rThigh).position;
+    // the ankle sits above and behind the striking point; for a side-foot it is
+    // beside the ball with the instep facing it
+    const sx = left ? 1 : -1;
+    T.y += 0.035;
+    T.z -= 0.08 * (1 - inside) + 0.01;
+    T.x += sx * 0.07 * inside;
+    T.y = Math.max(T.y, ground + 0.085);
+    const ty = left ? j[J.lLegY] : -j[J.rLegY];
+    const L1 = 0.45;
+    const L2 = 0.42;
+    // Out of reach: lunge the hips forward and sink them, like a real stride onto the ball.
+    const reach = L1 + L2 - 0.03;
+    const dz0 = T.z - hip.z;
+    let dist = ikD.copy(T).sub(hip).length();
+    if (dist > reach) {
+      const shift = Math.min(0.2, Math.max(0, dz0 * 0.5), (dist - reach) * 1.2);
+      T.z -= shift;
+      dist = ikD.copy(T).sub(hip).length();
+      let drop = 0;
+      if (dist > reach) {
+        const h = Math.hypot(T.x - hip.x, T.z - hip.z);
+        const v = hip.y - T.y;
+        drop = Math.min(0.16, Math.max(0, v - Math.sqrt(Math.max(0, reach * reach - h * h))));
+        T.y += drop;
+      }
+      j[J.rootZ] += (shift * this.body.scale.z - j[J.rootZ]) * w;
+      j[J.pelvisDrop] += (Math.max(j[J.pelvisDrop], j[J.pelvisDrop] + drop) - j[J.pelvisDrop]) * w;
+      j[J.torsoX] += 0.25 * Math.min(1, shift / 0.2) * w; // lean into the lunge
+    }
+    const goal = ikGoal.copy(T);
+    let tx = 0;
+    let tz = 0;
+    let k = 0;
+    for (let it = 0; it < 3; it++) {
+      const d = ikD.copy(goal).sub(hip).applyAxisAngle(Y_AXIS, -ty);
+      const L = Math.min(L1 + L2 - 0.002, Math.max(0.2, d.length()));
+      d.normalize();
+      const alpha = Math.acos(clampN((L1 * L1 + L * L - L2 * L2) / (2 * L1 * L)));
+      k = Math.PI - Math.acos(clampN((L1 * L1 + L2 * L2 - L * L) / (2 * L1 * L2)));
+      // knee in front: the bend plane holds the reach direction and "forward"
+      const pv = ikP.set(0, 0, 1).addScaledVector(d, -d.z);
+      if (pv.lengthSq() < 1e-6) pv.set(0, 1, 0);
+      pv.normalize();
+      const t = d.multiplyScalar(Math.cos(alpha)).addScaledVector(pv, Math.sin(alpha));
+      tz = Math.asin(clampN(t.x));
+      tx = Math.atan2(-t.z, -t.y);
+      // forward kinematics, then nudge the goal by the residual
+      ikE.set(tx, ty, tz, 'YXZ');
+      const ankle = ikA.set(0, -L1 - L2 * Math.cos(k), -L2 * Math.sin(k)).applyEuler(ikE).add(hip);
+      goal.add(ikD.copy(T).sub(ankle));
+    }
+    const th = left ? J.lThighX : J.rThighX;
+    const tzI = left ? J.lThighZ : J.rThighZ;
+    const sh = left ? J.lShinX : J.rShinX;
+    const ft = left ? J.lFootX : J.rFootX;
+    j[th] += (tx - j[th]) * w;
+    j[tzI] += ((left ? tz : -tz) - j[tzI]) * w;
+    j[sh] += (k - j[sh]) * w;
+    j[ft] += (-(tx + k) * 0.8 - j[ft]) * w; // keep the sole roughly level
+    this.apply();
+  }
+
   setTarget(s: PoseState) {
     computePose(this.target, s);
   }
@@ -620,17 +750,17 @@ export class PlayerModel {
   }
 
   apply(j: Float32Array = this.joints) {
-    this.body.position.y = j[J.rootY];
+    this.body.position.set(0, j[J.rootY], j[J.rootZ]);
     this.body.rotation.set(j[J.rootRX], 0, j[J.rootRZ]);
     this.pelvis.position.y = 0.94 - j[J.pelvisDrop];
     this.torso.rotation.set(j[J.torsoX], j[J.torsoY], j[J.torsoZ]);
-    this.head.rotation.x = j[J.headX];
+    this.head.rotation.set(j[J.headX], j[J.headY], 0);
     this.lArm.rotation.set(j[J.lArmX], 0, j[J.lArmZ]);
     this.rArm.rotation.set(j[J.rArmX], 0, -j[J.rArmZ]);
     this.lFore.rotation.x = j[J.lForeX];
     this.rFore.rotation.x = j[J.rForeX];
-    this.lThigh.rotation.set(j[J.lThighX], 0, j[J.lThighZ]);
-    this.rThigh.rotation.set(j[J.rThighX], 0, -j[J.rThighZ]);
+    this.lThigh.rotation.set(j[J.lThighX], j[J.lLegY], j[J.lThighZ]);
+    this.rThigh.rotation.set(j[J.rThighX], -j[J.rLegY], -j[J.rThighZ]);
     this.lShin.rotation.x = j[J.lShinX];
     this.rShin.rotation.x = j[J.rShinX];
     this.lFoot.rotation.x = j[J.lFootX];

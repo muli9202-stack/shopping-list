@@ -265,7 +265,7 @@ export class Plr {
     return base * (this.team.boost ? 1.04 : 1) * (sprint ? 1 : 0.68) * (0.78 + 0.22 * this.stamina) * (this.stamina < 0.2 ? 0.9 : 1) * (this.limp ? 0.72 : 1) * (withBall ? (sprint ? 0.93 : 0.92) : 1);
   }
   busy() {
-    return !!this.action && ['slide', 'fallen', 'dive', 'tackle', 'throw', 'celebrate'].includes(this.action.kind);
+    return !!this.action && ['slide', 'fallen', 'dive', 'tackle', 'throw', 'celebrate', 'stumble'].includes(this.action.kind);
   }
   down() {
     return !!this.action && (this.action.kind === 'fallen' || (this.action.kind === 'slide' && this.action.t > 0.15) || this.action.kind === 'dive');
@@ -967,6 +967,7 @@ export class Match {
     if (!v) return;
     v.vel.multiplyScalar(0.4);
     v.stun = 0.5;
+    if (!v.action) this.stumble(v);
     if (this.owner === v && Math.random() < 0.35) this.owner = null;
     this.hud.banner('משיכה בחולצה', '', 'info', 1);
     // tactical foul: often whistled, often a yellow
@@ -985,9 +986,14 @@ export class Match {
         this.owner = null;
         this.ball.vel.add(p.dir().multiplyScalar(2));
       }
-    }
+    } else if (!v.action) this.stumble(v);
     const behind = p.dir().dot(v.dir()) > 0.5;
     if (behind || Math.random() < 0.5) this.foul(p, v, behind ? 0.75 : 0.5, false, true);
+  }
+  // Knocked off balance but fights to stay up.
+  stumble(v: Plr) {
+    v.action = { kind: 'stumble', t: 0, dur: 0.75, contact: 1, fired: true };
+    if (this.owner === v && Math.random() < 0.3) this.owner = null;
   }
   trip(p: Plr) {
     const v = this.victimNear(p, 1.4);
@@ -1158,6 +1164,9 @@ export class Match {
     const right = new V(-Math.cos(p.facing), 0, Math.sin(p.facing));
     const lat = side.dot(right);
     p.pose.leftFoot = Math.abs(lat) > 0.3 ? lat < 0 : p.d.foot === 'L';
+    // short ground passes are side-footed; shots and long balls use the laces
+    p.pose.inside = (o.type === 'pass' || o.type === 'through') && o.power < 0.75 && !o.setPiece ? 1 : 0;
+    p.pose.power = clamp(o.type === 'shot' ? o.power : o.power * 0.8, 0, 1);
     p.action = { kind, t: 0, dur, contact: kind === 'throw' ? 0.62 : 0.6, fired: false, order: o };
     p.pending = null;
   }
@@ -1706,7 +1715,9 @@ export class Match {
         desired.copy(p.action.dir!).multiplyScalar(Math.max(0, 8 * (1 - p.action.t / 0.8)));
       } else if (k === 'tackle') desired.copy(p.vel).multiplyScalar(0.6);
       else if (k === 'dive') desired.copy(p.gk.diveVel).multiplyScalar(p.action.t < 0.55 ? 1 : 0.15);
-      else if (k === 'fallen') desired.set(0, 0, 0); else if (k === 'skill' || k === 'roulette') desired.copy(p.vel);
+      else if (k === 'fallen') desired.set(0, 0, 0);
+      else if (k === 'stumble') desired.copy(p.vel).multiplyScalar(0.5);
+      else if (k === 'skill' || k === 'roulette') desired.copy(p.vel);
     }
     if (p.stun > 0) desired.multiplyScalar(0.25);
     if (p.charging && this.owner !== p) desired.multiplyScalar(0.9);
@@ -1766,8 +1777,11 @@ export class Match {
     const slick = (this.setup.weather === 'rain' ? 0.5 : 0) + (mud > 4 ? (mud - 4) * (this.setup.weather === 'rain' ? 0.25 : 0.08) : 0);
     const hard = Math.abs(p.turn) > 3.5 || p.accelF < -9;
     if (slick > 0 && hard && speed > 7 && !p.action && Math.random() < dt * slick) {
-      p.action = { kind: 'fallen', t: 0, dur: 1.2, contact: 1, fired: false };
-      if (this.owner === p) this.owner = null;
+      if (Math.random() < 0.5) this.stumble(p);
+      else {
+        p.action = { kind: 'fallen', t: 0, dur: 1.2, contact: 1, fired: false };
+        if (this.owner === p) this.owner = null;
+      }
     }
   }
 
@@ -1985,7 +1999,7 @@ export class Match {
         p.pos.z += (dz / d) * (0.6 - d) * 0.7;
         this.refPos.x -= (dx / d) * (0.6 - d) * 0.3;
         this.refPos.z -= (dz / d) * (0.6 - d) * 0.3;
-        if (p.vel.length() > 7 && Math.random() < dt * 3) p.action = { kind: 'fallen', t: 0, dur: 1, contact: 1, fired: false };
+        if (p.vel.length() > 7 && !p.action && Math.random() < dt * 3) this.stumble(p);
       }
     }
     {
@@ -3181,6 +3195,15 @@ export class Match {
       ps.gkReady = p.isGK && hdist(this.ball.pos, p.pos) < 30;
       ps.touch = p.touchAnim > 0 ? 1 - p.touchAnim / 0.22 : -1;
       ps.touchLeft = p.touchLeft;
+      {
+        const b = this.ball.pos;
+        const dx = b.x - p.pos.x;
+        const dz = b.z - p.pos.z;
+        const fwd = dx * Math.sin(p.facing) + dz * Math.cos(p.facing);
+        const lft = dx * Math.cos(p.facing) - dz * Math.sin(p.facing);
+        ps.look = Math.atan2(lft, fwd);
+        ps.lookDown = Math.atan2(1.6 * p.hs - b.y, Math.max(0.3, Math.hypot(dx, dz)));
+      }
       if (this.phase === 'goal' && p.team.side === this.goalSide && p !== this.goalScorer && !p.isGK) {
         ps.action = 'celebrate';
         ps.celebrateStyle = 1;
@@ -3190,11 +3213,48 @@ export class Match {
       p.model.blend(dt, fast ? 26 : 12);
       p.model.root.position.copy(p.pos);
       p.model.root.rotation.y = p.facing;
+      this.footIK(p);
     }
     if (this.phase === 'replay') return;
     this.ballMesh.position.copy(this.ball.pos);
     this.ballMesh.quaternion.copy(this.ball.quat);
   }
+
+  // Continuous ball-foot IK: whenever a foot is meant to meet the ball (dribble
+  // touches, traps, passes, shots, skill moves) the leg is bent onto the ball's
+  // near face instead of trusting the canned swing.
+  private footIK(p: Plr) {
+    const b = this.ball.pos;
+    if (b.y > 0.5 || this.held === p) return;
+    const d = hdist(b, p.pos);
+    if (d > 1.15 * p.hs) return;
+    const a = p.action;
+    let w = 0;
+    let left = p.pose.leftFoot;
+    if (a && (a.kind === 'kick' || a.kind === 'lob')) {
+      const u = a.t / a.dur;
+      const c = a.contact;
+      w = u < c ? clamp(1 - (c - u) / 0.3, 0, 1) : clamp(1 - (u - c) / 0.08, 0, 1);
+    } else if (a && a.kind === 'trap') w = 0.9 * Math.sin(Math.PI * clamp(a.t / a.dur, 0, 1));
+    else if (a && (a.kind === 'skill' || a.kind === 'roulette') && this.owner === p) w = 0.45;
+    else if (!a && p.touchAnim > 0.12) {
+      // just after a touch: the foot follows through off the ball
+      left = p.touchLeft;
+      w = clamp((p.touchAnim - 0.12) / 0.1, 0, 1);
+    } else if (!a && this.owner === p && p.touchCD < 0.16 && p.vel.length() > 1 && (b.x - p.pos.x) * Math.sin(p.facing) + (b.z - p.pos.z) * Math.cos(p.facing) < 0.6 + p.vel.length() * 0.05) {
+      // the next touch is coming: reach for the ball with the nearer foot
+      const right = Math.cos(p.facing) * (p.pos.x - b.x) + Math.sin(p.facing) * (b.z - p.pos.z);
+      left = right < 0;
+      w = p.touchCD > 0 ? 1 - p.touchCD / 0.16 : 0.85;
+    }
+    if (w <= 0.01) return;
+    const nx = d > 0.01 ? (b.x - p.pos.x) / d : Math.sin(p.facing);
+    const nz = d > 0.01 ? (b.z - p.pos.z) / d : Math.cos(p.facing);
+    const r = BALL_R * 0.95;
+    this.ikTarget.set(b.x - nx * r, Math.max(0.06, b.y - 0.03), b.z - nz * r);
+    p.model.reachFoot(left, this.ikTarget, w, a && a.kind === 'kick' ? (p.pose.inside ?? 0) : 0);
+  }
+  private ikTarget = new V();
 
   toScreen(pos: V3, up = 0) {
     const v = pos.clone();
