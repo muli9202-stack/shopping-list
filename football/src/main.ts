@@ -1114,6 +1114,15 @@ function controlsModal() {
 
 setCustomScope(settings.modelScope);
 restoreCustomModel().finally(() => {
+  // a private build can ask for its bundled character on every player (once; the
+  // settings screen can still change it afterwards)
+  const bundled = (window as unknown as { __FB_DEFAULT_MODEL?: { scope?: M.Settings['modelScope'] } }).__FB_DEFAULT_MODEL;
+  if (bundled?.scope && !M.load('fb-bundled-scope', false)) {
+    settings.modelScope = bundled.scope;
+    saveSettings();
+    M.save('fb-bundled-scope', true);
+    setCustomScope(settings.modelScope);
+  }
   home();
   document.getElementById('boot')?.remove();
 });
