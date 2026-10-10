@@ -10,6 +10,7 @@ import { speak } from '../services/tts';
 import type { PlacedItem, RoomState } from '../types';
 import { HALF, buildRoom } from './roomScene';
 import { spendPoints } from '../engine/progress';
+import { animateWalk, person } from '../arcade/models';
 
 
 /** The child's own 3D room: rotate the view, buy things with points, place and move them. */
@@ -20,7 +21,12 @@ export function RoomScreen() {
   const [shop, setShop] = useState(false);
   const [cat, setCat] = useState<ItemCat | 'colors'>('furniture');
   const [msg, setMsg] = useState('');
-  const api = useRef<{ sync: (room: RoomState, sel: string | null) => void } | null>(null);
+  const api = useRef<{ sync: (room: RoomState, sel: string | null) => void; night: (on: boolean) => void } | null>(null);
+  // play mode: the child's own character walks in the room, pets follow, items react to a touch
+  const [play, setPlay] = useState(false);
+  const [night, setNight] = useState(false);
+  const playRef = useRef(false);
+  playRef.current = play;
   useGuide('room');
 
   useEffect(() => {
@@ -45,7 +51,48 @@ export function RoomScreen() {
     controls.maxAzimuthAngle = Math.PI / 2 + 0.1;
     controls.enableDamping = true;
 
-    const { floorMat, wallMat, dispose: disposeRoom } = buildRoom(scene, renderer);
+    const { floorMat, wallMat, setNight: nightMode, dispose: disposeRoom } = buildRoom(scene, renderer);
+
+    // the child's character
+    const me = person(3, 0x8338ec);
+    const mePos = new THREE.Vector3(0, 0, 2.5);
+    me.root.position.copy(mePos);
+    me.root.visible = false;
+    scene.add(me.root);
+    const joy = { on: false, x0: 0, y0: 0, dx: 0, dy: 0 };
+    const keys = new Set<string>();
+    const hearts: { s: THREE.Sprite; t: number }[] = [];
+    const heartTex = (() => {
+      const c = document.createElement('canvas');
+      c.width = c.height = 64;
+      const ctx = c.getContext('2d')!;
+      ctx.font = '52px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('❤️', 32, 36);
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace;
+      return t;
+    })();
+    const pop = (obj: THREE.Object3D) => {
+      obj.userData.bounce = 1;
+      for (let i = 0; i < 3; i++) {
+        const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: heartTex, transparent: true, depthTest: false }));
+        sp.scale.setScalar(0.45);
+        sp.position.set(obj.position.x + (i - 1) * 0.3, 1.2 + i * 0.15, obj.position.z);
+        scene.add(sp);
+        hearts.push({ s: sp, t: 0 });
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (!playRef.current) return;
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.type === 'keydown' ? keys.add(e.key) : keys.delete(e.key);
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('keyup', onKey);
 
     const selRing = new THREE.Mesh(new THREE.RingGeometry(0.75, 0.85, 40), new THREE.MeshBasicMaterial({ color: '#8338ec', side: THREE.DoubleSide }));
     selRing.rotation.x = -Math.PI / 2;
@@ -92,7 +139,7 @@ export function RoomScreen() {
       const s = sel ? objects.get(sel) : null;
       selRing.visible = !!s;
     };
-    api.current = { sync };
+    api.current = { sync, night: nightMode };
 
     const resize = () => {
       renderer.setSize(el.clientWidth, el.clientHeight);
@@ -116,6 +163,21 @@ export function RoomScreen() {
       downAt = { x: e.clientX, y: e.clientY };
       ray.setFromCamera(ndc(e), camera);
       const hits = ray.intersectObjects([...objects.values()], true);
+      if (playRef.current) {
+        // play mode: touching an item makes it jump with hearts; dragging the floor walks
+        if (hits.length) {
+          let o: THREE.Object3D | null = hits[0].object;
+          while (o && !o.userData.uid) o = o.parent;
+          if (o) {
+            pop(o);
+            sfx('pop');
+            return;
+          }
+        }
+        Object.assign(joy, { on: true, x0: e.clientX, y0: e.clientY, dx: 0, dy: 0 });
+        controls.enabled = false;
+        return;
+      }
       if (hits.length) {
         let o: THREE.Object3D | null = hits[0].object;
         while (o && !o.userData.uid) o = o.parent;
@@ -128,6 +190,14 @@ export function RoomScreen() {
       }
     };
     const onMove = (e: PointerEvent) => {
+      if (joy.on) {
+        const dx = e.clientX - joy.x0;
+        const dy = e.clientY - joy.y0;
+        const l = Math.max(40, Math.hypot(dx, dy));
+        joy.dx = dx / l;
+        joy.dy = dy / l;
+        return;
+      }
       if (!dragging) return;
       ray.setFromCamera(ndc(e), camera);
       const p = new THREE.Vector3();
@@ -140,6 +210,11 @@ export function RoomScreen() {
       }
     };
     const onUp = (e: PointerEvent) => {
+      if (joy.on) {
+        Object.assign(joy, { on: false, dx: 0, dy: 0 });
+        controls.enabled = true;
+        return;
+      }
       if (dragging) {
         const obj = objects.get(dragging);
         const uid = dragging;
@@ -162,8 +237,61 @@ export function RoomScreen() {
 
     const clock = new THREE.Clock();
     let raf = 0;
+    let prev = 0;
     const loop = () => {
       const t = clock.getElapsedTime();
+      const dt = Math.min(0.05, t - prev);
+      prev = t;
+      me.root.visible = playRef.current;
+      if (playRef.current) {
+        let dx = joy.dx;
+        let dy = joy.dy;
+        if (keys.has('ArrowLeft')) dx -= 1;
+        if (keys.has('ArrowRight')) dx += 1;
+        if (keys.has('ArrowUp')) dy -= 1;
+        if (keys.has('ArrowDown')) dy += 1;
+        const moving = Math.hypot(dx, dy) > 0.15;
+        if (moving) {
+          // move relative to the camera: up on the screen = away from the camera
+          const fwd = new THREE.Vector3().subVectors(controls.target, camera.position).setY(0).normalize();
+          const right = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0));
+          const dir = right.multiplyScalar(dx).add(fwd.multiplyScalar(-dy)).normalize();
+          mePos.addScaledVector(dir, 3 * dt);
+          mePos.x = THREE.MathUtils.clamp(mePos.x, -HALF + 0.4, HALF - 0.4);
+          mePos.z = THREE.MathUtils.clamp(mePos.z, -HALF + 0.4, HALF - 0.4);
+          me.root.rotation.y = Math.atan2(dir.x, dir.z);
+        }
+        me.root.position.copy(mePos);
+        animateWalk(me, t, moving, false);
+        controls.target.lerp(new THREE.Vector3(mePos.x, 0.8, mePos.z), 0.05);
+        // pets follow the child
+        let k = 0;
+        for (const obj of objects.values()) {
+          const def = ITEM_BY_ID[(current?.placed.find((p) => p.uid === obj.userData.uid)?.itemId) ?? ''];
+          if (def?.cat !== 'animals' || def.id === 'fish') continue;
+          const goal = new THREE.Vector3(mePos.x + Math.cos(k * 2.1 + 1) * 1.2, 0, mePos.z + Math.sin(k * 2.1 + 1) * 1.2);
+          const d = goal.sub(obj.position).setY(0);
+          if (d.length() > 0.3) {
+            obj.position.addScaledVector(d.normalize(), Math.min(2.4 * dt, d.length()));
+            obj.rotation.y = Math.atan2(d.x, d.z);
+          }
+          k++;
+        }
+      }
+      for (const h of [...hearts]) {
+        h.t += dt;
+        h.s.position.y += dt * 0.8;
+        (h.s.material as THREE.SpriteMaterial).opacity = Math.max(0, 1 - h.t);
+        if (h.t > 1) {
+          scene.remove(h.s);
+          hearts.splice(hearts.indexOf(h), 1);
+        }
+      }
+      for (const obj of objects.values())
+        if (obj.userData.bounce > 0) {
+          obj.userData.bounce = Math.max(0, obj.userData.bounce - dt * 2.5);
+          obj.position.y = Math.sin(obj.userData.bounce * Math.PI) * 0.35;
+        }
       controls.update();
       for (const obj of objects.values()) {
         if (obj.userData.grow < 1) {
@@ -192,6 +320,8 @@ export function RoomScreen() {
       renderer.domElement.removeEventListener('pointerdown', onDown);
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keyup', onKey);
       controls.dispose();
       disposeRoom();
       renderer.dispose();
@@ -203,6 +333,7 @@ export function RoomScreen() {
   useEffect(() => {
     if (child) api.current?.sync(child.room, selected);
   }, [child, selected]);
+  useEffect(() => api.current?.night(night), [night]);
 
   if (!child) return null;
   const room = child.room;
@@ -278,12 +409,25 @@ export function RoomScreen() {
         )}
       </div>
       <p className="small muted center" style={{ margin: '6px 0' }}>
-        👆 גררו ברקע כדי לסובב · גררו חפץ כדי להזיז אותו
+        {play ? '🚶 גררו את האצבע כדי ללכת · לחצו על חיה או חפץ' : '👆 גררו ברקע כדי לסובב · גררו חפץ כדי להזיז אותו'}
       </p>
       {msg && <div className="card center" style={{ background: '#fff9db' }}>{msg}</div>}
       <div className="row" style={{ marginTop: 8 }}>
         <button className="btn big green grow" onClick={() => setShop(true)}>
           🛒 חנות
+        </button>
+        <button
+          className={`btn big ${play ? 'purple' : 'white'}`}
+          onClick={() => {
+            setPlay(!play);
+            setSelected(null);
+            sfx('pop');
+          }}
+        >
+          {play ? '✋ לעצב' : '🚶 לטייל'}
+        </button>
+        <button className="btn big white" aria-label="יום או לילה" onClick={() => setNight(!night)}>
+          {night ? '☀️' : '🌙'}
         </button>
       </div>
       {stored.length > 0 && (

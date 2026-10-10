@@ -103,7 +103,8 @@ export function buildRoom(scene: THREE.Scene, renderer: THREE.WebGLRenderer) {
   pmrem.dispose();
 
   // light: soft sky light + warm sun through the window + a fill light
-  scene.add(new THREE.HemisphereLight(0xfff7ec, 0xc9a67a, 0.8));
+  const hemi = new THREE.HemisphereLight(0xfff7ec, 0xc9a67a, 0.8);
+  scene.add(hemi);
   const sun = new THREE.DirectionalLight(0xfff1d6, 2.6);
   sun.position.set(4, 9, -12);
   sun.target.position.set(0, 0, 1);
@@ -306,5 +307,40 @@ export function buildRoom(scene: THREE.Scene, renderer: THREE.WebGLRenderer) {
   cord.position.set(0, WALL_H - 0.05, 0);
   scene.add(shade, cord);
 
-  return { floorMat, wallMat, dispose: () => clearInterval(clockTimer) };
+  // night: the sun goes down, the sky turns dark blue and the lamps light the room
+  const daySky = (skyTex.image as HTMLCanvasElement).toDataURL();
+  const setNight = (on: boolean) => {
+    hemi.intensity = on ? 0.22 : 0.8;
+    sun.intensity = on ? 0.15 : 2.6;
+    fill.intensity = on ? 0.1 : 0.7;
+    lampLight.intensity = on ? 9 : 2;
+    window2Sun.intensity = on ? 0 : 18;
+    renderer.toneMappingExposure = on ? 1.25 : 1.05;
+    (scene.background as THREE.Color).set(on ? '#1b2340' : '#f8f0e3');
+    const c = skyTex.image as HTMLCanvasElement;
+    const ctx = c.getContext('2d')!;
+    if (on) {
+      const g = ctx.createLinearGradient(0, 0, 0, 256);
+      g.addColorStop(0, '#0b1a3a');
+      g.addColorStop(1, '#2b3d6b');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 256, 256);
+      ctx.fillStyle = '#fff';
+      for (let i = 0; i < 40; i++) ctx.fillRect((i * 97) % 256, (i * 53) % 170, 2, 2);
+      ctx.fillStyle = '#fff3bf';
+      ctx.beginPath();
+      ctx.arc(200, 50, 20, 0, Math.PI * 2);
+      ctx.fill();
+      skyTex.needsUpdate = true;
+    } else {
+      const img = new Image();
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0);
+        skyTex.needsUpdate = true;
+      };
+      img.src = daySky;
+    }
+  };
+
+  return { floorMat, wallMat, setNight, dispose: () => clearInterval(clockTimer) };
 }
