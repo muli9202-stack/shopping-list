@@ -8,7 +8,7 @@ import { eligibleSkills, gamesForSkill, mastery, weakestSkills } from './progres
  * - every 100 levels is a "tier": harder words, more questions, harder game modes
  * - from tier 4 the child's weakest topic is mixed in, from tier 7 two of them
  * - every 10th level is a champions level (several topics, a dictation-style game)
- * - every 25th level is a review of the child's own mistake words
+ * - every 25th level is a review of the child's own mistake words (every 100th is a champions level)
  */
 export const PATH_LENGTH = 1000;
 const UNIT = 8;
@@ -57,7 +57,7 @@ export function pathStep(c: Child, n: number): PathStep {
   const tier = tierOf(n);
   const rounds = 6 + Math.floor(tier / 2);
 
-  if (n % 25 === 0) {
+  if (n % 25 === 0 && n % 100 !== 0) {
     const skills = weakestSkills(c).slice(0, 3);
     return { n, kind: 'review', skills, topic: skills[0], game: (['cards', 'truefalse', 'detective'] as GameId[])[(n / 25) % 3], level: levelFor(c, n, skills), rounds: rounds + 2, intro: false };
   }
