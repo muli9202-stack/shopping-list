@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { APK_URL } from '../config';
 import { firebaseEnabled } from '../services/firebase';
@@ -11,25 +11,19 @@ import { useSpeakOnMount } from '../ui/kit';
 import { speak } from '../services/tts';
 
 /**
- * First screen. The account belongs to the parent, so login sits behind a neutral parent check
- * (Google Play Families policy: sign-in only behind an age/parent screen). Login with email is required.
+ * First screen. The account belongs to the parent: "parents' login" leads to the email login (the
+ * email and password are the parent check). Login with email is required.
  */
 export function LoginScreen() {
   const setMode = useStore((s) => s.setMode);
   const reset = useNav((s) => s.reset);
-  const [stage, setStage] = useState<'welcome' | 'gate' | 'login'>('welcome');
+  const [stage, setStage] = useState<'welcome' | 'login'>('welcome');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [info, setInfo] = useState('');
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
   const [isNew, setIsNew] = useState(false);
-  const [ans, setAns] = useState('');
-  const q = useMemo(() => {
-    const a = 6 + Math.floor(Math.random() * 7);
-    const b = 3 + Math.floor(Math.random() * 7);
-    return { a, b };
-  }, []);
   useSpeakOnMount('ברוכים הבאים לכותבים נכון! כדי להתחיל, צריך שאבא או אמא יתחברו. קראו להורים ולחצו על הכפתור.');
 
   const run = async (fn: () => Promise<void>) => {
@@ -66,8 +60,8 @@ export function LoginScreen() {
             <button
               className="btn big purple"
               onClick={() => {
-                setStage('gate');
-                speak('הורים, פתרו את התרגיל כדי להמשיך.');
+                setStage('login');
+                speak('הורים, התחברו עם המייל שלכם.');
               }}
             >
               🔑 כניסת הורים
@@ -79,28 +73,6 @@ export function LoginScreen() {
             </a>
           )}
         </>
-      )}
-
-      {stage === 'gate' && (
-        <div className="card center" style={{ width: '100%', maxWidth: 380, gap: 10 }}>
-          <b>לפני שממשיכים – שאלה להורים</b>
-          <div style={{ fontSize: 40, fontWeight: 700 }} dir="ltr">
-            {q.a} × {q.b} = ?
-          </div>
-          <input id="gate-answer" className="field" inputMode="numeric" dir="ltr" style={{ textAlign: 'center', maxWidth: 160 }} value={ans} onChange={(e) => setAns(e.target.value.replace(/\D/g, ''))} />
-          <button
-            className="btn purple"
-            onClick={() => {
-              if (Number(ans) === q.a * q.b) {
-                setErr('');
-                setStage('login');
-              } else setErr('התשובה לא נכונה, נסו שוב');
-            }}
-          >
-            המשך
-          </button>
-          {err && <div style={{ color: 'var(--red)' }}>{err}</div>}
-        </div>
       )}
 
       {stage === 'login' && (

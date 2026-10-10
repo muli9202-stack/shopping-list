@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PinPad } from '../ui/PinPad';
 import { useStore } from '../store';
 import { useNav } from '../nav';
 import { Mascot } from '../ui/Mascot';
@@ -14,6 +15,10 @@ export const GRADES = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ז׳', '
 export function FamilyScreen() {
   const children = useStore((s) => s.children);
   const setActive = useStore((s) => s.setActive);
+  const parentPin = useStore((s) => s.settings.parentPin);
+  const [locked, setLocked] = useState<string | null>(null);
+  const [pinErr, setPinErr] = useState('');
+  const lockedChild = children.find((c) => c.id === locked);
   const email = useStore((s) => s.email);
   const go = useNav((s) => s.go);
   const [adding, setAdding] = useState(false);
@@ -40,6 +45,11 @@ export function FamilyScreen() {
             className="card row"
             style={{ border: 'none', cursor: 'pointer', textAlign: 'right' }}
             onClick={() => {
+              if (c.pin) {
+                setLocked(c.id);
+                setPinErr('');
+                return;
+              }
               setActive(c.id);
               speak('שלום!');
               go({ name: 'child' });
@@ -53,7 +63,7 @@ export function FamilyScreen() {
                 כיתה {GRADES[c.grade - 1]} · ⭐ {c.points} · 🔥 {c.streak}
               </span>
             </span>
-            <span style={{ fontSize: 30 }}>⬅️</span>
+            <span style={{ fontSize: 30 }}>{c.pin ? '🔒' : '⬅️'}</span>
           </button>
         ))}
 
@@ -84,6 +94,29 @@ export function FamilyScreen() {
       )}
 
       {adding && <ChildForm onClose={() => setAdding(false)} />}
+      {lockedChild && (
+        <div className="overlay" onClick={() => setLocked(null)}>
+          <div className="modal center" onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontSize: 56 }}>{lockedChild.avatar}</div>
+            <PinPad
+              title={`הקוד של ${lockedChild.name}`}
+              error={pinErr}
+              onDone={(code) => {
+                // the child's own code, or the parents' code
+                if (code === lockedChild.pin || (parentPin && code === parentPin)) {
+                  setLocked(null);
+                  setActive(lockedChild.id);
+                  speak('שלום!');
+                  go({ name: 'child' });
+                } else setPinErr('הקוד לא נכון');
+              }}
+            />
+            <button className="btn ghost" onClick={() => setLocked(null)}>
+              ביטול
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { Mascot } from '../ui/Mascot';
 import { touchDay } from '../engine/progress';
 import { confetti, sfx } from '../ui/effects';
 import { speak } from '../services/tts';
+import { PinPad } from '../ui/PinPad';
 
 const SQUARES = [
   { id: 'teacher', emoji: '👩‍🏫', title: 'לומדים עם המורה', sub: 'המורה מסביר, מתרגלים, וממשיכים לבד', say: 'לומדים עם המורה. המורה מסביר לך, מתרגלים במשחק, והוא בוחר מה לומדים הלאה.', bg: 'linear-gradient(135deg,#3a86ff,#8338ec)' },
@@ -19,6 +20,7 @@ export function ChildHomeScreen() {
   const go = useNav((s) => s.go);
   const back = useNav((s) => s.back);
   const [bonus, setBonus] = useState(0);
+  const [pinOpen, setPinOpen] = useState(false);
 
   useEffect(() => {
     if (!child) return;
@@ -86,8 +88,12 @@ export function ChildHomeScreen() {
         <button className="btn white" onClick={() => go({ name: 'tricks' })}>
           💡 ספריית הטריקים
         </button>
+        <button className="btn white" onClick={() => setPinOpen(true)}>
+          {child.pin ? '🔒 הקוד שלי' : '🔓 קוד לפרופיל'}
+        </button>
       </div>
 
+      {pinOpen && <ChildPinModal hasPin={!!child.pin} onClose={() => setPinOpen(false)} />}
       {bonus > 0 && (
         <div className="overlay" onClick={() => setBonus(0)}>
           <div className="modal center">
@@ -102,6 +108,60 @@ export function ChildHomeScreen() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** The child chooses a code for their own profile (the parents' code always opens it too). */
+function ChildPinModal({ hasPin, onClose }: { hasPin: boolean; onClose: () => void }) {
+  const [stage, setStage] = useState<'menu' | 'new' | 'confirm'>(hasPin ? 'menu' : 'new');
+  const [first, setFirst] = useState('');
+  const [err, setErr] = useState('');
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="modal center" style={{ gap: 10 }} onClick={(e) => e.stopPropagation()}>
+        {stage === 'menu' ? (
+          <>
+            <b>לפרופיל שלך יש קוד 🔒</b>
+            <button className="btn purple" onClick={() => setStage('new')}>
+              החלפת קוד
+            </button>
+            <button
+              className="btn white"
+              onClick={() => {
+                updateActive((c) => ({ ...c, pin: undefined, updatedAt: Date.now() }));
+                onClose();
+              }}
+            >
+              בלי קוד
+            </button>
+          </>
+        ) : (
+          <PinPad
+            key={stage}
+            title={stage === 'new' ? 'בחרו קוד בן 4 ספרות לפרופיל שלכם' : 'הקלידו את הקוד שוב'}
+            error={err}
+            onDone={(code) => {
+              setErr('');
+              if (stage === 'new') {
+                setFirst(code);
+                setStage('confirm');
+              } else if (code === first) {
+                updateActive((c) => ({ ...c, pin: code, updatedAt: Date.now() }));
+                sfx('win');
+                onClose();
+              } else {
+                setErr('הקודים לא תואמים, נסו שוב');
+                setStage('new');
+              }
+            }}
+          />
+        )}
+        <p className="small muted" style={{ margin: 0 }}>גם הקוד של ההורים פותח את הפרופיל.</p>
+        <button className="btn ghost" onClick={onClose}>
+          סגירה
+        </button>
+      </div>
     </div>
   );
 }

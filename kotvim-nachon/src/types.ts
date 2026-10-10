@@ -121,6 +121,8 @@ export interface Child {
   /** the 1000-level path the teacher leads (engine/path.ts): next level to play and best stars per level */
   path?: { level: number; stars: Record<string, number> };
   aiSummary?: { t: number; text: string };
+  /** the child's own 4-digit code to open their profile (the parents' code opens it too) */
+  pin?: string;
 }
 
 export interface FamilySettings {
