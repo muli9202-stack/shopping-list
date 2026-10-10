@@ -9,7 +9,10 @@ export type SkillId =
   | 'prefixes'
   | 'im_im'
   | 'full_spelling'
-  | 'roots';
+  | 'roots'
+  | 'plural'
+  | 'gender'
+  | 'homophones';
 
 /** Game difficulty: easy, medium, champions, experts. */
 export type Level = 1 | 2 | 3 | 4;

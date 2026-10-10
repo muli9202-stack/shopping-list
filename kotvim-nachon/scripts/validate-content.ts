@@ -12,7 +12,7 @@
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { WORDS, IM_SENTENCES } from '../src/data/words.ts';
+import { WORDS, IM_SENTENCES, HOMO_SENTENCES } from '../src/data/words.ts';
 import { DETECTIVE_SENTENCES } from '../src/data/detective.ts';
 import { FAMILIES } from '../src/data/roots.ts';
 import { THEMES } from '../src/arcade/themes.ts';
@@ -98,6 +98,7 @@ const add = (w: string, where: string) => {
 };
 for (const [skill, list] of Object.entries(WORDS)) for (const e of list) add(e.w, `words:${skill}`);
 for (const s of IM_SENTENCES) for (const t of tokens(s.s.replace('___', s.a))) add(t, 'im_im sentence');
+for (const s of HOMO_SENTENCES) for (const t of tokens(s.s.replace('___', s.a))) add(t, 'homophone sentence');
 for (const d of DICTATIONS) for (const s of d.sentences) for (const t of tokens(s)) add(t, `dictation ${d.id}`);
 for (const d of SHORT_DICTATIONS) for (const s of d.sentences) for (const t of tokens(s)) add(t, `short dictation ${d.id}`);
 for (const f of FAMILIES) for (const w of f.words) add(w, `family ${f.root}`);

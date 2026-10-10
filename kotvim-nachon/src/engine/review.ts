@@ -1,5 +1,6 @@
 import type { Child, SkillId } from '../types';
 import { dayKey } from './progress.ts';
+import { sentencesFor } from '../data/words.ts';
 
 /**
  * Spaced repetition (Leitner boxes) for the child's own mistakes.
@@ -25,7 +26,7 @@ function addDays(days: number) {
 }
 
 export function reviewAnswer(c: Child, skill: SkillId, word: string, correct: boolean): Child {
-  if (!word || skill === 'im_im') return c;
+  if (!word || sentencesFor(skill)) return c;
   const key = reviewKey(skill, word);
   const review = { ...(c.review ?? {}) };
   const cur = review[key];

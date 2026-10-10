@@ -1,5 +1,5 @@
 import type { Question, SkillId } from '../types';
-import { IM_SENTENCES, WORDS, type WordEntry } from '../data/words.ts';
+import { WORDS, sentencesFor, type WordEntry } from '../data/words.ts';
 import { diffIndex, norm } from './analyze.ts';
 // wrong spellings checked with hspell (scripts/validate-content.ts): never a real Hebrew word
 import DISTRACTORS from '../data/generated/distractors.json' with { type: 'json' };
@@ -88,23 +88,26 @@ export function makeQuestion(skill: SkillId, entry: WordEntry, kind: 'choose' | 
   return { ...base, kind: 'choose', display: entry.w, answer: entry.w, options: shuffle([entry.w, ...wr.wrong.slice(0, 2)]) };
 }
 
-function imQuestions(grade: number): Question[] {
-  return shuffle(IM_SENTENCES.filter((s) => s.g <= grade + 1)).map((s) => ({
+/** Sentence questions (אם/עם, words that sound the same): choose the word that fits the sentence. */
+function sentenceQuestions(skill: SkillId, grade: number): Question[] {
+  const list = sentencesFor(skill) ?? [];
+  const fit = list.filter((s) => s.g <= grade + 1);
+  return shuffle(fit.length ? fit : list).map((s) => ({
     kind: 'sentence' as const,
-    skill: 'im_im' as const,
+    skill,
     word: s.a,
     say: s.s.replace('___', s.a),
     display: s.s,
     answer: s.a,
-    options: shuffle(['אם', 'עם']),
-    emoji: s.a === 'עם' ? '🤝' : '🤔',
+    options: shuffle([s.a, s.b]),
+    emoji: skill === 'im_im' ? (s.a === 'עם' ? '🤝' : '🤔') : '👂',
   }));
 }
 
 /** Build `count` questions for a skill. `prefer` chooses the question style when possible. */
 /** `seeOnly`: the game shows the words themselves (judge right/wrong), so it works without sound. */
 export function buildQuestions(skill: SkillId, grade: number, count: number, prefer: 'choose' | 'missing' = 'choose', seeOnly = false): Question[] {
-  if (skill === 'im_im') return cycle(imQuestions(grade), count);
+  if (sentencesFor(skill)) return cycle(sentenceQuestions(skill, grade), count);
   const noSound = visualOnly && !seeOnly;
   if (noSound) prefer = 'missing';
   const qs: Question[] = [];
@@ -146,7 +149,7 @@ export function mixedQuestions(skills: SkillId[], grade: number, perSkill: numbe
 
 /** Plain words for a skill (for typing and building games). */
 export function wordsFor(skill: SkillId, grade: number, count: number): WordEntry[] {
-  if (skill === 'im_im') return [];
+  if (sentencesFor(skill)) return [];
   const pool = poolFor(skill, grade).filter((w) => norm(w.w).length <= (grade <= 2 ? 6 : 9));
   const seen = visualOnly ? pool.filter((w) => w.e) : pool;
   return cycle(seen.length >= 4 ? seen : pool, count);
@@ -177,7 +180,7 @@ export function detectiveItems(skills: SkillId[], grade: number, count: number, 
   const covered = fit.filter((x) => x.s.split(' ').some((w) => bySkill.has(w.replace(/[.,!?:]/g, '')))).length;
   if (covered < count)
     for (const [skill, list] of Object.entries(WORDS) as [SkillId, WordEntry[]][])
-      if (skill !== 'im_im') for (const entry of list) if (hasDistractor(skill, entry.w) && !bySkill.has(entry.w)) bySkill.set(entry.w, { skill, entry });
+      if (!sentencesFor(skill)) for (const entry of list) if (hasDistractor(skill, entry.w) && !bySkill.has(entry.w)) bySkill.set(entry.w, { skill, entry });
   const out: DetectiveItem[] = [];
   const focusFirst = (a: DetectiveItem[]) => a.sort((x, y) => Number(!!focus[y.skill]?.has(y.right)) - Number(!!focus[x.skill]?.has(x.right)));
   for (const x of shuffle(fit)) {
@@ -194,12 +197,12 @@ export function detectiveItems(skills: SkillId[], grade: number, count: number, 
     out.push({ skill, words: shown, bad: t.i, right: entry.w, wrong, options: shuffle([entry.w, ...wr.wrong.slice(0, 2)]), sentence: x.s });
   }
   // אם / עם: the sentences of that topic, with the wrong one of the two
-  if (skills.includes('im_im'))
-    for (const x of shuffle(IM_SENTENCES.filter((y) => y.g <= grade + 1))) {
-      const wrong = x.a === 'אם' ? 'עם' : 'אם';
+  for (const sk of skills.filter((s) => sentencesFor(s)))
+    for (const x of shuffle(sentencesFor(sk)!.filter((y) => y.g <= grade + 1))) {
+      const wrong = x.b;
       const words = x.s.replace('___', wrong).split(' ');
       const bad = words.findIndex((w) => w === wrong || w.startsWith(wrong + ','));
-      if (bad >= 0) out.push({ skill: 'im_im', words, bad, right: x.a, wrong, options: shuffle([x.a, wrong]), sentence: x.s.replace('___', x.a) });
+      if (bad >= 0) out.push({ skill: sk, words, bad, right: x.a, wrong, options: shuffle([x.a, wrong]), sentence: x.s.replace('___', x.a) });
     }
   return focusFirst(shuffle(out)).slice(0, count);
 }

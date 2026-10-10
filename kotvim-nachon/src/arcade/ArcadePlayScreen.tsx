@@ -6,6 +6,7 @@ import { confetti, sfx } from '../ui/effects';
 import { speak } from '../services/tts';
 import { changeCoins } from '../engine/merge';
 import { buildQuestions } from '../engine/questions';
+import { sentencesFor } from '../data/words';
 import { weakestSkills } from '../engine/progress';
 import { reviewAnswer } from '../engine/review';
 import { recordAnswer } from '../engine/progress';
@@ -28,7 +29,7 @@ export function ArcadePlayScreen({ id }: { id: string }) {
   const [over, setOver] = useState(false);
   const startServed = useRef(0);
   const grade = child?.grade ?? 3;
-  const skills = useMemo(() => (child ? weakestSkills(child).filter((s) => s !== 'im_im').slice(0, 3) : []), [child?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const skills = useMemo(() => (child ? weakestSkills(child).filter((s) => !sentencesFor(s)).slice(0, 3) : []), [child?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const persist = () => {
     const e = engine.current;

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import type { GameProps } from './common';
 import { GameShell, HebrewKeyboard, showNikud, useSayQuestion } from './common';
 import { shuffle, wordsFor } from '../engine/questions';
-import { IM_SENTENCES } from '../data/words';
+import { sentencesFor } from '../data/words';
 import { classifyWord, norm } from '../engine/analyze';
 import { sfx } from '../ui/effects';
 import { speak } from '../services/tts';
@@ -24,8 +24,9 @@ export function writeItems(skills: SkillId[], grade: number, rounds: number): It
   const per = Math.ceil(rounds / skills.length);
   const list: Item[] = [];
   for (const s of skills) {
-    if (s === 'im_im') {
-      shuffle(IM_SENTENCES.filter((x) => x.g <= grade + 1))
+    const sentences = sentencesFor(s);
+    if (sentences) {
+      shuffle(sentences.filter((x) => x.g <= grade + 1))
         .slice(0, per)
         .forEach((x) => list.push({ skill: s, word: x.a, say: x.s.replace('___', x.a), sentence: x.s }));
     } else wordsFor(s, grade, per).forEach((w) => list.push({ skill: s, word: w.w, say: w.n ?? w.w, nikud: w.n, emoji: w.e }));

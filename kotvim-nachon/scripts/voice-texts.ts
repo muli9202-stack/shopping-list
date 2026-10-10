@@ -8,7 +8,7 @@
  */
 import { readFileSync, readdirSync, statSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { WORDS, IM_SENTENCES } from '../src/data/words.ts';
+import { WORDS, IM_SENTENCES, HOMO_SENTENCES } from '../src/data/words.ts';
 import { DICTATIONS, SHORT_DICTATIONS, STORY_IDEAS } from '../src/data/stories.ts';
 import { GUIDES } from '../src/data/guides.ts';
 import { PRAISE, ENCOURAGE } from '../src/data/phrases.ts';
@@ -48,7 +48,7 @@ function addWithSegments(text: string, opts: { slow?: boolean } = {}) {
 for (const list of Object.values(WORDS)) for (const e of list) add(e.w, { nikud: e.n, slow: true, alias: [e.n] });
 
 // sentences
-for (const s of IM_SENTENCES) add(s.s.replace('___', s.a), { slow: true });
+for (const s of [...IM_SENTENCES, ...HOMO_SENTENCES]) add(s.s.replace('___', s.a), { slow: true });
 for (const d of [...DICTATIONS, ...SHORT_DICTATIONS]) d.sentences.forEach((s, i) => add(s, { slow: true, alias: [d.spoken?.[i]] }));
 for (const list of Object.values(STORY_IDEAS)) for (const i of list) add(i.text);
 add('הרעיון לסיפור:');

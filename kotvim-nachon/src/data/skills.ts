@@ -25,6 +25,9 @@ export const SKILLS: SkillDef[] = [
   { id: 'prefixes', title: 'אותיות שנדבקות', parentTitle: 'תחיליות (ו, ה, ב, כ, ל, מ, ש)', groups: [], color: '#fab005', icon: '🚂', minGrade: 1 },
   { id: 'im_im', title: 'אם או עם?', parentTitle: 'אם / עם', groups: [], color: '#7950f2', icon: '🤝', minGrade: 1 },
   { id: 'roots', title: 'שורשים ומשפחות', parentTitle: 'שורשים ומשפחות מילים', groups: [], color: '#9c36b5', icon: '🌳', minGrade: 3 },
+  { id: 'plural', title: 'יחיד ורבים', parentTitle: 'צורות רבים (ים / ות, אות סופית)', groups: [], color: '#f76707', icon: '👨‍👩‍👧‍👦', minGrade: 2 },
+  { id: 'gender', title: 'זכר ונקבה', parentTitle: 'צורות נקבה (ה / ת בסוף)', groups: [], color: '#d6336c', icon: '👫', minGrade: 2 },
+  { id: 'homophones', title: 'נשמע אותו דבר', parentTitle: 'מילים שנשמעות אותו דבר (עט/עת, כל/קל...)', groups: [], color: '#0ca678', icon: '👂', minGrade: 2 },
   { id: 'full_spelling', title: 'כתיב מלא', parentTitle: 'כתיב מלא וחסר (ו/י)', groups: [['ו', ''], ['י', '']], color: '#1098ad', icon: '🧩', minGrade: 2 },
 ];
 

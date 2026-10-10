@@ -27,6 +27,39 @@ export interface Trick {
 
 /** Original tips & tricks for every common difficulty. Narrated aloud step by step. */
 export const TRICKS: Record<SkillId, Trick> = {
+  plural: {
+    skill: 'plural',
+    title: 'כשיש הרבה',
+    emoji: '👨‍👩‍👧‍👦',
+    steps: [
+      { say: 'כשיש הרבה, מוסיפים בסוף ים או ות: ילד, ילדים. ילדה, ילדות.', caption: 'ים או ות', visual: { kind: 'list', items: [{ w: 'ילדים', e: '👦👦' }, { w: 'ילדות', e: '👧👧' }] } },
+      { say: 'שימו לב! כשמוסיפים סוף, האות הסופית חוזרת להיות רגילה: מלך, מלכים. עץ, עצים.', caption: 'הסופית נעלמת', visual: { kind: 'morph', from: 'מלך', to: 'מלכים', emoji: '👑' } },
+      { say: 'מילה שנגמרת ב-ה או ב-ת, ברבים נגמרת ב-ות: מחברת, מחברות. מורה, מורות.', caption: 'ת ו-ה הופכות ל-ות', visual: { kind: 'morph', from: 'מחברת', to: 'מחברות', emoji: '📓' } },
+      { say: 'ואם במילה יש י כפולה, היא נשארת: עוגייה, עוגיות.', caption: 'הי הכפולה נשארת', visual: { kind: 'morph', from: 'עוגייה', to: 'עוגיות', emoji: '🍪' } },
+    ],
+  },
+  gender: {
+    skill: 'gender',
+    title: 'הוא והיא',
+    emoji: '👫',
+    steps: [
+      { say: 'כשמדברים על בת, הרבה מילים נגמרות ב-ה: גדול, גדולה. חכם, חכמה.', caption: 'הוא ⬅ היא: מוסיפים ה', visual: { kind: 'morph', from: 'גדול', to: 'גדולה', emoji: '🐘' } },
+      { say: 'ויש מילים שבנקבה נגמרות ב-ת: אוהב, אוהבת. כותב, כותבת.', caption: 'או מוסיפים ת', visual: { kind: 'morph', from: 'אוהב', to: 'אוהבת', emoji: '💖' } },
+      { say: 'צליל אַ בסוף מילה בנקבה נכתב כמעט תמיד ב-ה, ולא ב-א: יפה, קטנה, תלמידה.', caption: 'בסוף: ה ולא א', visual: { kind: 'list', items: [{ w: 'יפה', e: '🌸' }, { w: 'קטנה', e: '🐭' }, { w: 'תלמידה', e: '🧑‍🎓' }] } },
+      { say: 'וצליל אֶת בסוף נכתב עם ת, לא עם ט: יושבת, כותבת.', caption: 'בסוף: ת ולא ט', visual: { kind: 'list', items: [{ w: 'יושבת', e: '🪑' }, { w: 'כותבת', e: '✍️' }] } },
+    ],
+  },
+  homophones: {
+    skill: 'homophones',
+    title: 'אותו צליל, משמעות אחרת',
+    emoji: '👂',
+    steps: [
+      { say: 'יש מילים שנשמעות בדיוק אותו דבר, אבל המשמעות שונה, ולכן גם הכתיב שונה.', caption: 'נשמע אותו דבר', visual: { kind: 'compare', left: { w: 'עט', e: '🖊️' }, right: { w: 'עת', e: '⏰' } } },
+      { say: 'עט עם ט, זה כלי כתיבה. עת עם ת, זה זמן. כדי לדעת איך כותבים, שואלים: מה המשמעות במשפט?', caption: 'שואלים: מה המשמעות?', visual: { kind: 'list', items: [{ w: 'כתבתי בעט', e: '🖊️' }, { w: 'הגיעה העת', e: '⏰' }] } },
+      { say: 'כל עם כ, זה כולם. קל עם ק, זה לא קשה. כל הילדים אמרו שהמבחן היה קל!', caption: 'כל ⬅ כולם, קל ⬅ לא קשה', visual: { kind: 'compare', left: { w: 'כל', e: '👨‍👩‍👧‍👦' }, right: { w: 'קל', e: '🪶' } } },
+      { say: 'סל עם ס, זה סלסלה. של עם ש, זה שייך. הסל של סבתא!', caption: 'סל ⬅ סלסלה, של ⬅ שייך', visual: { kind: 'compare', left: { w: 'סל', e: '🧺' }, right: { w: 'של', e: '🫴' } } },
+    ],
+  },
   roots: {
     skill: 'roots',
     title: 'השורש שומר על האותיות',

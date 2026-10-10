@@ -6,7 +6,7 @@ import { shuffle } from '../engine/questions';
 import { explainFix } from '../engine/explain';
 import { DETECTIVE_SENTENCES } from '../data/detective';
 import { DICTATIONS, SHORT_DICTATIONS } from '../data/stories';
-import { WORDS } from '../data/words';
+import { WORDS, sentencesFor } from '../data/words';
 import { sfx } from '../ui/effects';
 import { speak } from '../services/tts';
 import { PRAISE, pick } from '../ui/kit';
@@ -31,7 +31,7 @@ const ALL = [
 /** Sentences for the topic first (they contain its practice words), fitting the grade. */
 function dictationItems(skills: SkillId[], grade: number, count: number): Item[] {
   const topicWords = new Set(skills.flatMap((s) => (WORDS[s] ?? []).map((e) => e.w)));
-  if (skills.includes('im_im')) ['אם', 'עם'].forEach((w) => topicWords.add(w));
+  for (const sk of skills) for (const x of sentencesFor(sk) ?? []) topicWords.add(x.a);
   const fit = shuffle(ALL.filter((x) => x.g <= grade + 1 && x.s.split(' ').length <= (grade <= 2 ? 5 : 9)));
   const words = (s: string) => s.replace(/[.,!?:"]/g, '').split(' ');
   const withTopic = fit.filter((x) => words(x.s).some((w) => topicWords.has(w)));
