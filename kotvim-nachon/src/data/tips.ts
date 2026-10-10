@@ -221,7 +221,7 @@ function spellTip(skill: SkillId, e: WordEntry): string | null {
   const set = FOCUS[skill];
   const i = set ? letters.findIndex((ch) => set.includes(ch)) : skill === 'he_alef_end' || skill === 'finals' ? letters.length - 1 : -1;
   if (i >= 0) focus = i === letters.length - 1 ? ` והאחרונה היא ${letters[i]}.` : ` והאות ${ORDINAL[i]} היא ${letters[i]}.`;
-  return `מאייתים ${w}: ${letters.join(', ')}. ${COUNT[letters.length]}${focus ? `,${focus}` : '.'}`;
+  return `איך כותבים ${w}? ${letters.join(', ')}. ${COUNT[letters.length]}${focus ? `,${focus}` : '.'}`;
 }
 
 /** Teaching tips written by hand for each topic – rules, mnemonics and ways to check yourself. */

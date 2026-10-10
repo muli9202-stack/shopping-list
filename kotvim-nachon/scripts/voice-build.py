@@ -50,7 +50,8 @@ PHONEME_FIX = {
 PREFIX_IPA = {"ו": "ve", "ה": "ha", "ב": "be", "ל": "le", "מ": "me", "ש": "ʃe", "כ": "ke"}
 NIKUD = re.compile(r"[֑-ׇ]")
 # a single letter standing alone, optionally after a prefix and hyphen: "ט", "ו-ת", "ה-ע", "שׂ"
-LETTER_TOKEN = re.compile(r"(?<![א-ת])(?:([ובהלמשכ])-)?([א-ת])[ְ-ׇ]*(?![א-תְ-ׇ])")
+# not after a letter or a nikud sign: the ם of "עִם" is part of the word, not a letter read by name
+LETTER_TOKEN = re.compile(r"(?<![א-תְ-ׇ])(?:([ובהלמשכ])-)?([א-ת])[ְ-ׇ]*(?![א-תְ-ׇ])")
 VOWELS = set("aeiou")
 
 nik = Phonikud(str(MODELS / "phonikud-1.0.int8.onnx"))
