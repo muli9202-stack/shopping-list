@@ -15,6 +15,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { WORDS, IM_SENTENCES } from '../src/data/words.ts';
 import { DETECTIVE_SENTENCES } from '../src/data/detective.ts';
 import { FAMILIES } from '../src/data/roots.ts';
+import { THEMES } from '../src/arcade/themes.ts';
 import { DICTATIONS, STORY_IDEAS, COMMON_WORDS, SHORT_DICTATIONS } from '../src/data/stories.ts';
 import { SKILLS, FINAL_TO_REGULAR, REGULAR_TO_FINAL } from '../src/data/skills.ts';
 import { TRICKS } from '../src/tricks/tricks.ts';
@@ -28,6 +29,8 @@ const OUT = new URL('../src/data/generated/', import.meta.url);
 const ALLOW = new Set([
   // spellings schools accept although hspell follows a stricter Academy form
   'אמא', 'איתו', 'אונייה', 'בריכה', 'לבריכה',
+  // shop names in the arcade (loanwords hspell does not list; Academy spelling)
+  'בורגר', 'גלידרייה', 'דונאטס', 'פיצרייה',
   // mnemonic and deliberate counter-examples inside tricks
   'מנצפך', 'מנצפ', 'בהבית',
   'בפארק', 'פארק', 'פיצה', 'ופל', 'שוקו', 'קקטוס', 'טרקטור', 'אטרקציה', 'חמסה', 'מתמטיקה', 'טמפרטורה', 'סוודר', 'אוטו', 'שוקולד', 'מוזיקה', 'טלפון', 'קרקס', 'בלון']);
@@ -98,6 +101,7 @@ for (const s of IM_SENTENCES) for (const t of tokens(s.s.replace('___', s.a))) a
 for (const d of DICTATIONS) for (const s of d.sentences) for (const t of tokens(s)) add(t, `dictation ${d.id}`);
 for (const d of SHORT_DICTATIONS) for (const s of d.sentences) for (const t of tokens(s)) add(t, `short dictation ${d.id}`);
 for (const f of FAMILIES) for (const w of f.words) add(w, `family ${f.root}`);
+for (const t of THEMES) for (const x of [t.name, t.productName, t.station, t.rawStation, t.seat]) if (x) for (const w of tokens(x)) add(w, `arcade ${t.id}`);
 for (const d of DETECTIVE_SENTENCES) for (const t of tokens(d.s)) add(t, `detective: ${d.s}`);
 for (const list of Object.values(STORY_IDEAS)) for (const i of list) for (const t of tokens(i.text)) add(t, 'story idea');
 for (const t of COMMON_WORDS.split(/\s+/).filter(Boolean)) add(t, 'common words');

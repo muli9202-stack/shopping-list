@@ -7,12 +7,14 @@ import { Mascot } from '../ui/Mascot';
 import { DAILY_GOAL_SECONDS, dayKey, touchDay } from '../engine/progress';
 import { confetti, sfx } from '../ui/effects';
 import { speak } from '../services/tts';
+import { coinsOf } from '../engine/merge';
 import { PinPad } from '../ui/PinPad';
 
 const SQUARES = [
   { id: 'teacher', emoji: '👩‍🏫', title: 'לומדים עם המורה', sub: 'המורה מסביר, מתרגלים, וממשיכים לבד', say: 'לומדים עם המורה. המורה מסביר לך, מתרגלים במשחק, והוא בוחר מה לומדים הלאה.', bg: 'linear-gradient(135deg,#3a86ff,#8338ec)' },
   { id: 'write', emoji: '✏️', title: 'כתיבה ומבחן', sub: 'סיפורים והכתבות', say: 'כתיבה ומבחן. כאן כותבים סיפור או הכתבה, ורואים כמה השתפרתם.', bg: 'linear-gradient(135deg,#fb8500,#ff5d8f)' },
   { id: 'room', emoji: '🏠', title: 'החדר שלי', sub: 'קונים ומעצבים בנקודות', say: 'החדר שלי. כאן קונים רהיטים וחיות עם הנקודות שצברתם.', bg: 'linear-gradient(135deg,#2ec27e,#20c997)' },
+  { id: 'arcade', emoji: '🎢', title: 'עולם העסקים', sub: '30 עסקים לנהל עם מטבעות זהב', say: 'עולם העסקים. כאן מנהלים מסעדה, בית חולים ותחנת דלק, עם מטבעות הזהב שמרוויחים בלמידה.', bg: 'linear-gradient(135deg,#f08c00,#fab005)' },
 ] as const;
 
 export function ChildHomeScreen() {
@@ -49,6 +51,7 @@ export function ChildHomeScreen() {
           {child.avatar} {child.name}
         </div>
         <HelpBtn guide="child" />
+        <span className="points-pill" style={{ background: '#fff3bf' }}>🪙 {coinsOf(child)}</span>
         <PointsPill points={child.points} />
       </div>
 

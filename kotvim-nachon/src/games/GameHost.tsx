@@ -22,6 +22,7 @@ import { MemoryWriteGame } from './MemoryWriteGame';
 import { DictationGame } from './DictationGame';
 import { updateActive, useStore } from '../store';
 import { addPoints, addPractice, recordAnswer } from '../engine/progress';
+import { changeCoins } from '../engine/merge';
 import { classifyWord } from '../engine/analyze';
 import { confetti, flyPoints } from '../ui/effects';
 import { TrickPlayer } from '../tricks/TrickPlayer';
@@ -139,7 +140,7 @@ export function GameHost({
       updateActive((c) => {
         let next = recordAnswer(c, skill, correct, correct ? undefined : { expected, typed, pair: issue?.pair, skill: issue?.skill ?? skill, source });
         next = reviewAnswer(next, skill, expected, correct);
-        if (correct && source !== 'diagnostic') next = addPoints(next, POINTS_PER_CORRECT);
+        if (correct && source !== 'diagnostic') next = changeCoins(addPoints(next, POINTS_PER_CORRECT), 1);
         return next;
       });
       if (correct && source !== 'diagnostic') {
@@ -194,7 +195,7 @@ export function GameHost({
       updateActive((ch) => {
         const r = addPractice(ch, secs);
         reached = r.reached;
-        return r.reached ? addPoints(r.child, 50) : r.child;
+        return r.reached ? changeCoins(addPoints(r.child, 50), 10) : r.child;
       });
       if (reached)
         setTimeout(() => {

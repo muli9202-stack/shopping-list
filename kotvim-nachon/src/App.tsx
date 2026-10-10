@@ -18,6 +18,8 @@ import { ChildHomeScreen } from './screens/ChildHomeScreen';
 import { LearnScreen } from './screens/LearnScreen';
 import { TeacherScreen } from './screens/TeacherScreen';
 import { WeekWordsScreen } from './screens/WeekWordsScreen';
+import { ArcadeScreen } from './arcade/ArcadeScreen';
+import { ArcadePlayScreen } from './arcade/ArcadePlayScreen';
 import { DiagnosticScreen } from './screens/DiagnosticScreen';
 import { PracticeScreen, StageScreen } from './screens/StageScreen';
 import { TrickScreen, TricksScreen } from './screens/TricksScreen';
@@ -97,6 +99,10 @@ export default function App() {
       return <TeacherScreen />;
     case 'weekwords':
       return <WeekWordsScreen />;
+    case 'arcade':
+      return <ArcadeScreen />;
+    case 'arcadePlay':
+      return <ArcadePlayScreen id={route.id} />;
     case 'diagnostic':
       return <DiagnosticScreen />;
     case 'stage':

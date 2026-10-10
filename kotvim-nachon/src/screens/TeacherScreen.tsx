@@ -8,6 +8,7 @@ import { Mascot, MascotSays } from '../ui/Mascot';
 import { confetti, sfx } from '../ui/effects';
 import { speak, stop } from '../services/tts';
 import { addPoints, dayKey, gamesForSkill } from '../engine/progress';
+import { changeCoins } from '../engine/merge';
 import { PATH_LENGTH, UNIT, completeLevel, pathLevel, pathStep, rankOf } from '../engine/path';
 import { SKILL_BY_ID } from '../data/skills';
 import { dueWords } from '../engine/review';
@@ -139,7 +140,7 @@ export function TeacherScreen() {
     let milestone: string | null = null;
     if (passed) {
       updateActive((c) => {
-        let next = addPoints(completeLevel(c, n, stars), bonus);
+        let next = changeCoins(addPoints(completeLevel(c, n, stars), bonus), 3 + stars);
         // the unit test: how much the child knows now, next to the test before the topic
         if (step.pos === UNIT - 1 && step.kind === 'lesson') next = { ...next, unitTests: { ...(next.unitTests ?? {}), [step.unit]: { ...(next.unitTests?.[step.unit] ?? { topic: step.topic }), post: Math.round(r * 100) } } };
         return next;

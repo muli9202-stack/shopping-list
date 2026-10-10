@@ -47,6 +47,36 @@ export function changePoints(c: Child, delta: number, dev = deviceId()): Child {
   return { ...c, wallet, points: pointsOf(wallet), totalEarned: c.totalEarned + Math.max(0, delta), updatedAt: Date.now() };
 }
 
+/** Gold coins 🪙: the same per-device wallet as points, so coins from every device add up. */
+export function coinsOf(c: Child): number {
+  return Object.values(c.coinWallet ?? {}).reduce((a, w) => a + w.e - w.s, 0);
+}
+
+export function changeCoins(c: Child, delta: number, dev = deviceId()): Child {
+  const wallet = { ...(c.coinWallet ?? {}) };
+  const mine = { ...(wallet[dev] ?? { e: 0, s: 0 }) };
+  if (delta >= 0) mine.e += delta;
+  else mine.s += -delta;
+  wallet[dev] = mine;
+  return { ...c, coinWallet: wallet, updatedAt: Date.now() };
+}
+
+function mergeWallet(a: Wallet, b: Wallet): Wallet {
+  const out: Wallet = {};
+  for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) out[k] = { e: Math.max(a[k]?.e ?? 0, b[k]?.e ?? 0), s: Math.max(a[k]?.s ?? 0, b[k]?.s ?? 0) };
+  return out;
+}
+
+function mergeArcade(a: NonNullable<Child['arcade']>, b: NonNullable<Child['arcade']>): NonNullable<Child['arcade']> {
+  const out = { ...a };
+  // per business: the copy that got further (level, then customers served)
+  for (const [k, v] of Object.entries(b)) {
+    const cur = out[k];
+    if (!cur || v.level > cur.level || (v.level === cur.level && v.served > cur.served)) out[k] = v;
+  }
+  return out;
+}
+
 function mergeDays(a: DayStat[], b: DayStat[]): DayStat[] {
   const m = new Map<string, DayStat>();
   for (const d of [...a, ...b]) {
@@ -154,6 +184,8 @@ export function mergeChild(a: Child, b: Child): Child {
     ...(a.daily || b.daily ? { daily: mergeMax(a.daily ?? {}, b.daily ?? {}) } : {}),
     ...(a.unitTests || b.unitTests ? { unitTests: mergeUnitTests(a.unitTests ?? {}, b.unitTests ?? {}) } : {}),
     ...(a.weekDone || b.weekDone ? { weekDone: (a.weekDone ?? '') > (b.weekDone ?? '') ? a.weekDone : b.weekDone } : {}),
+    ...(a.coinWallet || b.coinWallet ? { coinWallet: mergeWallet(a.coinWallet ?? {}, b.coinWallet ?? {}) } : {}),
+    ...(a.arcade || b.arcade ? { arcade: mergeArcade(a.arcade ?? {}, b.arcade ?? {}) } : {}),
     streak: lastDay.streak,
     lastActiveDay: lastDay.lastActiveDay,
     room: { ...newer.room, owned },

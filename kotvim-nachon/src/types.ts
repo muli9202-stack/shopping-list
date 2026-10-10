@@ -133,6 +133,10 @@ export interface Child {
   unitTests?: Record<string, { topic: SkillId; pre?: number; post?: number }>;
   /** seconds of practice per day (key = YYYY-MM-DD), for the daily goal */
   daily?: Record<string, number>;
+  /** gold coins 🪙 (earned by learning, spent in the arcade) – a per-device wallet like points */
+  coinWallet?: Record<string, { e: number; s: number }>;
+  /** progress in each arcade business (key = theme id) */
+  arcade?: Record<string, { level: number; cash: number; served: number; bought: string[] }>;
 }
 
 export interface FamilySettings {
