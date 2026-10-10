@@ -44,6 +44,12 @@ function lessonCards(c: Child, skills: SkillId[], missed: string[], n: number): 
   const due = dueWords(c).filter((d) => skills.includes(d.skill)).map((d) => d.word);
   const words = [...new Set([...missed, ...due, ...skills.flatMap((s) => poolFor(s, c.grade).map((e) => e.w))])];
   const cards: LessonCard[] = [];
+  // every lesson opens with one of the handwritten teaching tips of the topic
+  const lead = nextTip(seen, skills[0]);
+  if (lead && lead.id.includes(':topic:') && !missed.length) {
+    seen.push(lead.id);
+    cards.push({ word: SKILL_BY_ID[skills[0]].title, tip: lead });
+  }
   for (const word of words) {
     if (cards.length >= n) break;
     const skill = skills.find((s) => WORDS[s].some((e) => e.w === word)) ?? skills[0];
