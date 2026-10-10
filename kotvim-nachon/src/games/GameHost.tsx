@@ -20,6 +20,7 @@ import { DetectiveGame } from './DetectiveGame';
 import { RootsGame } from './RootsGame';
 import { MemoryWriteGame } from './MemoryWriteGame';
 import { DictationGame } from './DictationGame';
+import { WordDinerGame } from './WordDinerGame';
 import { updateActive, useStore } from '../store';
 import { addPoints, addPractice, recordAnswer } from '../engine/progress';
 import { changeCoins } from '../engine/merge';
@@ -51,6 +52,7 @@ export const GAME_INFO: Record<GameId, { title: string; emoji: string; color: st
   roots: { title: 'עץ השורשים', emoji: '🌳', color: '#9c36b5' },
   memwrite: { title: 'כותבים מהזיכרון', emoji: '🙈', color: '#5f3dc4' },
   dictation: { title: 'הכתבה', emoji: '📝', color: '#0b7285' },
+  worddiner: { title: 'מסעדת המילים', emoji: '🍽️', color: '#e8590c' },
 };
 
 const COMPONENTS: Record<GameId, (p: GameProps) => React.ReactNode> = {
@@ -72,6 +74,7 @@ const COMPONENTS: Record<GameId, (p: GameProps) => React.ReactNode> = {
   roots: RootsGame,
   memwrite: MemoryWriteGame,
   dictation: DictationGame,
+  worddiner: WordDinerGame,
 };
 
 export const POINTS_PER_CORRECT = 10;

@@ -32,7 +32,8 @@ export type GameId =
   | 'detective'
   | 'roots'
   | 'memwrite'
-  | 'dictation';
+  | 'dictation'
+  | 'worddiner';
 
 /** Daily aggregate for one skill – used for the parents' progress charts. */
 export interface DayStat {

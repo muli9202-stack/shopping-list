@@ -110,17 +110,17 @@ export function isWeak(child: Child, skill: SkillId): boolean {
 
 export const STAGES_PER_WORLD = 5;
 
-const LETTER_GAMES: GameId[] = ['cards', 'balloons', 'rain', 'sort', 'builder', 'memory', 'truefalse', 'listen', 'bubbles', 'rocket', 'path', 'fishing', 'whack', 'train', 'detective', 'memwrite', 'dictation'];
+const LETTER_GAMES: GameId[] = ['cards', 'balloons', 'rain', 'sort', 'builder', 'memory', 'truefalse', 'listen', 'bubbles', 'rocket', 'path', 'fishing', 'whack', 'train', 'detective', 'memwrite', 'dictation', 'worddiner'];
 /** Which games fit which topic (e.g. אם/עם only works in sentence games). */
 const SKILL_GAMES: Partial<Record<SkillId, GameId[]>> = {
-  im_im: ['balloons', 'sort', 'truefalse', 'cards', 'rocket', 'path', 'train', 'listen', 'detective', 'memwrite', 'dictation'],
-  prefixes: ['balloons', 'truefalse', 'cards', 'listen', 'bubbles', 'rocket', 'path', 'whack', 'train', 'builder', 'detective', 'memwrite', 'dictation'],
-  roots: ['roots', 'cards', 'truefalse', 'builder', 'roots', 'balloons', 'detective', 'train', 'listen', 'roots', 'rocket', 'path', 'memwrite', 'dictation'],
-  full_spelling: ['balloons', 'builder', 'truefalse', 'listen', 'memory', 'cards', 'bubbles', 'rocket', 'path', 'whack', 'train', 'detective', 'memwrite', 'dictation'],
+  im_im: ['balloons', 'sort', 'truefalse', 'cards', 'rocket', 'path', 'train', 'listen', 'detective', 'memwrite', 'dictation', 'worddiner'],
+  prefixes: ['balloons', 'truefalse', 'cards', 'listen', 'bubbles', 'rocket', 'path', 'whack', 'train', 'builder', 'detective', 'memwrite', 'dictation', 'worddiner'],
+  roots: ['roots', 'cards', 'truefalse', 'builder', 'roots', 'balloons', 'detective', 'train', 'listen', 'roots', 'rocket', 'path', 'memwrite', 'dictation', 'worddiner'],
+  full_spelling: ['balloons', 'builder', 'truefalse', 'listen', 'memory', 'cards', 'bubbles', 'rocket', 'path', 'whack', 'train', 'detective', 'memwrite', 'dictation', 'worddiner'],
 };
 
 export function gamesForSkill(skill: SkillId | 'review'): GameId[] {
-  if (skill === 'review') return ['balloons', 'truefalse', 'cards', 'listen', 'rocket', 'path', 'train', 'detective', 'memwrite', 'dictation'];
+  if (skill === 'review') return ['balloons', 'truefalse', 'cards', 'listen', 'rocket', 'path', 'train', 'detective', 'memwrite', 'dictation', 'worddiner'];
   return SKILL_GAMES[skill] ?? LETTER_GAMES;
 }
 

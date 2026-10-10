@@ -76,7 +76,7 @@ export function pathStep(c: Child, n: number): PathStep {
   const games = gamesForSkill(topic);
   // the unit test (last level of a unit) is a dictation-style game; the rest rotate through the topic's games
   // writing from memory twice in every unit; the unit test is a dictation-style game
-  const game: GameId = pos === UNIT - 1 ? (topic === 'roots' ? 'roots' : 'listen') : pos === 2 || pos === 5 ? 'memwrite' : games[(unit * 5 + pos) % games.length];
+  const game: GameId = pos === UNIT - 1 ? (topic === 'roots' ? 'roots' : 'listen') : pos === 2 || pos === 5 ? 'memwrite' : pos === 4 && topic !== 'roots' ? 'worddiner' : games[(unit * 5 + pos) % games.length];
   // every 5th level: a dictation of sentences with the words learned (what a test at school asks for)
   if (n % 5 === 0) return { n, kind: 'dictation', skills: [topic], topic, game: 'dictation', level: levelFor(c, n, [topic]), rounds, intro: false, unit, pos };
   const skills: SkillId[] = [topic];
