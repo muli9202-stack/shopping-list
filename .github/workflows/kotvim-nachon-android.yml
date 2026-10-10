@@ -1,6 +1,7 @@
 name: כותבים נכון – Android App Bundle
 
-# Builds the .aab for Google Play. Download it from the run page → "Artifacts".
+# Builds the .aab for Google Play (run page → "Artifacts") and an installable .apk that is published
+# as the release "kotvim-nachon-latest" – a fixed download link for phones.
 on:
   push:
     paths:
@@ -9,7 +10,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  # write: to publish the .apk as a GitHub release
+  contents: write
 
 defaults:
   run:
@@ -89,3 +91,43 @@ jobs:
           name: kotvim-nachon-aab-${{ github.run_number }}
           path: kotvim-nachon/android/app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
+
+      # ---- installable .apk for direct download ----
+      - name: Signing key for the .apk
+        run: |
+          if [ -z "$KEYSTORE_FILE" ]; then
+            # no upload key yet: a one-off key, so the .apk installs (updates need the old version removed first)
+            keytool -genkeypair -keystore "$RUNNER_TEMP/test.jks" -storepass android-test -keypass android-test \
+              -alias upload -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Kotvim Nachon test" -noprompt
+            echo "APK_KEYSTORE_FILE=$RUNNER_TEMP/test.jks" >> "$GITHUB_ENV"
+            echo "APK_KEYSTORE_PASSWORD=android-test" >> "$GITHUB_ENV"
+          else
+            echo "APK_KEYSTORE_FILE=$KEYSTORE_FILE" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build .apk
+        working-directory: kotvim-nachon/android
+        env:
+          KEYSTORE_FILE: ${{ env.APK_KEYSTORE_FILE }}
+          KEYSTORE_PASSWORD: ${{ env.APK_KEYSTORE_PASSWORD || secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: upload
+        run: |
+          ./gradlew assembleRelease --no-daemon -PversionCode=${{ github.run_number }}
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/kotvim-nachon.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kotvim-nachon-apk-${{ github.run_number }}
+          path: ${{ runner.temp }}/kotvim-nachon.apk
+          if-no-files-found: error
+
+      - name: Publish the .apk (fixed download link)
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=kotvim-nachon-latest
+          gh release delete "$TAG" --cleanup-tag --yes --repo "$GITHUB_REPOSITORY" || true
+          gh release create "$TAG" "$RUNNER_TEMP/kotvim-nachon.apk" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "כותבים נכון – גרסה 1.0.${{ github.run_number }}" \
+            --notes "קובץ התקנה לאנדרואיד: מורידים את kotvim-nachon.apk בטלפון ופותחים אותו."
