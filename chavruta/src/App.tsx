@@ -280,7 +280,8 @@ export default function App() {
             <CommentaryPane onClose={() => setComHidden(true)} />
           </>
         )}
-        {comOpen && narrow && (
+        {/* On a phone the illustration temporarily takes the commentary sheet's place. */}
+        {comOpen && narrow && !illustration && (
           <div className="sheet">
             <CommentaryPane onClose={() => setComHidden(true)} />
           </div>

@@ -287,11 +287,14 @@ export const demoBrain: Brain = {
       case 'summary':
         gen = summary(ctx);
         break;
-      case 'resume':
-        gen = ctx.pending.length
-          ? [meta(`חוזרים ל${ctx.section.heRef}, למקום שבו עצרנו.`), { t: 'resume_pending' }]
-          : [meta(`חוזרים ל${ctx.section.heRef}, שורה ${ctx.focusSeg}.`), ...segmentSteps(ctx, ctx.focusSeg)];
+      case 'resume': {
+        // A short recap of what was already learned here, then back to the exact place.
+        const recap = DEMO[ctx.section.ref]?.summary.learned[0];
+        const intro: Step[] = [meta(`חוזרים ל${ctx.section.heRef}${ctx.pending.length ? ', למקום שבו עצרנו' : `, שורה ${ctx.focusSeg}`}.`)];
+        if (recap && ctx.focusSeg > 1) intro.push({ t: 'say', kind: 'explain', text: `בקצרה, מה שלמדנו: ${recap}` });
+        gen = ctx.pending.length ? [...intro, { t: 'resume_pending' }] : [...intro, ...segmentSteps(ctx, ctx.focusSeg)];
         break;
+      }
       case 'repeat':
         gen = ctx.pending.length ? [{ t: 'resume_pending' }] : segmentSteps(ctx, ctx.focusSeg);
         break;

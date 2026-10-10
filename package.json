@@ -8,7 +8,12 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b",
-    "build:artifact": "vite build -c kitchen/vite.artifact.config.ts && node kitchen/scripts/build-artifact.mjs"
+    "build:artifact": "vite build -c kitchen/vite.artifact.config.ts && node kitchen/scripts/build-artifact.mjs",
+    "chavruta:test": "vitest run -c chavruta/vitest.config.ts",
+    "chavruta:live": "LIVE=1 vitest run -c chavruta/vitest.config.ts chavruta/tests/unit/live.test.ts",
+    "chavruta:e2e": "npm run build && cd chavruta && playwright test",
+    "chavruta:snapshot": "node chavruta/scripts/build-snapshot.mjs",
+    "chavruta:coverage": "node --experimental-strip-types chavruta/scripts/check-coverage.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",
