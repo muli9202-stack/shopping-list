@@ -13,6 +13,7 @@ export type Route =
   | { name: 'teacher' }
   | { name: 'weekwords' }
   | { name: 'arcade' }
+  | { name: 'tutor' }
   | { name: 'arcadePlay'; id: string }
   | { name: 'diagnostic' }
   | { name: 'stage' }

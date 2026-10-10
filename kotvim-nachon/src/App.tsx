@@ -19,6 +19,7 @@ import { LearnScreen } from './screens/LearnScreen';
 import { TeacherScreen } from './screens/TeacherScreen';
 import { WeekWordsScreen } from './screens/WeekWordsScreen';
 import { ArcadeScreen } from './arcade/ArcadeScreen';
+import { TutorScreen } from './tutor/TutorScreen';
 import { ArcadePlayScreen } from './arcade/ArcadePlayScreen';
 import { DiagnosticScreen } from './screens/DiagnosticScreen';
 import { PracticeScreen, StageScreen } from './screens/StageScreen';
@@ -101,6 +102,8 @@ export default function App() {
       return <WeekWordsScreen />;
     case 'arcade':
       return <ArcadeScreen />;
+    case 'tutor':
+      return <TutorScreen />;
     case 'arcadePlay':
       return <ArcadePlayScreen id={route.id} />;
     case 'diagnostic':

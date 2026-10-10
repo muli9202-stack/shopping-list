@@ -45,6 +45,21 @@ export function SettingsScreen() {
 
       <div className="card" style={{ marginBottom: 14 }}>
         <div className="row">
+          <span style={{ fontSize: 30 }}>🤖</span>
+          <div className="grow">
+            <b>רובי – המורה המדבר (בינה מלאכותית)</b>
+            <div className="small muted">
+              הילד מדבר או כותב, ורובי עונה בקול. השאלות נשלחות לשרת שלנו ול-Claude של Anthropic (בלי השם של הילד), והתשובה מוקראת בקול של Google. רובי מוגדר לדבר רק על נושאים שמתאימים לילדים ולא לבקש פרטים אישיים.
+            </div>
+          </div>
+          <button className={`btn ${settings.tutorOn ? 'green' : 'white'}`} onClick={() => setSettings({ tutorOn: !settings.tutorOn })}>
+            {settings.tutorOn ? 'פועל' : 'כבוי'}
+          </button>
+        </div>
+      </div>
+
+      <div className="card" style={{ marginBottom: 14 }}>
+        <div className="row">
           <span style={{ fontSize: 30 }}>🔒</span>
           <div className="grow">
             <b>קוד כניסה לאזור ההורים</b>

@@ -2,7 +2,7 @@
 Listening check for the recorded voice: a Hebrew speech recogniser (ivrit-ai Whisper) transcribes a
 sample of clips, and we compare what it heard with the text. Clips it cannot understand are listed.
 
-  python scripts/voice-check.py [sample_size] [--all-words]
+  python scripts/voice-check.py [sample_size] [--words | --sentences] [--asr path]
 Needs: pip install faster-whisper, model ivrit-ai/whisper-large-v3-turbo-ct2 in voice/asr/
 """
 import io
@@ -38,6 +38,8 @@ def main():
     packs = {}
     random.seed(7)
     words_mode = "--words" in sys.argv
+    if "--sentences" in sys.argv:
+        items = [i for i in items if not i.get("nikud") and len(i["text"].split()) >= 3]
     if words_mode:
         # single words are too short for a recogniser on their own – check them after a known phrase
         items = [i for i in items if i.get("nikud")]

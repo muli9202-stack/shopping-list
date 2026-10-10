@@ -142,6 +142,8 @@ export interface Child {
 export interface FamilySettings {
   voiceOn: boolean;
   parentPin: string | null;
+  /** the parents allowed the talking AI teacher (sends the child's questions to the server's AI) */
+  tutorOn?: boolean;
   updatedAt: number;
 }
 
