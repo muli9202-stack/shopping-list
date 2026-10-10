@@ -5,8 +5,8 @@ import { Stars, TopBar } from '../ui/kit';
 import { useGuide } from '../ui/guide';
 import { MascotSays } from '../ui/Mascot';
 import { SKILL_BY_ID } from '../data/skills';
-import { STAGES_PER_WORLD, ensureWorld, stageAt } from '../engine/progress';
-import { GAME_INFO } from '../games/GameHost';
+import { ensureWorld } from '../engine/progress';
+import { PATH_LENGTH, pathLevel, pathStep, rankOf, tierOf } from '../engine/path';
 import { catalogSize } from './GamesScreen';
 import { dueWords } from '../engine/review';
 import type { World } from '../types';
@@ -17,8 +17,6 @@ export function worldInfo(w: World) {
   const s = SKILL_BY_ID[w.skill];
   return { title: s.title, icon: s.icon, color: s.color };
 }
-
-const STAGE_ICON = { trick: '💡', game: '🎮', boss: '👑' };
 
 export function LearnScreen() {
   const child = useActiveChild();
@@ -46,12 +44,20 @@ export function LearnScreen() {
     );
   }
 
-  const worlds = child.worlds.slice(-6);
-  const offset = child.worlds.length - worlds.length;
+  const cur = pathLevel(child);
+  const from = Math.max(1, cur - 3);
+  const to = Math.min(PATH_LENGTH, from + 14);
 
   return (
     <div className="screen" style={{ background: 'linear-gradient(#e7f5ff, #fff9db)' }}>
-      <TopBar title="🗺️ מפת הלמידה" guide="learn" />
+      <TopBar title={`🗺️ שלב ${cur} מתוך ${PATH_LENGTH}`} guide="learn" />
+      <button className="big-square" style={{ background: 'linear-gradient(135deg,#3a86ff,#8338ec)', minHeight: 96, marginBottom: 12 }} onClick={() => go({ name: 'teacher' })}>
+        <span className="emoji" style={{ fontSize: 50 }}>👩‍🏫</span>
+        <span className="grow">
+          ממשיכים עם המורה
+          <span className="sub">שלב {cur} · {rankOf(cur)}</span>
+        </span>
+      </button>
       {dueWords(child).length > 0 && (
         <button className="big-square" style={{ background: 'linear-gradient(135deg,#0ca678,#20c997)', minHeight: 96, marginBottom: 12 }} onClick={() => go({ name: 'review' })}>
           <span className="emoji" style={{ fontSize: 50 }}>🔁</span>
@@ -70,53 +76,40 @@ export function LearnScreen() {
       </button>
 
       <div className="map">
-        {worlds.map((w, wi) => {
-          const info = worldInfo(w);
-          const worldIndex = offset + wi;
-          const isCurrent = worldIndex === child.worlds.length - 1;
+        {Array.from({ length: to - from + 1 }, (_, k) => {
+          const n = from + k;
+          const st = pathStep(child, n);
+          const sk = SKILL_BY_ID[st.topic];
+          const done = n < cur;
+          const current = n === cur;
+          const x = Math.sin(n * 1.3) * 90;
           return (
-            <div key={worldIndex}>
-              <div className="world-banner" style={{ background: info.color }}>
-                <span style={{ fontSize: 32 }}>{info.icon}</span>
-                <span className="grow">
-                  עולם {worldIndex + 1}: {info.title}
-                </span>
-                {w.done >= STAGES_PER_WORLD && <span>🏆</span>}
+            <div key={n}>
+              {(n - 1) % 100 === 0 && <div className="world-banner" style={{ background: sk.color }}>🎖️ דרגה {tierOf(n) + 1}: {rankOf(n)}</div>}
+              <div style={{ transform: `translateX(${x}px)`, marginBottom: 34 }}>
+                <button
+                  className={`map-node ${!done && !current ? 'locked' : ''} ${current ? 'current' : ''}`}
+                  style={{ background: done ? '#ffe066' : st.kind === 'boss' ? '#fab005' : sk.color, flexDirection: 'column', fontSize: 22 }}
+                  onClick={() => {
+                    if (current) {
+                      sfx('pop');
+                      go({ name: 'teacher' });
+                    }
+                  }}
+                >
+                  <span>{st.kind === 'boss' ? '👑' : st.kind === 'review' ? '🔁' : !done && !current ? '🔒' : sk.icon}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700 }}>{n}</span>
+                  {done && (
+                    <span className="stars">
+                      <Stars n={child.path?.stars[String(n)] ?? 0} />
+                    </span>
+                  )}
+                </button>
               </div>
-              {Array.from({ length: STAGES_PER_WORLD }, (_, k) => {
-                const st = stageAt(w, worldIndex, k);
-                const done = k < w.done;
-                const current = isCurrent && k === w.done;
-                const locked = !done && !current;
-                const icon = st.kind === 'game' ? GAME_INFO[st.game].emoji : STAGE_ICON[st.kind];
-                const x = Math.sin((k + worldIndex) * 1.3) * 90;
-                return (
-                  <div key={k} style={{ transform: `translateX(${x}px)`, marginBottom: 40 }}>
-                    <button
-                      className={`map-node ${locked ? 'locked' : ''} ${current ? 'current' : ''}`}
-                      style={{ background: done ? '#ffe066' : info.color }}
-                      onClick={() => {
-                        if (current) {
-                          sfx('pop');
-                          go({ name: 'stage' });
-                        } else if (done && st.kind === 'trick' && w.skill !== 'review') go({ name: 'trick', skill: w.skill });
-                      }}
-                    >
-                      {locked ? '🔒' : icon}
-                      {done && (
-                        <span className="stars">
-                          <Stars n={w.stars[k] ?? 0} />
-                        </span>
-                      )}
-                    </button>
-                  </div>
-                );
-              })}
             </div>
           );
         })}
       </div>
-
     </div>
   );
 }

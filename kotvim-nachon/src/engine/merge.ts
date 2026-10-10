@@ -137,6 +137,9 @@ export function mergeChild(a: Child, b: Child): Child {
     learnedWords: Math.max(a.learnedWords ?? 0, b.learnedWords ?? 0),
     diagnosed: a.diagnosed || b.diagnosed,
     worlds,
+    ...(a.path || b.path
+      ? { path: { level: Math.max(a.path?.level ?? 1, b.path?.level ?? 1), stars: mergeMax(a.path?.stars ?? {}, b.path?.stars ?? {}) } }
+      : {}),
     streak: lastDay.streak,
     lastActiveDay: lastDay.lastActiveDay,
     room: { ...newer.room, owned },

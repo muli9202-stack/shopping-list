@@ -118,6 +118,8 @@ export interface Child {
   learnedWords?: number;
   /** best stars per catalog game, key = `${game}:${skill}:${level}` */
   gameStars?: Record<string, number>;
+  /** the 1000-level path the teacher leads (engine/path.ts): next level to play and best stars per level */
+  path?: { level: number; stars: Record<string, number> };
   aiSummary?: { t: number; text: string };
 }
 

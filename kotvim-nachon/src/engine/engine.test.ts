@@ -134,3 +134,29 @@ test('the roots game always has an answer among the options', () => {
       assert.equal(new Set(options).size, options.length);
     }
 });
+
+import { PATH_LENGTH, completeLevel, pathStep } from './path.ts';
+import { gamesForSkill } from './progress.ts';
+
+test('every level of the 1000-level path is playable for every grade', () => {
+  for (let g = 1; g <= 8; g++) {
+    const c = { ...newChild('נ', g, 'x'), diagnosed: true };
+    const seen = new Set<string>();
+    for (let n = 1; n <= PATH_LENGTH; n++) {
+      const s = pathStep(c, n);
+      assert.ok(s.skills.length > 0, `level ${n}`);
+      if (s.game !== 'roots') for (const sk of s.skills) assert.ok(gamesForSkill(sk).includes(s.game), `grade ${g} level ${n}: ${s.game} cannot ask ${sk}`);
+      assert.ok(s.level >= 1 && s.level <= 4);
+      seen.add(s.topic);
+    }
+    assert.ok(seen.size >= 9, `grade ${g} covers the topics`);
+  }
+});
+
+test('finishing a level moves the path on and keeps the best stars', () => {
+  let c = newChild('נ', 3, 'x');
+  c = completeLevel(c, 1, 2);
+  c = completeLevel(c, 1, 1);
+  assert.equal(c.path!.level, 2);
+  assert.equal(c.path!.stars['1'], 2);
+});
