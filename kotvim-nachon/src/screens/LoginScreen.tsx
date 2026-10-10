@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { APK_URL } from '../config';
 import { firebaseEnabled } from '../services/firebase';
 import { authErrorText, signInWithEmail, signInWithGoogle } from '../services/auth';
 import { resetPassword } from '../services/account';
@@ -71,6 +73,11 @@ export function LoginScreen() {
               🔑 כניסת הורים
             </button>
           </div>
+          {!Capacitor.isNativePlatform() && (
+            <a className="btn white" style={{ textDecoration: 'none', marginTop: 12 }} href={APK_URL} target="_blank" rel="noopener noreferrer">
+              📱 הורדת האפליקציה לטלפון (אנדרואיד)
+            </a>
+          )}
         </>
       )}
 
