@@ -1,6 +1,9 @@
 import type { SkillId } from '../types';
 import { WORDS, IM_SENTENCES, type WordEntry } from './words.ts';
 import { FINAL_TO_REGULAR } from './skills.ts';
+import { FAMILIES as ROOT_FAMILIES } from './roots.ts';
+import { DETECTIVE_SENTENCES } from './detective.ts';
+import { DICTATIONS, SHORT_DICTATIONS } from './stories.ts';
 
 /**
  * Tips library. Every tip is derived from a real spelling rule and the word itself, so it is true
@@ -184,15 +187,166 @@ const FAMILIES: { root: string; letters: string; words: string[] }[] = [
 
 function familyTips(): Tip[] {
   const out: Tip[] = [];
-  for (const f of FAMILIES) {
+  // the roots topic's families: the root letters stay in every member
+  const fromRoots = ROOT_FAMILIES.map((f) => ({ root: [...f.root].join('-'), letters: [...f.root].map((ch) => REGULAR_TO_FINAL_NAME[ch] ?? ch).join(', ').replace(/, ([^,]+)$/, ' ו-$1'), words: f.words }));
+  for (const f of [...FAMILIES, ...fromRoots]) {
     if (f.words.length < 2) continue;
     for (const w of f.words) {
       const others = f.words.filter((x) => x !== w);
-      const text = `${w} שייכת למשפחה של ${others.join(', ')}. למילים מאותה משפחה יש אותן אותיות שורש, ${f.root}, ולכן בכולן כותבים ${f.letters}.`;
+      const text = `${w} שייכת למשפחה של ${others.join(', ')}. למילים מאותה משפחה יש אותן אותיות שורש, ${f.root.split('-').join(', ')}, ולכן בכולן כותבים ${f.letters}.`;
       for (const [skill, list] of Object.entries(WORDS) as [SkillId, WordEntry[]][])
         if (list.some((e) => e.w === w)) out.push({ id: `${skill}:${w}:family`, skill, word: w, text });
     }
   }
+  return out;
+}
+
+/** the letters as written in the root (regular forms), for "בכולן כותבים כ, ת ו-ב" */
+const REGULAR_TO_FINAL_NAME: Record<string, string> = {};
+
+const COUNT = ['', 'אות אחת', 'שתי אותיות', 'שלוש אותיות', 'ארבע אותיות', 'חמש אותיות', 'שש אותיות', 'שבע אותיות', 'שמונה אותיות', 'תשע אותיות', 'עשר אותיות'];
+const ORDINAL = ['הראשונה', 'השנייה', 'השלישית', 'הרביעית', 'החמישית', 'השישית', 'השביעית', 'השמינית', 'התשיעית', 'העשירית'];
+/** the letters a topic is about, to point at the one to remember */
+const FOCUS: Partial<Record<SkillId, string>> = { alef_ayin: 'אע', tet_tav: 'טת', kaf_het_kuf: 'כחקך', samekh_sin: 'סש', bet_vav: 'בו' };
+
+/**
+ * Spelling aloud, letter by letter – the way children learn a word by heart. The voice reads the
+ * single letters by their names. Points at the letter the topic is about.
+ */
+function spellTip(skill: SkillId, e: WordEntry): string | null {
+  const w = e.w;
+  const letters = [...w];
+  if (letters.length < 2 || letters.length > 10 || !/^[א-ת]+$/.test(w)) return null;
+  let focus = '';
+  const set = FOCUS[skill];
+  const i = set ? letters.findIndex((ch) => set.includes(ch)) : skill === 'he_alef_end' || skill === 'finals' ? letters.length - 1 : -1;
+  if (i >= 0) focus = i === letters.length - 1 ? ` והאחרונה היא ${letters[i]}.` : ` והאות ${ORDINAL[i]} היא ${letters[i]}.`;
+  return `מאייתים ${w}: ${letters.join(', ')}. ${COUNT[letters.length]}${focus ? `,${focus}` : '.'}`;
+}
+
+/** Teaching tips written by hand for each topic – rules, mnemonics and ways to check yourself. */
+const TOPIC_TIPS: Partial<Record<SkillId, string[]>> = {
+  alef_ayin: [
+    'כשמתלבטים בין א ל-ע, חפשו מילה מאותה משפחה: עבודה ועובד, שתיהן עם ע.',
+    'גם אוטו וגם עוגה מתחילות בצליל אוֹ, אבל אוטו עם א ועוגה עם ע. את זה זוכרים בעין, לא באוזן.',
+    'מילים שקשורות לעין ולראייה נכתבות עם ע: עין, עיניים, עפעף.',
+    'המספרים ארבע, שבע ותשע נגמרים כולם ב-ע.',
+    'אמא ואבא נכתבות עם א בהתחלה ובסוף.',
+    'שאלה, שאלתי ושואל הן מאותה משפחה, ובכולן יש א באמצע.',
+    'שבוע, אצבע, צבע ומדע נגמרות כולן ב-ע. שימו לב לסוף המילה!',
+    'אמת, אמיץ ואמצע מתחילות ב-א. עמוד ועמק מתחילות ב-ע. כדאי לזכור כל מילה ביחד עם מילה מהמשפחה שלה.',
+  ],
+  tet_tav: [
+    'ת היא האות של הסיומות: ילדות, מורות, כתבתי ואכלתי. בכולן ת בסוף.',
+    'מחברת, טבעת ודלת: הרבה שמות של חפצים נגמרים ב-ת.',
+    'ט עגולה כמו טבעת, ו-ת עומדת על שתי רגליים. תגידו בלב: טבעת עם ט, תות עם ת.',
+    'אני כתבתי, אני אכלתי, אני שיחקתי: כשאני עשיתי משהו, הסוף הוא תי, עם ת.',
+    'כשמתלבטים, חפשו את המשפחה: טיול, מטייל ולטייל. בכולן ט.',
+    'תות ותפוח מתחילים ב-ת, וטעים מתחיל ב-ט.',
+    'מילים ברבים שנגמרות ב-ות, כמו מכוניות וחנויות, נגמרות תמיד ב-ת.',
+    'תלמיד, תשובה ותמונה מתחילות ב-ת. טלפון, טיול וטבע מתחילות ב-ט. כדאי לזכור אותן בזוגות.',
+  ],
+  kaf_het_kuf: [
+    'בתחילת מילה כ נשמעת כמו ק, ולכן קשה להבדיל: כלב עם כ, קוף עם ק. את זה זוכרים בעין.',
+    'באמצע או בסוף מילה כ יכולה להישמע כמו ח: מכתב, מלך. לכן צליל ח יכול להיות ח או כ.',
+    'ך סופית נשמעת כמו ח: מלך, דרך, ארוך.',
+    'חשבון, מחשב ומחשבה הן משפחה אחת, ובכולן ח.',
+    'במילה כתב שומעים ק בהתחלה, אבל כותבים כ. ולכן גם מכתב, מאותה משפחה, עם כ.',
+    'ל-ק יש רגל ארוכה שיורדת מתחת לשורה, ול-כ אין.',
+    'חם, חג וחלב: צליל ח בתחילת מילה נכתב ב-ח, כי בהתחלה כ נשמעת כמו ק.',
+    'ירוק נגמר ב-ק, ומלך נגמר ב-ך. אם בסוף המילה שומעים ק, כותבים ק.',
+  ],
+  samekh_sin: [
+    'ל-ש שמאלית יש נקודה בצד שמאל, והיא נשמעת כמו ס. בלי ניקוד צריך לזכור את המילה.',
+    'שמח, שמחה ומשמח: כל המשפחה עם ש, למרות שהיא נשמעת כמו ס.',
+    'משחק, שיחק ושחקן: כולן עם ש שמאלית.',
+    'מילים שבאו משפות אחרות עם צליל ס נכתבות כמעט תמיד עם ס: אוטובוס, סוודר, סלט.',
+    'עשר, עשרים ועשייה נכתבות עם ש שמאלית.',
+    'ס היא אות סגורה ועגולה, ול-ש יש שלוש ידיים למעלה.',
+    'סבא וסבתא, סבון וסל נכתבות עם ס. כדאי לזכור אותן בעל פה.',
+    'בדקו את המשפחה: ספר, סיפור וספרייה. כולן עם ס.',
+  ],
+  bet_vav: [
+    'ב בלי נקודה באמצע נשמעת כמו ו. לכן בסוף המילה זאב שומעים ו, אבל כותבים ב.',
+    'בתחילת מילה עברית, צליל ב נכתב ב-ב: בית, בובה, בננה.',
+    'ורד, וילון וופל מתחילות בצליל ו ונכתבות ב-ו.',
+    'כתב, מכתב וכתובת הן משפחה עם ב, גם כשהיא נשמעת כמו ו.',
+    'ו כפולה באמצע מילה נשמעת ו: תקווה, שווה, טווס.',
+    'כלב, לב, ערב וחלב: הרבה מילים נגמרות בצליל ו שנכתב ב-ב.',
+    'שבוע ושבועות, עבודה ועובד: המשפחה שומרת על ה-ב.',
+    'דבש ודבורה הן מאותה משפחה, ובשתיהן כותבים ב.',
+  ],
+  he_alef_end: [
+    'הרבה מילים בנקבה נגמרות ב-ה: ילדה, בובה, מורה.',
+    'מילים שהשורש שלהן נגמר ב-א שומרות על ה-א: קרא, קורא, קריאה.',
+    'יצא ומצא נגמרות ב-א, כי ה-א היא חלק מהשורש: יצא ויציאה, מצא ומציאה.',
+    'אבא, אמא, סבא וסבתא נגמרות ב-א. אלו מילים שזוכרים בעל פה.',
+    'כשהמילה נגמרת בצליל אֶה, כמו שדה ומורה, בדרך כלל כותבים ה.',
+    'רופא נגמר ב-א, כמו רפואה. השורש: ר, פ, א.',
+    'כיסא, פלא ובריא הן מילים שזוכרים עם א בסוף.',
+    'שמחה, עוגה וגלידה: הרבה מילים בנקבה עם ה בסוף.',
+  ],
+  finals: [
+    'חמש אותיות משנות צורה בסוף מילה: מ, נ, צ, פ, כ הופכות ל-ם, ן, ץ, ף, ך.',
+    'אות סופית באה רק בסוף המילה. כשמוסיפים סוף למילה, היא חוזרת להיות רגילה: מלך, מלכה.',
+    'ברבים האות הסופית נעלמת: עץ ועצים, כף וכפות, שולחן ושולחנות.',
+    'ם סגורה מכל הצדדים, כמו קופסה. מ רגילה פתוחה קצת למטה.',
+    'ן, ץ, ף ו-ך יורדות מתחת לשורה. ם לא יורדת, היא רק נסגרת.',
+    'כל מילה שנגמרת ב-ים, כמו ילדים ופרחים, נגמרת ב-ם סופית.',
+    'גם בשמות של אנשים ומקומות יש אותיות סופיות: אברהם, ירדן.',
+    'בתחילת מילה ובאמצע שלה אין אף פעם אות סופית.',
+  ],
+  prefixes: [
+    'ו, ה, ב, כ, ל, מ, ש הן אותיות שנדבקות לתחילת המילה, ולא כותבים רווח אחריהן.',
+    'בבית: ב נדבקת לבית. לבית: ל נדבקת. מהבית: מ ו-ה נדבקות ביחד.',
+    'אפשר להדביק כמה אותיות: וכשהלכתי זה ו, כש והלכתי.',
+    'אחרי ב, ל או כ, ה של הידיעה נעלמת: לבית, ולא להבית.',
+    'אחרי מ, ה של הידיעה נשארת: מהבית, מהגן.',
+    'ש בהתחלה נדבקת למילה: הילד שאני אוהב. שאני כתוב צמוד.',
+    'ו החיבור נדבקת תמיד: אבא ואמא, בלי רווח אחרי ה-ו.',
+    'כשמחפשים מילה במילון, מורידים קודם את האותיות שנדבקו: בגינה, גינה.',
+  ],
+  im_im: [
+    'עם עם ע, כשאפשר להגיד ביחד: אני משחק עם חבר.',
+    'אם עם א, כשיש תנאי: אם ירד גשם, נישאר בבית.',
+    'אם עם א גם בשאלה: אני לא יודע אם הוא יבוא.',
+    'עם עם ע היא גם אומה: עם ישראל.',
+    'נסו להוסיף את המילה ביחד: אכלתי ביחד עם אבא. הגיוני? אז עם בעין.',
+    'אם אפשר להחליף במקרה ש, כותבים אם באלף: אם תבוא, במקרה שתבוא.',
+    'אמא ואבא מתחילות ב-א, כמו אם. ובמילים גבוהות, אם היא גם אמא.',
+    'כתבו את המשפט, קראו אותו, ושאלו: ביחד או תנאי? ביחד זה עם, תנאי זה אם.',
+  ],
+  full_spelling: [
+    'בלי ניקוד מוסיפים ו כששומעים אוֹ או אוּ: שולחן, כדור.',
+    'בלי ניקוד מוסיפים י כששומעים אִי: סיפור, מילה.',
+    'ו בתחילת מילה, כמו ורד, היא עיצור. ו באמצע, כמו שולחן, היא תנועה.',
+    'ו כפולה כשהיא עיצור באמצע מילה: תקווה, מצווה, אוויר.',
+    'י כפולה כשהיא עיצור באמצע מילה: עגבנייה, מטרייה, עוגייה.',
+    'במילים מנוקדות לא צריך את ה-ו וה-י הנוספות, אבל בכתיבה רגילה מוסיפים אותן.',
+    'קיבלתי, דיברנו, סיפרה: בפעלים כאלה מוסיפים י אחרי האות הראשונה.',
+    'שמיים ואופניים נכתבות עם שתי י.',
+  ],
+  roots: [
+    'השורש הוא שלוש אותיות שחוזרות בכל המשפחה: כ, ת, ב בכתב, מכתב וכתיבה.',
+    'כדי למצוא שורש, מורידים אותיות שנוספו בהתחלה ובסוף: מכתבים, מורידים מ ו-ים, ונשאר כתב.',
+    'אותיות השורש לא משתנות במשפחה, ולכן הן עוזרות לכתוב נכון.',
+    'צבע, צבעוני וצובע: ה-ע בסוף השורש נשארת בכל המילים.',
+    'תלמיד ולומדים הן מאותו שורש: ל, מ, ד. ה-ת בתלמיד היא תוספת.',
+    'מחשב ומחשבה: ה-מ בהתחלה היא תוספת, והשורש הוא ח, ש, ב.',
+    'כשאות סופית נמצאת בשורש, היא חוזרת להיות רגילה במילים אחרות: מלך ומלכה, השורש מ, ל, כ.',
+    'רכבת, רוכב ולרכוב: כולן מהשורש ר, כ, ב.',
+  ],
+};
+
+/** A word seen in a real sentence: reading it in context helps remember its spelling. */
+function sentenceTips(): Tip[] {
+  const sentences = [...DETECTIVE_SENTENCES.map((d) => d.s), ...[...SHORT_DICTATIONS, ...DICTATIONS].flatMap((d) => d.sentences)];
+  const out: Tip[] = [];
+  for (const [skill, list] of Object.entries(WORDS) as [SkillId, WordEntry[]][])
+    for (const e of list) {
+      const s = sentences.find((x) => x.replace(/[.,!?:"]/g, '').split(' ').includes(e.w));
+      if (s) out.push({ id: `${skill}:${e.w}:sentence`, skill, word: e.w, text: `קראו את המשפט ושימו לב למילה ${e.w}: ${s}` });
+    }
   return out;
 }
 
@@ -205,6 +359,8 @@ export function allTips(): Tip[] {
     for (const e of list) {
       const r = ruleTip(skill, e);
       if (r) out.push({ id: `${skill}:${e.w}:rule`, skill, word: e.w, text: r });
+      const sp = spellTip(skill, e);
+      if (sp) out.push({ id: `${skill}:${e.w}:spell`, skill, word: e.w, text: sp });
       const c = contrastTip(skill, e);
       if (c) out.push({ id: `${skill}:${e.w}:contrast`, skill, word: e.w, text: c });
     }
@@ -216,6 +372,8 @@ export function allTips(): Tip[] {
     out.push({ id: `im_im:${full}`, skill: 'im_im', word: s.a, text: `${full}. ${why}` });
   }
   out.push(...familyTips());
+  out.push(...sentenceTips());
+  for (const [skill, list] of Object.entries(TOPIC_TIPS) as [SkillId, string[]][]) list.forEach((t, i) => out.push({ id: `${skill}:topic:${i}`, skill, text: t }));
   GENERAL.forEach((t, i) => out.push({ id: `general:${i}`, skill: 'general', text: t }));
   // one tip per id (a word can appear in several topics)
   const seen = new Set<string>();
@@ -227,7 +385,7 @@ export function allTips(): Tip[] {
 export function nextTip(seen: string[], skill: SkillId, word?: string): Tip | null {
   const s = new Set(seen);
   const tips = allTips().filter((t) => !s.has(t.id));
-  const order = ['rule', 'family', 'contrast', 'group'];
+  const order = ['rule', 'family', 'spell', 'sentence', 'contrast', 'group'];
   if (word) {
     const forWord = tips.filter((t) => t.skill === skill && t.word === word).sort((a, b) => order.indexOf(a.id.split(':').pop()!) - order.indexOf(b.id.split(':').pop()!));
     if (forWord.length) return forWord[0];
