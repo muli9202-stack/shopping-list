@@ -159,7 +159,7 @@ export function parseTarget(raw: string): Intent | null {
     (h) =>
       h.distance === 0 ||
       (!commentatorWords.has(norm(words.slice(h.start, h.end).join(' ')).replace(/ /g, '')) &&
-        [0, 1, 2].some((k) => readNumber(words, h.end + k)[1] > 0 && !Number.isNaN(readNumber(words, h.end + k)[0]))),
+        /^(דף|פרק|\d+|[א-ת]{1,3}["'][א-ת]?)$/.test(words[h.end] ?? '')),
   );
   const bookHits = findName(words, TANAKH, (b) => [b.he, ...b.variants], false);
 
@@ -283,7 +283,8 @@ export function parseCommand(raw: string): Intent {
   if (/(עמוד|דף|פרק)( ה)?(קודם|הקודם|הבא)|(הקודם|הבא)$/.test(text) && /(חזור|תחזור|עבור|תעבור|נעבור|לך|תלך|עמוד|דף|פרק)/.test(text)) {
     return { type: 'nav', dir: /קודם/.test(text) ? -1 : 1 };
   }
-  if (/(תראה|הראה|תראי|תראו)( לי)? איפה|איפה (זה )?כתוב|איפה זה מופיע/.test(text) && !commentatorIn(text)) {
+  const asksQuote = /["„“]/.test(text) || /(תצטט|ציטוט)/.test(text);
+  if (/(תראה|הראה|תראי|תראו)( לי)? איפה|איפה (זה )?כתוב|איפה זה מופיע/.test(text) && !commentatorIn(text) && !asksQuote) {
     return { type: 'showWhere' };
   }
   if (/(ההבדל בין השיטות|טבלת שיטות|השוואה בין|תשווה)/.test(text)) return { type: 'illustrate', variant: 'compare', text: raw };

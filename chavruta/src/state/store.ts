@@ -46,6 +46,9 @@ export interface HeardLine {
   /** Set when the learner cut in: how much of the line was actually spoken. */
   cutAt?: number;
   unverified?: boolean;
+  /** Segment and words this line highlights, so a replay highlights the same place. */
+  hlSeg?: number;
+  hlWords?: string;
 }
 
 export interface Turn {
@@ -299,8 +302,10 @@ export const mouth = {
     mouthValue = v;
     mouthListeners.forEach((l) => l(v));
   },
-  subscribe(l: MouthListener) {
+  subscribe(l: MouthListener): () => void {
     mouthListeners.add(l);
-    return () => mouthListeners.delete(l);
+    return () => {
+      mouthListeners.delete(l);
+    };
   },
 };
