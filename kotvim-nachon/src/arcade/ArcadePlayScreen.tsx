@@ -58,6 +58,7 @@ export function ArcadePlayScreen({ id }: { id: string }) {
         speak('וואו! העסק שלך גדל!');
         setToast(`🎉 העסק עלה לרמה ${lv + 1}!`);
       },
+      sound: (k) => sfx(k === 'pick' ? 'pop' : k === 'cash' ? 'coin' : k === 'buy' ? 'win' : 'bad'),
       special: (answer) => {
         const sk = skills[Math.floor(Math.random() * Math.max(1, skills.length))] ?? 'alef_ayin';
         const q = buildQuestions(sk, grade, 1, 'choose')[0];

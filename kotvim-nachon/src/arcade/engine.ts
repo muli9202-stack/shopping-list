@@ -29,6 +29,7 @@ export interface EngineEvents {
   special: (answer: (correct: boolean) => void) => void;
   toast: (text: string) => void;
   levelUp: (level: number) => void;
+  sound: (kind: 'pick' | 'cash' | 'buy' | 'angry') => void;
 }
 
 interface Station {
@@ -62,6 +63,8 @@ interface Customer {
   bubble: THREE.Sprite;
   timer: number;
   held: THREE.Object3D[];
+  patience: number;
+  hurry: boolean;
 }
 
 interface Pad {
@@ -495,7 +498,7 @@ export class TycoonEngine {
     bubble.position.y = t.customer === 'car' ? 1.6 : 1.85;
     bubble.visible = false;
     c.root.add(bubble);
-    const cust: Customer = { c, state: 'in', target: new THREE.Vector3(), want, got: 0, special, seat, bubble, timer: 0, held: [] };
+    const cust: Customer = { c, state: 'in', target: new THREE.Vector3(), want, got: 0, special, seat, bubble, timer: 0, held: [], patience: 45 + want * 10, hurry: false };
     if (seat) {
       seat.customer = cust;
       cust.target.copy(seat.pos);
@@ -545,6 +548,30 @@ export class TycoonEngine {
         }
       } else if (cu.state === 'wait') {
         this.walk(cu.c, pos, cu.target, 2.2, dt);
+        // patience: after a long wait the customer leaves without paying
+        cu.patience -= dt;
+        if (cu.patience < 12 && !cu.hurry) {
+          cu.hurry = true;
+          cu.c.root.remove(cu.bubble);
+          cu.bubble = label(`⏳ ${this.theme.emoji} ×${cu.want - cu.got}`, '#c92a2a', '#ffe3e3', 0.8);
+          cu.bubble.position.y = this.theme.customer === 'car' ? 1.6 : 1.85;
+          cu.c.root.add(cu.bubble);
+        }
+        if (cu.patience <= 0 && cu.state === 'wait') {
+          cu.state = 'out';
+          cu.c.root.remove(cu.bubble);
+          const face = label('😠', '#212529', 'rgba(255,255,255,0)', 1);
+          face.position.y = 1.9;
+          cu.c.root.add(face);
+          if (cu.seat) cu.seat.customer = null;
+          if (pos.y > 0) {
+            pos.y = 0;
+            cu.c.root.rotation.set(0, 0, 0);
+          }
+          this.ev.sound('angry');
+          this.layoutQueue();
+          continue;
+        }
         // counter customers take products from the counter, one at a time
         if (!cu.seat && cu === front && this.counter && this.counter.items.length) {
           cu.timer -= dt;
@@ -640,6 +667,7 @@ export class TycoonEngine {
         this.scene.remove(it);
         this.carry.kind = s.makes;
         this.hold(it);
+        this.ev.sound('pick');
         acted = true;
       }
     }
@@ -688,6 +716,7 @@ export class TycoonEngine {
       if (left <= 0) {
         const id = this.pad.id as (typeof PAD_ORDER)[number];
         this.save.bought.push(id);
+        this.ev.sound('buy');
         this.apply(id);
         this.nextPad();
       }
@@ -703,6 +732,7 @@ export class TycoonEngine {
 
   private collect(amount: number, meshes: THREE.Object3D[]) {
     this.save.cash += amount;
+    this.ev.sound('cash');
     for (const m of meshes) this.scene.remove(m);
     meshes.length = 0;
     this.ev.toast(`+${amount}💵`);
@@ -714,8 +744,26 @@ export class TycoonEngine {
     const h = this.helper!;
     if (h.state === 'get') {
       const s = this.stations.find((x) => x.makes === this.theme.product && x.out.length);
-      if (!s) return animateWalk(h.c, this.clock, false, false);
+      if (!s) {
+        // production line: bring raw material from its station to an empty machine
+        const raw = this.stations.find((x) => !x.needs && x.makes === this.theme.raw && x.out.length);
+        const machine = this.stations.find((x) => x.needs && x.input < 2);
+        if (raw && machine) {
+          if (this.walk(h.c, h.pos, raw.pick, 2.0, dt)) {
+            const it = raw.out.pop()!;
+            this.scene.remove(it);
+            h.kind = raw.makes;
+            h.carry.push(it);
+            it.position.set(0, 0, 0);
+            h.c.hands.add(it);
+            h.state = 'give';
+          }
+          return;
+        }
+        return animateWalk(h.c, this.clock, false, false);
+      }
       if (this.walk(h.c, h.pos, s.pick, 2.0, dt)) {
+        h.kind = s.makes;
         while (s.out.length && h.carry.length < 2) {
           const it = s.out.pop()!;
           this.scene.remove(it);
@@ -726,6 +774,17 @@ export class TycoonEngine {
         h.state = 'give';
       }
     } else {
+      if (h.kind && h.kind === this.theme.raw) {
+        const machine = this.stations.find((x) => x.needs) ;
+        if (machine && this.walk(h.c, h.pos, machine.pick, 2.0, dt)) {
+          for (const it of h.carry) h.c.hands.remove(it);
+          machine.input += h.carry.length;
+          h.carry = [];
+          h.kind = null;
+          h.state = 'get';
+        }
+        return;
+      }
       const seat = this.seats.find((x) => x.customer?.state === 'wait');
       const target = this.counter ? this.counter.drop : seat ? seat.pos.clone().add(new THREE.Vector3(0.9, 0, -0.6)) : null;
       if (!target) return animateWalk(h.c, this.clock, false, true);
@@ -740,6 +799,7 @@ export class TycoonEngine {
             this.counter.items.push(it);
           } else if (seat?.customer && seat.customer.state === 'wait') this.give(seat.customer);
         }
+        h.kind = null;
         h.state = 'get';
       }
     }
