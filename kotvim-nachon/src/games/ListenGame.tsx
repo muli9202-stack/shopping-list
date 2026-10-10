@@ -9,7 +9,7 @@ import { speak } from '../services/tts';
 import { PRAISE, SpeakBtn, pick } from '../ui/kit';
 import type { SkillId } from '../types';
 
-interface Item {
+export interface Item {
   skill: SkillId;
   word: string;
   say: string;
@@ -19,20 +19,23 @@ interface Item {
   sentence?: string;
 }
 
+/** Words (or אם/עם sentences) to write, for the writing games. */
+export function writeItems(skills: SkillId[], grade: number, rounds: number): Item[] {
+  const per = Math.ceil(rounds / skills.length);
+  const list: Item[] = [];
+  for (const s of skills) {
+    if (s === 'im_im') {
+      shuffle(IM_SENTENCES.filter((x) => x.g <= grade + 1))
+        .slice(0, per)
+        .forEach((x) => list.push({ skill: s, word: x.a, say: x.s.replace('___', x.a), sentence: x.s }));
+    } else wordsFor(s, grade, per).forEach((w) => list.push({ skill: s, word: w.w, say: w.n ?? w.w, nikud: w.n, emoji: w.e }));
+  }
+  return shuffle(list).slice(0, rounds);
+}
+
 /** Dictation of single words: hear it, type it on the big keyboard. Also used as the "boss" challenge. */
 export function ListenGame({ skills, grade, rounds, report, finish, title = '👂 שומעים וכותבים' }: GameProps & { title?: string }) {
-  const items = useMemo<Item[]>(() => {
-    const per = Math.ceil(rounds / skills.length);
-    const list: Item[] = [];
-    for (const s of skills) {
-      if (s === 'im_im') {
-        shuffle(IM_SENTENCES.filter((x) => x.g <= grade + 1))
-          .slice(0, per)
-          .forEach((x) => list.push({ skill: s, word: x.a, say: x.s.replace('___', x.a), sentence: x.s }));
-      } else wordsFor(s, grade, per).forEach((w) => list.push({ skill: s, word: w.w, say: w.n ?? w.w, nikud: w.n, emoji: w.e }));
-    }
-    return shuffle(list).slice(0, rounds);
-  }, [skills, grade, rounds]);
+  const items = useMemo(() => writeItems(skills, grade, rounds), [skills, grade, rounds]);
   const [i, setI] = useState(0);
   const [typed, setTyped] = useState('');
   const [state, setState] = useState<null | boolean>(null);

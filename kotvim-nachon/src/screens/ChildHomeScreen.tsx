@@ -4,7 +4,7 @@ import { useNav } from '../nav';
 import { HelpBtn, PointsPill, SpeakBtn } from '../ui/kit';
 import { useGuide } from '../ui/guide';
 import { Mascot } from '../ui/Mascot';
-import { touchDay } from '../engine/progress';
+import { DAILY_GOAL_SECONDS, dayKey, touchDay } from '../engine/progress';
 import { confetti, sfx } from '../ui/effects';
 import { speak } from '../services/tts';
 import { PinPad } from '../ui/PinPad';
@@ -58,6 +58,13 @@ export function ChildHomeScreen() {
           {child.streak > 1 ? `🔥 ${child.streak} ימים ברצף! ממשיכים?` : 'בוא נכתוב נכון היום!'}
         </div>
       </div>
+
+      <DailyGoal seconds={child.daily?.[dayKey()] ?? 0} />
+      {!!child.weekWords?.words.length && (
+        <button className="btn white block" style={{ marginBottom: 6 }} onClick={() => go({ name: 'weekwords' })}>
+          📚 מילות השבוע מבית הספר ({child.weekWords.words.length}){child.weekDone === dayKey() ? ' ✅' : ''}
+        </button>
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 10 }}>
         {SQUARES.map((s) => (
@@ -161,6 +168,23 @@ function ChildPinModal({ hasPin, onClose }: { hasPin: boolean; onClose: () => vo
         <button className="btn ghost" onClick={onClose}>
           סגירה
         </button>
+      </div>
+    </div>
+  );
+}
+
+/** Today's practice towards the daily goal of 10 minutes. */
+function DailyGoal({ seconds }: { seconds: number }) {
+  const min = Math.min(10, Math.floor(seconds / 60));
+  const pct = Math.min(100, (seconds / DAILY_GOAL_SECONDS) * 100);
+  return (
+    <div className="card" style={{ padding: '8px 12px', marginBottom: 8 }}>
+      <div className="row" style={{ gap: 8 }}>
+        <span>{pct >= 100 ? '🏆' : '⏱️'}</span>
+        <span className="grow small" style={{ fontWeight: 700 }}>{pct >= 100 ? 'השלמת את 10 הדקות של היום!' : `היום: ${min} מתוך 10 דקות למידה`}</span>
+      </div>
+      <div style={{ height: 10, background: '#e9ecef', borderRadius: 10, overflow: 'hidden', marginTop: 6 }}>
+        <div style={{ width: `${pct}%`, height: '100%', background: pct >= 100 ? 'var(--green)' : 'var(--orange)', transition: 'width .5s' }} />
       </div>
     </div>
   );

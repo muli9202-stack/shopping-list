@@ -11,6 +11,8 @@ import { checkStory } from '../services/ai';
 import { speak, stop } from '../services/tts';
 import { alignTexts, norm, tokenize } from '../engine/analyze';
 import { addMistake, addPoints, recordAnswer } from '../engine/progress';
+import { reviewAnswer } from '../engine/review';
+import { WORDS } from '../data/words';
 import { SKILLS, SKILL_BY_ID } from '../data/skills';
 import { confetti, flyPoints, sfx } from '../ui/effects';
 import { GameHost } from '../games/GameHost';
@@ -323,6 +325,9 @@ function ResultView({ outcome, child, onAgain }: { outcome: Outcome; child: Chil
         const sk = t.skill && t.skill !== 'other' ? t.skill : null;
         if (sk) n = recordAnswer(n, sk, false);
         n = addMistake(n, { expected: t.right ?? '', typed: t.typed ?? '', skill: t.skill ?? 'other', pair: t.pair, source: outcome.mode === 'story' ? 'write' : 'dictation' });
+        // a word the child got wrong in real writing comes back in the spaced review (when the games know it)
+        const known = (Object.keys(WORDS) as SkillId[]).find((s) => WORDS[s].some((e) => e.w === t.right));
+        if (known && t.right) n = reviewAnswer(n, sk && WORDS[sk].some((e) => e.w === t.right) ? sk : known, t.right, false);
       }
       // correctly written words also count as successful practice (not only mistakes)
       for (const t of outcome.tokens.filter((x) => x.ok && x.sure)) {

@@ -26,6 +26,8 @@ export interface GameProps {
   /** report every answer – feeds the mistake map */
   report: (skill: SkillId, correct: boolean, expected: string, typed: string) => void;
   finish: (correct: number, total: number) => void;
+  /** words typed in by the parents (weekly school list) – used instead of the word bank */
+  words?: string[];
 }
 
 export function showNikud(grade: number) {

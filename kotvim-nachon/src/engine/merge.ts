@@ -72,6 +72,17 @@ function union<T>(a: T[], b: T[], key: (x: T) => string, sort: (x: T) => number,
     .slice(-cap);
 }
 
+function mergeUnitTests(a: NonNullable<Child['unitTests']>, b: NonNullable<Child['unitTests']>): NonNullable<Child['unitTests']> {
+  const out = { ...a };
+  for (const [k, v] of Object.entries(b)) {
+    const cur = out[k];
+    out[k] = cur ? { topic: cur.topic, pre: cur.pre ?? v.pre, post: Math.max(cur.post ?? -1, v.post ?? -1) < 0 ? undefined : Math.max(cur.post ?? -1, v.post ?? -1) } : v;
+    if (out[k].post === undefined) delete out[k].post;
+    if (out[k].pre === undefined) delete out[k].pre;
+  }
+  return out;
+}
+
 function mergeMax(a: Record<string, number>, b: Record<string, number>): Record<string, number> {
   const out = { ...a };
   for (const [k, v] of Object.entries(b)) out[k] = Math.max(out[k] ?? 0, v);
@@ -140,6 +151,9 @@ export function mergeChild(a: Child, b: Child): Child {
     ...(a.path || b.path
       ? { path: { level: Math.max(a.path?.level ?? 1, b.path?.level ?? 1), stars: mergeMax(a.path?.stars ?? {}, b.path?.stars ?? {}) } }
       : {}),
+    ...(a.daily || b.daily ? { daily: mergeMax(a.daily ?? {}, b.daily ?? {}) } : {}),
+    ...(a.unitTests || b.unitTests ? { unitTests: mergeUnitTests(a.unitTests ?? {}, b.unitTests ?? {}) } : {}),
+    ...(a.weekDone || b.weekDone ? { weekDone: (a.weekDone ?? '') > (b.weekDone ?? '') ? a.weekDone : b.weekDone } : {}),
     streak: lastDay.streak,
     lastActiveDay: lastDay.lastActiveDay,
     room: { ...newer.room, owned },

@@ -17,6 +17,7 @@ import { PrivacyScreen } from './screens/PrivacyScreen';
 import { ChildHomeScreen } from './screens/ChildHomeScreen';
 import { LearnScreen } from './screens/LearnScreen';
 import { TeacherScreen } from './screens/TeacherScreen';
+import { WeekWordsScreen } from './screens/WeekWordsScreen';
 import { DiagnosticScreen } from './screens/DiagnosticScreen';
 import { PracticeScreen, StageScreen } from './screens/StageScreen';
 import { TrickScreen, TricksScreen } from './screens/TricksScreen';
@@ -94,6 +95,8 @@ export default function App() {
       return <LearnScreen />;
     case 'teacher':
       return <TeacherScreen />;
+    case 'weekwords':
+      return <WeekWordsScreen />;
     case 'diagnostic':
       return <DiagnosticScreen />;
     case 'stage':

@@ -30,7 +30,9 @@ export type GameId =
   | 'whack'
   | 'train'
   | 'detective'
-  | 'roots';
+  | 'roots'
+  | 'memwrite'
+  | 'dictation';
 
 /** Daily aggregate for one skill – used for the parents' progress charts. */
 export interface DayStat {
@@ -123,6 +125,14 @@ export interface Child {
   aiSummary?: { t: number; text: string };
   /** the child's own 4-digit code to open their profile (the parents' code opens it too) */
   pin?: string;
+  /** words the parents typed in from school (the weekly spelling list), practised every day */
+  weekWords?: { words: string[]; setAt: number };
+  /** day the weekly words were last practised */
+  weekDone?: string;
+  /** a short test before and after each topic unit of the path, in percent (key = unit number) */
+  unitTests?: Record<string, { topic: SkillId; pre?: number; post?: number }>;
+  /** seconds of practice per day (key = YYYY-MM-DD), for the daily goal */
+  daily?: Record<string, number>;
 }
 
 export interface FamilySettings {

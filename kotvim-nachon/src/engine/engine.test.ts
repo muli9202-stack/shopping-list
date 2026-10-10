@@ -160,3 +160,16 @@ test('finishing a level moves the path on and keeps the best stars', () => {
   assert.equal(c.path!.level, 2);
   assert.equal(c.path!.stars['1'], 2);
 });
+
+import { explainFix, letterMarks } from './explain.ts';
+
+test('mistakes are explained in words', () => {
+  assert.match(explainFix('עוגה', 'אוגה')[0], /כתבת א במקום ע/);
+  assert.match(explainFix('מלך', 'מלכ')[0], /אות סופית: ך/);
+  assert.match(explainFix('שולחן', 'שלחן')[0], /חסרה האות ו/);
+  assert.match(explainFix('לבית', 'ל בית')[0], /נדבקת/);
+  assert.match(explainFix('עם', 'אם')[0], /ביחד/);
+  assert.deepEqual(explainFix('ילד', 'ילד'), []);
+  assert.deepEqual(letterMarks('עוגה', 'אוגה').map((m) => m.ok), [false, true, true, true]);
+  assert.deepEqual(letterMarks('שולחן', 'שלחן').map((m) => m.ok), [true, true, true, true]);
+});

@@ -97,7 +97,7 @@ export function LearnScreen() {
                     }
                   }}
                 >
-                  <span>{st.kind === 'boss' ? '👑' : st.kind === 'review' ? '🔁' : !done && !current ? '🔒' : sk.icon}</span>
+                  <span>{st.kind === 'boss' ? '👑' : st.kind === 'review' ? '🔁' : st.kind === 'dictation' && (done || current) ? '📝' : !done && !current ? '🔒' : sk.icon}</span>
                   <span style={{ fontSize: 14, fontWeight: 700 }}>{n}</span>
                   {done && (
                     <span className="stars">

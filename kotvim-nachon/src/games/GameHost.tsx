@@ -18,10 +18,12 @@ import { WhackGame } from './WhackGame';
 import { TrainGame } from './TrainGame';
 import { DetectiveGame } from './DetectiveGame';
 import { RootsGame } from './RootsGame';
+import { MemoryWriteGame } from './MemoryWriteGame';
+import { DictationGame } from './DictationGame';
 import { updateActive, useStore } from '../store';
-import { addPoints, recordAnswer } from '../engine/progress';
+import { addPoints, addPractice, recordAnswer } from '../engine/progress';
 import { classifyWord } from '../engine/analyze';
-import { flyPoints } from '../ui/effects';
+import { confetti, flyPoints } from '../ui/effects';
 import { TrickPlayer } from '../tricks/TrickPlayer';
 import { TRICKS } from '../tricks/tricks';
 import { nextTip, type Tip } from '../data/tips';
@@ -46,6 +48,8 @@ export const GAME_INFO: Record<GameId, { title: string; emoji: string; color: st
   train: { title: 'רכבת המילים', emoji: '🚂', color: '#c2255c' },
   detective: { title: 'בלש הטעויות', emoji: '🔍', color: '#495057' },
   roots: { title: 'עץ השורשים', emoji: '🌳', color: '#9c36b5' },
+  memwrite: { title: 'כותבים מהזיכרון', emoji: '🙈', color: '#5f3dc4' },
+  dictation: { title: 'הכתבה', emoji: '📝', color: '#0b7285' },
 };
 
 const COMPONENTS: Record<GameId, (p: GameProps) => React.ReactNode> = {
@@ -65,6 +69,8 @@ const COMPONENTS: Record<GameId, (p: GameProps) => React.ReactNode> = {
   train: TrainGame,
   detective: DetectiveGame,
   roots: RootsGame,
+  memwrite: MemoryWriteGame,
+  dictation: DictationGame,
 };
 
 export const POINTS_PER_CORRECT = 10;
@@ -82,6 +88,7 @@ export function GameHost({
   onFinish,
   onAnswer,
   title,
+  words,
 }: {
   game: GameId;
   skills: SkillId[];
@@ -92,6 +99,8 @@ export function GameHost({
   /** every answer, e.g. so the teacher can re-teach the words that went wrong */
   onAnswer?: (skill: SkillId, correct: boolean, expected: string) => void;
   title?: string;
+  /** the parents' own words (weekly school list) instead of the word bank */
+  words?: string[];
 }) {
   const liveGrade = useStore((s) => s.children.find((c) => c.id === s.activeChildId)?.grade ?? 1);
   // freeze inputs for the whole game so store updates (points) never regenerate the questions
@@ -109,7 +118,9 @@ export function GameHost({
   const shown = useRef<Set<string>>(new Set());
   const [trick, setTrick] = useState<SkillId | null>(null);
   // hearts: three mistakes and the game is lost – play it again (the placement check has no hearts)
-  const hearts = source === 'diagnostic' ? Infinity : 3;
+  // a dictation is a test of whole sentences: its corrections are shown inside it, no hearts or tip pop-ups
+  const quiet = source === 'diagnostic' || game === 'dictation';
+  const hearts = quiet ? Infinity : 3;
   const [lost, setLost] = useState(0);
   const [attempt, setAttempt] = useState(0);
   const lostRef = useRef(0);
@@ -142,7 +153,7 @@ export function GameHost({
         streak.current = 0;
         setCombo(0);
       }
-      if (!correct && source !== 'diagnostic') {
+      if (!correct && !quiet) {
         lostRef.current += 1;
         setLost(lostRef.current);
         wrongs.current[skill] = (wrongs.current[skill] ?? 0) + 1;
@@ -170,14 +181,31 @@ export function GameHost({
         }
       }
     },
-    [source],
+    [source, quiet],
   );
 
+  // practice time counts towards the daily goal (10 minutes)
+  const started = useRef(Date.now());
   const finish = useCallback((c: number, t: number) => {
+    if (source !== 'diagnostic') {
+      const secs = (Date.now() - started.current) / 1000;
+      started.current = Date.now();
+      let reached = false;
+      updateActive((ch) => {
+        const r = addPractice(ch, secs);
+        reached = r.reached;
+        return r.reached ? addPoints(r.child, 50) : r.child;
+      });
+      if (reached)
+        setTimeout(() => {
+          confetti(200);
+          speak('וואו! השלמת עשר דקות של למידה היום!');
+        }, 1600);
+    }
     if (lostRef.current < hearts) finishRef.current(c, t);
-  }, [hearts]);
+  }, [hearts, source]);
   const Comp = COMPONENTS[game];
-  const props = { skills: frozen.skills, grade: frozen.grade, rounds, level, report, finish };
+  const props = { skills: frozen.skills, grade: frozen.grade, rounds, level, report, finish, words };
 
   return (
     <>

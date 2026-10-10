@@ -7,8 +7,8 @@ import { TrickPlayer } from '../tricks/TrickPlayer';
 import { Mascot, MascotSays } from '../ui/Mascot';
 import { confetti, sfx } from '../ui/effects';
 import { speak, stop } from '../services/tts';
-import { addPoints, gamesForSkill } from '../engine/progress';
-import { PATH_LENGTH, completeLevel, pathLevel, pathStep, rankOf } from '../engine/path';
+import { addPoints, dayKey, gamesForSkill } from '../engine/progress';
+import { PATH_LENGTH, UNIT, completeLevel, pathLevel, pathStep, rankOf } from '../engine/path';
 import { SKILL_BY_ID } from '../data/skills';
 import { dueWords } from '../engine/review';
 import { poolFor } from '../engine/questions';
@@ -23,6 +23,8 @@ import type { Child, GameId, SkillId } from '../types';
  * with another game → next level. Due review words come first.
  */
 type Phase =
+  | { k: 'week' }
+  | { k: 'pretest' }
   | { k: 'review' }
   | { k: 'trick'; skill: SkillId }
   | { k: 'teach'; cards: LessonCard[]; again: boolean }
@@ -70,12 +72,22 @@ export function TeacherScreen() {
     stop();
     const c = activeChild();
     if (!c) return;
+    // the weekly school words come first, once a day
+    if (!again && c.weekWords?.words.length && c.weekDone !== dayKey()) {
+      speak('קודם נתרגל את מילות השבוע שלך מבית הספר.');
+      return setPhase({ k: 'week' });
+    }
     if (!again && !reviewed.current && dueWords(c).length >= 3) {
       reviewed.current = true;
       speak('קודם נחזור על מילים שלך שמחכות לחזרה.');
       return setPhase({ k: 'review' });
     }
     const step = pathStep(c, pathLevel(c));
+    // a short test before a new topic, to compare with the unit test at its end
+    if (step.intro && !again && c.unitTests?.[step.unit]?.pre === undefined) {
+      speak('לפני שמתחילים נושא חדש, בוא נבדוק מה כבר יודעים.');
+      return setPhase({ k: 'pretest' });
+    }
     if (step.intro && !c.seenTricks.includes(step.topic)) return setPhase({ k: 'trick', skill: step.topic });
     const cards = lessonCards(c, step.skills, again ? missed.current : [], again ? 3 : step.intro ? 3 : 2);
     if (cards.length) return setPhase({ k: 'teach', cards, again });
@@ -116,7 +128,7 @@ export function TeacherScreen() {
   const n = pathLevel(child);
   const step = pathStep(child, n);
   const topic = SKILL_BY_ID[step.topic];
-  const label = step.kind === 'boss' ? '👑 שלב אלופים' : step.kind === 'review' ? '🔁 שלב חזרה' : `${topic.icon} ${topic.title}`;
+  const label = step.kind === 'boss' ? '👑 שלב אלופים' : step.kind === 'review' ? '🔁 שלב חזרה' : step.kind === 'dictation' ? '📝 הכתבה' : `${topic.icon} ${topic.title}`;
 
   const finishLevel = (correct: number, total: number, attempt: number) => {
     const r = total ? correct / total : 1;
@@ -126,7 +138,12 @@ export function TeacherScreen() {
     const bonus = passed ? 20 + stars * 10 + (step.kind === 'boss' ? 30 : 0) : 0;
     let milestone: string | null = null;
     if (passed) {
-      updateActive((c) => addPoints(completeLevel(c, n, stars), bonus));
+      updateActive((c) => {
+        let next = addPoints(completeLevel(c, n, stars), bonus);
+        // the unit test: how much the child knows now, next to the test before the topic
+        if (step.pos === UNIT - 1 && step.kind === 'lesson') next = { ...next, unitTests: { ...(next.unitTests ?? {}), [step.unit]: { ...(next.unitTests?.[step.unit] ?? { topic: step.topic }), post: Math.round(r * 100) } } };
+        return next;
+      });
       if (n % 100 === 0 && n < PATH_LENGTH) milestone = `🎖️ עלית לדרגה חדשה: ${rankOf(n + 1)}`;
       else if (n === PATH_LENGTH) milestone = '👑 סיימת את כל 1000 השלבים! אתה מלך הכתיב!';
       else if (n % 10 === 0) milestone = `🏆 עברת את שלב האלופים ${n}!`;
@@ -150,6 +167,33 @@ export function TeacherScreen() {
         </div>
         <span className="small muted">{n}/{PATH_LENGTH}</span>
       </div>
+
+      {phase.k === 'week' && (
+        <GameHost
+          game="memwrite"
+          skills={step.skills}
+          words={child.weekWords!.words}
+          rounds={child.weekWords!.words.length}
+          onFinish={() => {
+            updateActive((c) => ({ ...c, weekDone: dayKey(), updatedAt: Date.now() }));
+            next();
+          }}
+        />
+      )}
+
+      {phase.k === 'pretest' && (
+        <GameHost
+          game="cards"
+          title="🧪 בדיקה לפני הנושא"
+          skills={[step.topic]}
+          rounds={6}
+          source="diagnostic"
+          onFinish={(c, t) => {
+            updateActive((ch) => ({ ...ch, unitTests: { ...(ch.unitTests ?? {}), [step.unit]: { topic: step.topic, pre: Math.round((c / Math.max(1, t)) * 100) } }, updatedAt: Date.now() }));
+            next();
+          }}
+        />
+      )}
 
       {phase.k === 'review' && (
         <GameHost

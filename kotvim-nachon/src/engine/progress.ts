@@ -110,17 +110,17 @@ export function isWeak(child: Child, skill: SkillId): boolean {
 
 export const STAGES_PER_WORLD = 5;
 
-const LETTER_GAMES: GameId[] = ['cards', 'balloons', 'rain', 'sort', 'builder', 'memory', 'truefalse', 'listen', 'bubbles', 'rocket', 'path', 'fishing', 'whack', 'train', 'detective'];
+const LETTER_GAMES: GameId[] = ['cards', 'balloons', 'rain', 'sort', 'builder', 'memory', 'truefalse', 'listen', 'bubbles', 'rocket', 'path', 'fishing', 'whack', 'train', 'detective', 'memwrite', 'dictation'];
 /** Which games fit which topic (e.g. אם/עם only works in sentence games). */
 const SKILL_GAMES: Partial<Record<SkillId, GameId[]>> = {
-  im_im: ['balloons', 'sort', 'truefalse', 'cards', 'rocket', 'path', 'train', 'listen', 'detective'],
-  prefixes: ['balloons', 'truefalse', 'cards', 'listen', 'bubbles', 'rocket', 'path', 'whack', 'train', 'builder', 'detective'],
-  roots: ['roots', 'cards', 'truefalse', 'builder', 'roots', 'balloons', 'detective', 'train', 'listen', 'roots', 'rocket', 'path'],
-  full_spelling: ['balloons', 'builder', 'truefalse', 'listen', 'memory', 'cards', 'bubbles', 'rocket', 'path', 'whack', 'train', 'detective'],
+  im_im: ['balloons', 'sort', 'truefalse', 'cards', 'rocket', 'path', 'train', 'listen', 'detective', 'memwrite', 'dictation'],
+  prefixes: ['balloons', 'truefalse', 'cards', 'listen', 'bubbles', 'rocket', 'path', 'whack', 'train', 'builder', 'detective', 'memwrite', 'dictation'],
+  roots: ['roots', 'cards', 'truefalse', 'builder', 'roots', 'balloons', 'detective', 'train', 'listen', 'roots', 'rocket', 'path', 'memwrite', 'dictation'],
+  full_spelling: ['balloons', 'builder', 'truefalse', 'listen', 'memory', 'cards', 'bubbles', 'rocket', 'path', 'whack', 'train', 'detective', 'memwrite', 'dictation'],
 };
 
 export function gamesForSkill(skill: SkillId | 'review'): GameId[] {
-  if (skill === 'review') return ['balloons', 'truefalse', 'cards', 'listen', 'rocket', 'path', 'train', 'detective'];
+  if (skill === 'review') return ['balloons', 'truefalse', 'cards', 'listen', 'rocket', 'path', 'train', 'detective', 'memwrite', 'dictation'];
   return SKILL_GAMES[skill] ?? LETTER_GAMES;
 }
 
@@ -160,4 +160,18 @@ export function completeStage(child: Child, stars: number): Child {
 /** Skills that are relevant for a review world: the currently weakest three. */
 export function reviewSkills(child: Child): SkillId[] {
   return weakestSkills(child).slice(0, 3);
+}
+
+// ---- daily goal ----
+export const DAILY_GOAL_SECONDS = 600;
+
+/** Adds practice time to today; `reached` is true when this time completed the daily 10 minutes. */
+export function addPractice(child: Child, seconds: number): { child: Child; reached: boolean } {
+  const today = dayKey();
+  const before = child.daily?.[today] ?? 0;
+  const after = before + Math.max(0, Math.min(seconds, 600));
+  const days = Object.entries({ ...(child.daily ?? {}), [today]: after })
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .slice(-30);
+  return { child: { ...child, daily: Object.fromEntries(days), updatedAt: Date.now() }, reached: before < DAILY_GOAL_SECONDS && after >= DAILY_GOAL_SECONDS };
 }

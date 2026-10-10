@@ -71,6 +71,45 @@ function ChildReport({ child }: { child: Child }) {
         <Tile label="מילים שנלמדו" value={String(child.learnedWords ?? 0)} />
       </div>
 
+      <WeekWordsEditor child={child} />
+
+      <div className="card">
+        <b>🧪 לפני ואחרי כל נושא</b>
+        {!Object.values(child.unitTests ?? {}).some((u) => u.pre !== undefined && u.post !== undefined) && (
+          <p className="small muted" style={{ marginBottom: 0 }}>בתחילת כל נושא יש בדיקה קצרה, ובסופו מבחן. כאן תראו כמה הילד השתפר.</p>
+        )}
+        {Object.entries(child.unitTests ?? {})
+          .filter(([, u]) => u.pre !== undefined && u.post !== undefined)
+          .slice(-8)
+          .reverse()
+          .map(([k, u]) => (
+            <div key={k} className="stat-row">
+              <span style={{ width: 120, fontWeight: 700 }}>{SKILL_BY_ID[u.topic]?.title}</span>
+              <span className="grow">
+                לפני <b>{u.pre}%</b> ⬅ אחרי <b style={{ color: u.post! >= u.pre! ? 'var(--green)' : 'var(--red)' }}>{u.post}%</b>
+              </span>
+            </div>
+          ))}
+      </div>
+
+      <div className="card">
+        <b>⏱️ דקות למידה בשבוע האחרון</b>
+        <div className="row" style={{ alignItems: 'flex-end', gap: 6, height: 90, marginTop: 8 }}>
+          {Array.from({ length: 7 }, (_, k) => {
+            const d = new Date(Date.now() - (6 - k) * 86400000).toISOString().slice(0, 10);
+            const m = Math.round((child.daily?.[d] ?? 0) / 60);
+            return (
+              <div key={d} className="grow center" style={{ gap: 2 }}>
+                <span className="small">{m}</span>
+                <div style={{ width: '70%', height: Math.min(60, m * 6), minHeight: 2, background: m >= 10 ? 'var(--green)' : '#2a78d6', borderRadius: 4 }} />
+                <span className="small muted">{new Date(d).toLocaleDateString('he-IL', { weekday: 'narrow' })}</span>
+              </div>
+            );
+          })}
+        </div>
+        <div className="small muted">המטרה: 10 דקות ביום. מעט כל יום מלמד יותר מהרבה פעם בשבוע.</div>
+      </div>
+
       <div className="card">
         <div className="row">
           <b className="grow">🤖 סיכום וניתוח טעויות</b>
@@ -256,4 +295,54 @@ function TrendChart({ child, skills }: { child: Child; skills: SkillId[] }) {
 /** YYYY-MM-DD → DD/MM */
 function il(d?: string) {
   return d ? `${d.slice(8)}/${d.slice(5, 7)}` : '';
+}
+
+/** The parents type in the weekly spelling list from school; the teacher practises it every day. */
+function WeekWordsEditor({ child }: { child: Child }) {
+  const updateChild = useStore((s) => s.updateChild);
+  const [text, setText] = useState((child.weekWords?.words ?? []).join(' '));
+  const [saved, setSaved] = useState(false);
+  const words = [...new Set(text.split(/[\s,،;.]+/).map((w) => w.replace(/[^\u05D0-\u05EA]/g, '')).filter((w) => w.length >= 2))].slice(0, 30);
+  return (
+    <div className="card">
+      <b>📚 מילות השבוע מבית הספר</b>
+      <p className="small muted" style={{ margin: '4px 0' }}>כתבו את המילים שהמורה נתנה למבחן (רווח בין מילה למילה). המורה באפליקציה יתרגל אותן כל יום בכתיבה מהזיכרון.</p>
+      <textarea
+        className="field"
+        dir="rtl"
+        rows={3}
+        style={{ width: '100%', fontSize: 20, fontFamily: 'var(--script)' }}
+        placeholder="למשל: עוגה שולחן מכתב תפוח"
+        value={text}
+        onChange={(e) => {
+          setText(e.target.value);
+          setSaved(false);
+        }}
+      />
+      <div className="row" style={{ marginTop: 6 }}>
+        <span className="grow small muted">{words.length} מילים</span>
+        {child.weekWords?.words.length ? (
+          <button
+            className="btn white"
+            onClick={() => {
+              updateChild(child.id, (c) => ({ ...c, weekWords: undefined, updatedAt: Date.now() }));
+              setText('');
+            }}
+          >
+            ניקוי
+          </button>
+        ) : null}
+        <button
+          className="btn green"
+          disabled={!words.length}
+          onClick={() => {
+            updateChild(child.id, (c) => ({ ...c, weekWords: { words, setAt: Date.now() }, weekDone: undefined, updatedAt: Date.now() }));
+            setSaved(true);
+          }}
+        >
+          {saved ? 'נשמר ✅' : 'שמירה'}
+        </button>
+      </div>
+    </div>
+  );
 }

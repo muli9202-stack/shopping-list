@@ -8,16 +8,18 @@ import { eligibleSkills, gamesForSkill, mastery, weakestSkills } from './progres
  * - every 100 levels is a "tier": harder words, more questions, harder game modes
  * - from tier 4 the child's weakest topic is mixed in, from tier 7 two of them
  * - every 10th level is a champions level (several topics, a dictation-style game)
+ * - every other 5th level is a sentence dictation with an explained correction
+ * - in every unit, two levels are "look, cover, write, check" (writing from memory)
  * - every 25th level is a review of the child's own mistake words (every 100th is a champions level)
  */
 export const PATH_LENGTH = 1000;
-const UNIT = 8;
+export const UNIT = 8;
 
 export const RANKS = ['מתחילים 🌱', 'חוקרים 🔎', 'כותבים 📝', 'בלשים 🕵️', 'קוסמים 🪄', 'אלופים 🏅', 'מומחים 🎓', 'אגדות 🌟', 'גאונים 🧠', 'מלכי הכתיב 👑'];
 
 export interface PathStep {
   n: number;
-  kind: 'lesson' | 'boss' | 'review';
+  kind: 'lesson' | 'boss' | 'review' | 'dictation';
   skills: SkillId[];
   /** the topic this unit teaches (for tricks and tips) */
   topic: SkillId;
@@ -26,6 +28,9 @@ export interface PathStep {
   rounds: number;
   /** first level of a unit: the topic is introduced */
   intro: boolean;
+  /** topic unit number and the level's place in it (the last place is the unit test) */
+  unit: number;
+  pos: number;
 }
 
 export function tierOf(n: number) {
@@ -59,24 +64,27 @@ export function pathStep(c: Child, n: number): PathStep {
 
   if (n % 25 === 0 && n % 100 !== 0) {
     const skills = weakestSkills(c).slice(0, 3);
-    return { n, kind: 'review', skills, topic: skills[0], game: (['cards', 'truefalse', 'detective'] as GameId[])[(n / 25) % 3], level: levelFor(c, n, skills), rounds: rounds + 2, intro: false };
+    return { n, kind: 'review', skills, topic: skills[0], game: (['cards', 'truefalse', 'detective'] as GameId[])[(n / 25) % 3], level: levelFor(c, n, skills), rounds: rounds + 2, intro: false, unit, pos };
   }
   if (n % 10 === 0) {
     // champions: this unit's topic with the ones learned just before it
     const skills = [...new Set([topic, topics[(unit + topics.length - 1) % topics.length], topics[(unit + topics.length - 2) % topics.length]])];
     const game: GameId = tier >= 2 && n % 20 === 0 ? 'detective' : 'listen';
-    return { n, kind: 'boss', skills, topic, game, level: levelFor(c, n, skills), rounds: rounds + 2, intro: false };
+    return { n, kind: 'boss', skills, topic, game, level: levelFor(c, n, skills), rounds: rounds + 2, intro: false, unit, pos };
   }
 
   const games = gamesForSkill(topic);
   // the unit test (last level of a unit) is a dictation-style game; the rest rotate through the topic's games
-  const game = pos === UNIT - 1 ? (topic === 'roots' ? 'roots' : 'listen') : games[(unit * 5 + pos) % games.length];
+  // writing from memory twice in every unit; the unit test is a dictation-style game
+  const game: GameId = pos === UNIT - 1 ? (topic === 'roots' ? 'roots' : 'listen') : pos === 2 || pos === 5 ? 'memwrite' : games[(unit * 5 + pos) % games.length];
+  // every 5th level: a dictation of sentences with the words learned (what a test at school asks for)
+  if (n % 5 === 0) return { n, kind: 'dictation', skills: [topic], topic, game: 'dictation', level: levelFor(c, n, [topic]), rounds, intro: false, unit, pos };
   const skills: SkillId[] = [topic];
   // mixed practice: the child's weakest topics join in – only those the game can ask about
   const weak = game === 'roots' ? [] : weakestSkills(c).filter((s) => s !== topic && gamesForSkill(s).includes(game));
   if (tier >= 4 && weak[0]) skills.push(weak[0]);
   if (tier >= 7 && weak[1]) skills.push(weak[1]);
-  return { n, kind: 'lesson', skills, topic, game, level: levelFor(c, n, skills), rounds, intro: pos === 0 };
+  return { n, kind: 'lesson', skills, topic, game, level: levelFor(c, n, skills), rounds, intro: pos === 0, unit, pos };
 }
 
 /** A finished level: stars are kept (best of), and the path moves on. */
