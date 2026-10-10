@@ -47,6 +47,23 @@ jobs:
           sudo apt-get update -qq && sudo apt-get install -y -qq hspell
           npm run validate-content -- --check
 
+      # optional: a voice that may be used in a paid app (Google neural voice) instead of Phonikud
+      - uses: actions/cache@v4
+        with:
+          path: kotvim-nachon/voice/cache-cloud
+          key: cloud-voice-${{ hashFiles('kotvim-nachon/voice/texts.json') }}
+          restore-keys: cloud-voice-
+      - name: Natural cloud voice (optional)
+        env:
+          GOOGLE_TTS_API_KEY: ${{ secrets.GOOGLE_TTS_API_KEY }}
+        run: |
+          if [ -n "$GOOGLE_TTS_API_KEY" ]; then
+            node --experimental-strip-types scripts/voice-texts.ts
+            python3 scripts/voice-build-cloud.py
+          else
+            echo "GOOGLE_TTS_API_KEY not set – using the recorded Phonikud voice"
+          fi
+
       - name: Build web app
         env:
           VITE_FIREBASE_CONFIG: ${{ secrets.FIREBASE_WEB_CONFIG }}
