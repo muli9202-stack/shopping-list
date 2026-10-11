@@ -84,6 +84,7 @@ export function CommentaryPane({ onClose }: { onClose?: () => void }) {
             <p className="edition">
               מהדורה: {com.version.heTitle || com.version.title} · רישיון: {licenseHe(com.version.license)}
               {com.origin === 'snapshot' && ' · מעותק שמור במכשיר'}
+              {com.origin === 'library' && ' · ספרייה מקומית מתוך ספריא'}
             </p>
           </>
         ) : (

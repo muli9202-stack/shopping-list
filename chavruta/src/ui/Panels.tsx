@@ -7,7 +7,7 @@ import { PRICES, PRICES_CHECKED } from '../brain/claude';
 import { COVERAGE, COVERAGE_CHECKED, STATUS_HE } from '../core/coverage';
 import { TERMS } from '../core/lexicon';
 import { SNAPSHOT_DATE } from '../core/sefaria';
-import { hebrewVoices, voicesReady } from '../speech/tts';
+import { hebrewVoices, QUALITY_HE, voiceQuality, voicesReady } from '../speech/tts';
 import { LEVELS, PROGRESS_LABEL, useStudy, type Level, type Settings } from '../state/store';
 
 export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
@@ -170,14 +170,19 @@ export function SettingsPanel() {
         <label className="field">
           קול
           <select value={s.voiceURI} onChange={(e) => set({ voiceURI: e.target.value })}>
-            <option value="">ברירת מחדל (קול עברי ראשון)</option>
+            <option value="">אוטומטי: הקול הטבעי ביותר במכשיר{voices[0] ? ` (${voices[0].name})` : ''}</option>
             {voices.map((v) => (
               <option key={v.voiceURI} value={v.voiceURI}>
-                {v.name}
+                {v.name} · {QUALITY_HE[voiceQuality(v)]}
               </option>
             ))}
           </select>
         </label>
+        {voices.length > 0 && voiceQuality(voices[0]) < 3 && (
+          <p className="muted small">
+            לקול טבעי לגמרי: בדפדפן Edge (במחשב, באנדרואיד או באייפון) יש קולות עבריים עצביים, „Hila” ו-„Avri” (Natural), בחינם. החברותא בוחרת בהם אוטומטית כשהם זמינים.
+          </p>
+        )}
         {voices.length === 0 && <p className="warn small">לא נמצא במכשיר קול עברי. החברותא תציג כתוביות בלי קול. ב-Windows: הגדרות → זמן ושפה → דיבור → הוסף קול „עברית”. באנדרואיד: מנוע הדיבור של Google עם עברית.</p>}
         <div className="row">
           <label className="field">

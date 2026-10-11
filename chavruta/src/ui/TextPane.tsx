@@ -163,7 +163,9 @@ export function TextPane() {
       </div>
       <footer className="edition">
         תצוגת טקסט דיגיטלית · מהדורה: {section.version.heTitle || section.version.title} · רישיון: {licenseHe(section.version.license)} ·{' '}
-        {section.origin === 'snapshot' ? (
+        {section.origin === 'library' ? (
+          <span>ספרייה מקומית מתוך ספריא</span>
+        ) : section.origin === 'snapshot' ? (
           <span className="warn">{IS_ARTIFACT ? 'עותק שמור מספריא (גרסת הצ׳אט)' : 'מעותק שמור במכשיר (אין חיבור לספריא)'}</span>
         ) : (
           <a href={`https://www.sefaria.org/${encodeURIComponent(section.ref.replace(/ /g, '_'))}?lang=he`} target="_blank" rel="noreferrer">

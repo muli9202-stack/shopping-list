@@ -17,10 +17,27 @@ export interface SpeakOptions {
 
 const synth = (): SpeechSynthesis | null => (typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null);
 
+/**
+ * How natural a voice sounds. Neural voices ("Natural"/"Neural", e.g. Microsoft Hila and Avri
+ * in Edge) beat Google's online voice, which beats the older built-in system voices.
+ */
+export function voiceQuality(v: SpeechSynthesisVoice): number {
+  const n = v.name;
+  if (/natural|neural/i.test(n)) return 3;
+  if (/google|online|premium|enhanced/i.test(n) || !v.localService) return 2;
+  return 1;
+}
+
+export const QUALITY_HE = ['', 'רגיל', 'טוב', 'טבעי'];
+
+/** Hebrew voices on this device, most natural first. */
 export function hebrewVoices(): SpeechSynthesisVoice[] {
   const s = synth();
   if (!s) return [];
-  return s.getVoices().filter((v) => v.lang.toLowerCase().startsWith('he') || v.lang.toLowerCase().startsWith('iw'));
+  return s
+    .getVoices()
+    .filter((v) => v.lang.toLowerCase().startsWith('he') || v.lang.toLowerCase().startsWith('iw'))
+    .sort((a, b) => voiceQuality(b) - voiceQuality(a));
 }
 
 /** Resolves once the voice list is loaded (Chrome loads it asynchronously). */

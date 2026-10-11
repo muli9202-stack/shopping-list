@@ -5,6 +5,8 @@ import snapshotJson from '../data/snapshot.json';
 import { plain } from './hebrew';
 import { COMMENTATORS, type TextKind } from './lexicon';
 import { kindOf, splitRef } from './refs';
+import { libraryText } from './library';
+import { IS_ARTIFACT } from '../env';
 
 const API = 'https://www.sefaria.org/api';
 
@@ -15,7 +17,8 @@ export interface Version {
   source: string;
 }
 
-export type Origin = 'sefaria' | 'snapshot';
+/** sefaria: live API; library: the offline library shipped with the Artifact; snapshot: the small built-in set. */
+export type Origin = 'sefaria' | 'library' | 'snapshot';
 
 export interface Section {
   /** Sefaria section ref: "Berakhot 2a", "Mishnah Berakhot 1", "Genesis 1". */
@@ -136,6 +139,11 @@ export function getRaw(ref: string): Promise<RawText & { origin: Origin }> {
     cache.set(
       key,
       (async () => {
+        // The Artifact cannot reach Sefaria; it reads from the library published next to it.
+        if (IS_ARTIFACT) {
+          const lib = await libraryText(ref).catch(() => null);
+          if (lib) return { ...lib, origin: 'library' as const };
+        }
         try {
           const d = await fetchJson<ApiText>(`${API}/v3/texts/${encodeURIComponent(ref)}?version=hebrew`);
           if (d.error) throw new SourceError(d.error, 'not-found');
