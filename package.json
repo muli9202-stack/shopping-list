@@ -13,7 +13,8 @@
     "chavruta:live": "LIVE=1 vitest run -c chavruta/vitest.config.ts chavruta/tests/unit/live.test.ts",
     "chavruta:e2e": "npm run build && cd chavruta && playwright test",
     "chavruta:snapshot": "node chavruta/scripts/build-snapshot.mjs",
-    "chavruta:coverage": "node --experimental-strip-types chavruta/scripts/check-coverage.mts"
+    "chavruta:coverage": "node --experimental-strip-types chavruta/scripts/check-coverage.mts",
+    "chavruta:artifact": "vite build -c chavruta/vite.artifact.config.ts && node chavruta/scripts/build-artifact.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",

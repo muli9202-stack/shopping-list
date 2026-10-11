@@ -24,6 +24,8 @@ import { speaker } from '../speech/tts';
 import { useStudy, type HeardLine, type SayKind } from '../state/store';
 import { ClaudeBrain, costOf, describeError } from './claude';
 import { demoBrain } from './demo';
+import { sampleBrain, sampleUnavailable } from './sample';
+import { IS_ARTIFACT } from '../env';
 import type { Brain, BrainRequest, RequestKind, Step, StudyContext } from './types';
 
 const st = () => useStudy.getState();
@@ -39,9 +41,18 @@ interface Playing {
 }
 
 let cachedBrain: { key: string; brain: Brain } | null = null;
+let artifactBrain: Brain | null = null;
+
+/** Which explanation engine is answering: Claude (key or chat account) or the scripted demo. */
+export function brainMode(): 'demo' | 'claude-key' | 'claude-chat' {
+  if (IS_ARTIFACT) return sampleUnavailable ? 'demo' : 'claude-chat';
+  return st().settings.apiKey.trim() ? 'claude-key' : 'demo';
+}
 
 export function getBrain(): Brain {
   const s = st().settings;
+  // In a Claude Artifact the viewer's own Claude answers (no key); elsewhere a key is needed.
+  if (IS_ARTIFACT) return (artifactBrain ??= sampleBrain(demoBrain));
   if (!s.apiKey.trim()) return demoBrain;
   const effort = s.level === 'iyun' && s.effort === 'low' ? 'medium' : s.effort;
   const key = `${s.apiKey}|${s.model}|${effort}`;
@@ -324,7 +335,9 @@ class Engine {
     const offline = e instanceof SourceError && e.reason === 'offline';
     const notFound = e instanceof SourceError && e.reason === 'not-found';
     const msg = offline
-      ? `אין חיבור לספריא, ו${label} לא נמצא בעותק השמור במכשיר. בעותק השמור: ברכות ב׳–ג׳, משנה ברכות פרק א׳ ובראשית פרק א׳.`
+      ? IS_ARTIFACT
+        ? `בגרסה שבצ'אט אין גישה לספריא, ו${label} עוד לא נכלל בה. זמינים כאן: ברכות ב׳–ג׳, משנה ברכות פרק א׳ ובראשית פרק א׳. כל ספרי ספריא זמינים באפליקציה באתר.`
+        : `אין חיבור לספריא, ו${label} לא נמצא בעותק השמור במכשיר. בעותק השמור: ברכות ב׳–ג׳, משנה ברכות פרק א׳ ובראשית פרק א׳.`
       : notFound
         ? `לא מצאתי את ${label} בספריא. ייתכן שהדף או הפרק לא קיימים. אפשר לבדוק את המספר?`
         : `לא הצלחתי לפתוח את ${label}: ${(e as Error).message}`;

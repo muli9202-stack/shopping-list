@@ -22,7 +22,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --bg: #15181d;
     --panel: #1d2128;
     --paper: #1f2329;
@@ -42,6 +42,26 @@
     color-scheme: dark;
   }
 }
+
+:root[data-theme='dark'] {
+    --bg: #15181d;
+    --panel: #1d2128;
+    --paper: #1f2329;
+    --ink: #ece8df;
+    --muted: #a9b0bb;
+    --line: #353b45;
+    --accent: #8db4e8;
+    --accent-2: #e2b56d;
+    --accent-ink: #0f1520;
+    --hl: #4a4220;
+    --mark: #7a6418;
+    --sel: #23406a;
+    --danger: #ff8d8d;
+    --ok: #8fd19e;
+    --warn: #f0b860;
+    --avatar-bg-plain: #2a3038;
+    color-scheme: dark;
+  }
 
 :root[data-contrast='high'] {
   --bg: #ffffff;
@@ -90,7 +110,7 @@ textarea {
 .app {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  height: 100%;
 }
 .app > .room {
   flex: 1;

@@ -1,7 +1,8 @@
 // The study room: the page in the middle, commentary beside it when open, and the
 // chavruta in a fixed side column (a strip above the text on phones), never covering the text.
 import { useEffect, useRef, useState } from 'react';
-import { engine } from './brain/engine';
+import { brainMode, engine } from './brain/engine';
+import { IS_ARTIFACT } from './env';
 import { amudLabel } from './core/refs';
 import { useStudy, PROGRESS_LABEL, SAY_KIND_LABEL } from './state/store';
 import { Avatar } from './ui/Avatar';
@@ -153,7 +154,7 @@ export default function App() {
   const [sideW, setSideW] = useState(320);
   const [comW, setComW] = useState(380);
   const [comHidden, setComHidden] = useState(false);
-  const demo = !settings.apiKey.trim();
+  const demo = brainMode() === 'demo';
   const comOpen = open.length > 0 && !comHidden;
 
   useEffect(() => {
@@ -165,7 +166,7 @@ export default function App() {
   }, [settings.highContrast]);
 
   const startConversation = () => {
-    if (recognitionSupported() && settings.micMode === 'open') startMic();
+    if (!IS_ARTIFACT && recognitionSupported() && settings.micMode === 'open') startMic();
     void engine.greet();
   };
 
@@ -179,10 +180,12 @@ export default function App() {
             החברותא שלי
           </button>
         </h1>
-        {demo && (
-          <button className="badge demo" onClick={() => setPanel('settings')} title="בלי מפתח Claude: מצב הדגמה">
+        {demo ? (
+          <button className="badge demo" onClick={() => setPanel('settings')} title="בלי Claude: מצב הדגמה">
             מצב הדגמה
           </button>
+        ) : (
+          IS_ARTIFACT && <span className="badge">Claude בחשבון שלך</span>
         )}
         {section && (
           <nav className="source-nav" aria-label="ניווט במקור">

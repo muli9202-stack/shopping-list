@@ -2,6 +2,7 @@
 // and progress, and the Hebrew help page.
 import { useEffect, useState } from 'react';
 import { engine } from '../brain/engine';
+import { IS_ARTIFACT } from '../env';
 import { PRICES, PRICES_CHECKED } from '../brain/claude';
 import { COVERAGE, COVERAGE_CHECKED, STATUS_HE } from '../core/coverage';
 import { TERMS } from '../core/lexicon';
@@ -62,7 +63,7 @@ export function StartPanel() {
         </button>
       )}
       <div className="quick">
-        {QUICK.map((q) => (
+        {QUICK.filter((q) => !IS_ARTIFACT || q.label !== 'פרשת השבוע').map((q) => (
           <button key={q.label} className="chip big" onClick={() => engine.handleInput(q.say)}>
             {q.label}
           </button>
@@ -118,6 +119,15 @@ export function SettingsPanel() {
   const price = PRICES[s.model];
   return (
     <div className="settings">
+      {IS_ARTIFACT ? (
+        <fieldset>
+          <legend>מנגנון ההסבר</legend>
+          <p className="muted small">
+            בגרסה שבצ'אט Claude עונה דרך החשבון שלך, בלי מפתח. בשאלה הראשונה תתבקש לאשר. אם לא תאשר, החברותא תמשיך במצב הדגמה. השימוש נספר במכסת השימוש הרגילה שלך ב-Claude.
+          </p>
+        </fieldset>
+      ) : (
+        <>
       <fieldset>
         <legend>מנגנון ההסבר</legend>
         <p className="muted small">
@@ -152,6 +162,8 @@ export function SettingsPanel() {
           </select>
         </label>
       </fieldset>
+        </>
+      )}
 
       <fieldset>
         <legend>קול ודמות</legend>

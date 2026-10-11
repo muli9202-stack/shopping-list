@@ -5,6 +5,7 @@ import { engine } from '../brain/engine';
 import { norm, tokenize } from '../core/hebrew';
 import { amudLabel } from '../core/refs';
 import { useStudy } from '../state/store';
+import { IS_ARTIFACT } from '../env';
 
 const LICENSE_HE: Record<string, string> = {
   'Public Domain': 'נחלת הכלל',
@@ -163,7 +164,7 @@ export function TextPane() {
       <footer className="edition">
         תצוגת טקסט דיגיטלית · מהדורה: {section.version.heTitle || section.version.title} · רישיון: {licenseHe(section.version.license)} ·{' '}
         {section.origin === 'snapshot' ? (
-          <span className="warn">מעותק שמור במכשיר (אין חיבור לספריא)</span>
+          <span className="warn">{IS_ARTIFACT ? 'עותק שמור מספריא (גרסת הצ׳אט)' : 'מעותק שמור במכשיר (אין חיבור לספריא)'}</span>
         ) : (
           <a href={`https://www.sefaria.org/${encodeURIComponent(section.ref.replace(/ /g, '_'))}?lang=he`} target="_blank" rel="noreferrer">
             ספריא

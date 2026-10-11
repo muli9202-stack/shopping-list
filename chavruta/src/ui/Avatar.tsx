@@ -2,6 +2,7 @@
 // motion and blinking. The mouth is driven directly by the speech layer (mouth.subscribe),
 // so it moves only while audio plays and closes the instant speech stops.
 import { useEffect, useRef } from 'react';
+import { brainMode } from '../brain/engine';
 import { AVATAR_LABEL, mouth, useStudy, type AvatarState, type Settings } from '../state/store';
 
 const SKIN = { young: '#e9c4a0', elder: '#e3bd98', woman: '#ecc7a4' };
@@ -105,7 +106,8 @@ export function Avatar({ compact = false }: { compact?: boolean }) {
   const state = useStudy((s) => s.avatar);
   const caption = useStudy((s) => s.caption);
   const interim = useStudy((s) => s.interim);
-  const demo = !settings.apiKey.trim();
+  useStudy((s) => s.settings.apiKey);
+  const demo = brainMode() === 'demo';
   return (
     <section className={`avatar ${compact ? 'compact' : ''}`} aria-label="החברותא">
       <div className="avatar-frame">

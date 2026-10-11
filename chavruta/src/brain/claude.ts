@@ -22,7 +22,7 @@ export function costOf(u: Usage): number {
   return (u.inputTokens * p.input + u.outputTokens * p.output + u.cacheReadTokens * p.cacheRead + u.cacheWriteTokens * p.cacheWrite) / 1e6;
 }
 
-const SYSTEM = `אתה „החברותא”: שותף ללימוד תורה מבוסס בינה מלאכותית. הלומד רואה את הדף על המסך ושומע אותך מדבר. מה שאתה כותב מוקרא בקול, משפט אחר משפט, וכל משפט מוצג גם ככתובית.
+export const SYSTEM = `אתה „החברותא”: שותף ללימוד תורה מבוסס בינה מלאכותית. הלומד רואה את הדף על המסך ושומע אותך מדבר. מה שאתה כותב מוקרא בקול, משפט אחר משפט, וכל משפט מוצג גם ככתובית.
 
 ## אופי
 - מדבר עברית טבעית ודבורה, כמו חברותא בבית מדרש: קצר, חם, ענייני. משתמש במונחים כמו הווה אמינא, מסקנה, שקלא וטריא, קושיה, תירוץ, ראיה, דחייה, סברה, נפקא מינה, פשט, חידוש, צריך עיון, דיבור המתחיל, ומסביר אותם כשהלומד מתחיל.
@@ -190,6 +190,61 @@ export function parseStepLine(raw: string): Step | null {
   }
 }
 
+/**
+ * The conversation sent to the model: what the learner said, what they actually heard
+ * from the chavruta (cut lines marked), and last the study context and the request.
+ */
+export async function buildTurns(req: BrainRequest, signal: AbortSignal): Promise<{ role: 'user' | 'assistant'; content: string }[]> {
+  const { ctx } = req;
+  const retrieved = req.kind === 'chat' ? await retrieve(req.text ?? '', ctx, signal) : '';
+  const messages: { role: 'user' | 'assistant'; content: string }[] = [];
+  for (const t of ctx.history.slice(-10)) {
+    if (t.role === 'user' && t.text) messages.push({ role: 'user', content: t.text });
+    else if (t.role === 'chavruta') {
+      const heard = t.lines
+        .filter((l) => l.heard || l.cutAt)
+        .map((l) => {
+          const said = l.heard ? l.text : `${l.text.slice(0, l.cutAt)}… [נקטע כאן]`;
+          return l.kind === 'meta' ? said : `(${SAY_KIND_LABEL[l.kind]}) ${said}`;
+        });
+      if (heard.length) messages.push({ role: 'assistant', content: heard.join('\n') });
+    }
+  }
+  // Alternating roles, starting with the learner.
+  const merged: { role: 'user' | 'assistant'; content: string }[] = [];
+  for (const m of messages) {
+    const last = merged[merged.length - 1];
+    if (last && last.role === m.role) last.content = `${last.content}\n${m.content}`;
+    else merged.push({ ...m });
+  }
+  while (merged.length && merged[0].role !== 'user') merged.shift();
+  const content = `${contextBlock(ctx, retrieved)}\n\n<request kind="${req.kind}">${REQUEST_TEXT[req.kind]?.(req) ?? req.text ?? ''}</request>`;
+  if (merged.length && merged[merged.length - 1].role === 'user') merged.push({ role: 'assistant', content: '(ממתין)' });
+  merged.push({ role: 'user', content });
+  return merged;
+}
+
+/** Splits streamed text into complete lines and turns each into a step. */
+export class StepLineReader {
+  private buf = '';
+  push(delta: string): Step[] {
+    this.buf += delta;
+    const out: Step[] = [];
+    let nl: number;
+    while ((nl = this.buf.indexOf('\n')) >= 0) {
+      const step = parseStepLine(this.buf.slice(0, nl));
+      this.buf = this.buf.slice(nl + 1);
+      if (step) out.push(step);
+    }
+    return out;
+  }
+  end(): Step[] {
+    const step = parseStepLine(this.buf);
+    this.buf = '';
+    return step ? [step] : [];
+  }
+}
+
 export class ClaudeBrain implements Brain {
   readonly demo = false;
   onUsage?: (u: Usage) => void;
@@ -205,32 +260,8 @@ export class ClaudeBrain implements Brain {
   }
 
   async *respond(req: BrainRequest, signal: AbortSignal): AsyncIterable<Step> {
-    const { ctx } = req;
-    const retrieved = req.kind === 'chat' ? await retrieve(req.text ?? '', ctx, signal) : '';
+    const merged = await buildTurns(req, signal);
     if (signal.aborted) return;
-
-    const messages: Anthropic.Beta.BetaMessageParam[] = [];
-    for (const t of ctx.history.slice(-10)) {
-      if (t.role === 'user' && t.text) messages.push({ role: 'user', content: t.text });
-      else if (t.role === 'chavruta') {
-        const heard = t.lines.filter((l) => l.heard || l.cutAt).map((l) => {
-          const said = l.heard ? l.text : `${l.text.slice(0, l.cutAt)}… [נקטע כאן]`;
-          return l.kind === 'meta' ? said : `(${SAY_KIND_LABEL[l.kind]}) ${said}`;
-        });
-        if (heard.length) messages.push({ role: 'assistant', content: heard.join('\n') });
-      }
-    }
-    // The API needs alternating roles starting with the learner.
-    const merged: Anthropic.Beta.BetaMessageParam[] = [];
-    for (const m of messages) {
-      const last = merged[merged.length - 1];
-      if (last && last.role === m.role) last.content = `${last.content as string}\n${m.content as string}`;
-      else merged.push({ ...m });
-    }
-    while (merged.length && merged[0].role !== 'user') merged.shift();
-    const content = `${contextBlock(ctx, retrieved)}\n\n<request kind="${req.kind}">${REQUEST_TEXT[req.kind]?.(req) ?? req.text ?? ''}</request>`;
-    if (merged.length && merged[merged.length - 1].role === 'user') merged.push({ role: 'assistant', content: '(ממתין)' });
-    merged.push({ role: 'user', content });
 
     const stream = this.client.beta.messages.stream(
       {
@@ -244,21 +275,12 @@ export class ClaudeBrain implements Brain {
       { signal },
     );
 
-    let buf = '';
+    const reader = new StepLineReader();
     for await (const ev of stream) {
       if (signal.aborted) return;
-      if (ev.type === 'content_block_delta' && ev.delta.type === 'text_delta') {
-        buf += ev.delta.text;
-        let nl: number;
-        while ((nl = buf.indexOf('\n')) >= 0) {
-          const step = parseStepLine(buf.slice(0, nl));
-          buf = buf.slice(nl + 1);
-          if (step) yield step;
-        }
-      }
+      if (ev.type === 'content_block_delta' && ev.delta.type === 'text_delta') yield* reader.push(ev.delta.text);
     }
-    const tail = parseStepLine(buf);
-    if (tail) yield tail;
+    yield* reader.end();
     const final = await stream.finalMessage();
     if (final.stop_reason === 'refusal') {
       yield { t: 'say', kind: 'meta', text: 'המודל סירב לענות על הבקשה הזאת. אפשר לנסח אחרת.' };

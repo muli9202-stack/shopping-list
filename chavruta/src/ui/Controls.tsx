@@ -6,6 +6,7 @@ import { engine } from '../brain/engine';
 import { Listener, recognitionSupported, shouldBargeIn } from '../speech/asr';
 import { speaker } from '../speech/tts';
 import { useStudy } from '../state/store';
+import { IS_ARTIFACT } from '../env';
 
 let listener: Listener | null = null;
 
@@ -46,7 +47,8 @@ export function Controls() {
   const [text, setText] = useState('');
   const [holding, setHolding] = useState(false);
   const input = useRef<HTMLInputElement>(null);
-  const supported = recognitionSupported();
+  // Inside a Claude Artifact the microphone is not available: the learner types, the chavruta speaks.
+  const supported = !IS_ARTIFACT && recognitionSupported();
   const ptt = settings.micMode === 'ptt';
 
   useEffect(() => {
@@ -125,7 +127,7 @@ export function Controls() {
           ref={input}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={supported ? 'אפשר גם להקליד… (/)' : 'הקלד כאן (זיהוי דיבור לא נתמך בדפדפן הזה)'}
+          placeholder={supported ? 'אפשר גם להקליד… (/)' : IS_ARTIFACT ? 'כתוב לחברותא… למשל: בוא נלמד ברכות דף ב עמוד א' : 'הקלד כאן (זיהוי דיבור לא נתמך בדפדפן הזה)'}
           aria-label="הקלדה לחברותא"
           dir="rtl"
         />
